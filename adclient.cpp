@@ -80,7 +80,7 @@ vector <string> adclient::searchDN_ext_single(string filter) {
      throws ADSearchException - if error occupied.
 */
     int result, num_results, i;
-    char *attrs[]={"1.1", NULL};
+    char *attrs[] = {"1.1", NULL};
     LDAPMessage *res = NULL;
     LDAPMessage *entry;
     char *dn;
@@ -307,7 +307,7 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
 }
 
 map < string, map < string, vector<string> > > adclient::search_ext(string OU, int scope, string filter, vector <string> attributes) {
-    int result, num_entries;
+    int result;
     char *attrs[50];
     LDAPMessage *res=NULL;
     LDAPMessage *entry;
@@ -323,7 +323,7 @@ map < string, map < string, vector<string> > > adclient::search_ext(string OU, i
         attrs[i] = strdup(attributes[i].c_str());
     }
     attrs[i] = NULL;
-//    char *attrs[]={"1.1", NULL};
+//    char *attrs[] = {"1.1", NULL};
 //    result = ldap_search_ext_s(ds, OU.c_str(), LDAP_SCOPE_BASE, filter.c_str(), attrs, 0, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
     result = ldap_search_ext_s(ds, OU.c_str(), scope, filter.c_str(), attrs, 0, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
 
@@ -475,7 +475,7 @@ vector < pair <string, vector <string> > >  adclient::getObjectAttributes(string
   throws ADSearchException if no values were found, or if error occupied.
 */
     int result, num_results, i;
-    char *attrs[]={"*", NULL};
+    char * attrs[] = {"*", NULL};
     LDAPMessage *res;
     LDAPMessage *entry;
     string error_msg;
@@ -545,7 +545,7 @@ vector < pair <string, vector <string> > >  adclient::getObjectAttributes(string
 
 bool adclient::ifObjectExists(string object) {
     int result;
-    char *attrs[]={"*", NULL};
+    char *attrs[] = {"*", NULL};
     LDAPMessage *res;
     string error_msg;
     int attrsonly = 1;
@@ -1132,9 +1132,9 @@ void adclient::CreateUser(string cn, string container, string user_short) {
 
     string dn = "CN=" + cn + "," + container;
 
-    char *objectClass_values[]={"user", NULL};
+    char *objectClass_values[] = {"user", NULL};
     char *name_values[2];
-    char *accountControl_values[]={"66050", NULL};
+    char *accountControl_values[] = {"66050", NULL};
     char *upn_values[2];
     string upn;
     string domain;
@@ -1143,8 +1143,8 @@ void adclient::CreateUser(string cn, string container, string user_short) {
     attr1.mod_type = "objectClass";
     attr1.mod_values = objectClass_values;
 
-    name_values[0]=strdup(user_short.c_str());
-    name_values[1]=NULL;
+    name_values[0] = strdup(user_short.c_str());
+    name_values[1] = NULL;
     attr2.mod_op = LDAP_MOD_ADD;
     attr2.mod_type = "sAMAccountName";
     attr2.mod_values = name_values;
@@ -1155,17 +1155,17 @@ void adclient::CreateUser(string cn, string container, string user_short) {
 
     domain=dn2domain(dn);
     upn = user_short + "@" + domain;
-    upn_values[0]=strdup(upn.c_str());
-    upn_values[1]=NULL;
+    upn_values[0] = strdup(upn.c_str());
+    upn_values[1] = NULL;
     attr4.mod_op = LDAP_MOD_ADD;
     attr4.mod_type = "userPrincipalName";
     attr4.mod_values = upn_values;
 
-    attrs[0]=&attr1;
-    attrs[1]=&attr2;
-    attrs[2]=&attr3;
-    attrs[3]=&attr4;
-    attrs[4]=NULL;
+    attrs[0] = &attr1;
+    attrs[1] = &attr2;
+    attrs[2] = &attr3;
+    attrs[3] = &attr4;
+    attrs[4] = NULL;
 
     int result;
     result=ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
@@ -1327,7 +1327,7 @@ void adclient::setUserPassword(string user, string password) {
     char unicode_password[(MAX_PASSWORD_LENGTH+2)*2];
     memset(unicode_password, 0, sizeof(unicode_password));
     for(unsigned int i=0; i<quoted_password.size(); i++)
-        unicode_password[i*2]=quoted_password[i];
+        unicode_password[i*2] = quoted_password[i];
 
     LDAPMod *attrs[2];
     LDAPMod attr1;
@@ -1337,15 +1337,15 @@ void adclient::setUserPassword(string user, string password) {
     pw.bv_val = unicode_password;
     pw.bv_len = quoted_password.size()*2;
 
-    bervalues[0]=&pw;
-    bervalues[1]=NULL;
+    bervalues[0] = &pw;
+    bervalues[1] = NULL;
 
     attr1.mod_type="unicodePwd";
     attr1.mod_op = LDAP_MOD_REPLACE|LDAP_MOD_BVALUES;
     attr1.mod_bvalues = bervalues;
 
-    attrs[0]=&attr1;
-    attrs[1]=NULL;
+    attrs[0] = &attr1;
+    attrs[1] = NULL;
 
     int result;
 
