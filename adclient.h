@@ -105,8 +105,8 @@ public:
       struct berval getBinaryObjectAttribute(string object, string attribute);
       vector <string> getObjectAttribute(string object, string attribute);
 
-      vector <string> searchDN_ext(string filter);
-      map < string, map < string, vector<string> > > search_ext(string OU, int scope, string filter, vector <string> attributes);
+      vector <string> searchDN(string filter);
+      map < string, map < string, vector<string> > > search(string OU, int scope, string filter, vector <string> attributes);
 
       vector < pair <string, vector <string> > > getObjectAttributes(string object);
 private:

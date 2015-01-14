@@ -54,7 +54,7 @@ static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
        return Py_None;
 }
 
-static PyObject *wrapper_search_ext_adclient(PyObject *self, PyObject *args) {
+static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *ou, *filter;
        PyObject * listObj;
@@ -78,7 +78,7 @@ static PyObject *wrapper_search_ext_adclient(PyObject *self, PyObject *args) {
 
        adclient *ad = convert_ad(obj);
        try {
-          res = ad->search_ext(ou, scope, filter, attrs);
+          res = ad->search(ou, scope, filter, attrs);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -104,14 +104,14 @@ static PyObject *wrapper_search_ext_adclient(PyObject *self, PyObject *args) {
        return res_dict;
 }
 
-static PyObject *wrapper_searchDN_ext_adclient(PyObject *self, PyObject *args) {
+static PyObject *wrapper_searchDN_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *filter;
        vector <string> result;
        if (!PyArg_ParseTuple(args, "Os", &obj, &filter)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          result = ad->searchDN_ext(filter);
+          result = ad->searchDN(filter);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -892,8 +892,8 @@ static PyObject * wrapper_UnlockUser_adclient(PyObject *self, PyObject *args) {
 static PyMethodDef adclient_methods[] = {
        { "new_adclient", wrapper_new_adclient, 1 },
        { "login_adclient", wrapper_login_adclient, 1 },
-       { "searchDN_ext_adclient", wrapper_searchDN_ext_adclient, 1},
-       { "search_ext_adclient", wrapper_search_ext_adclient, 1},
+       { "searchDN_adclient", wrapper_searchDN_adclient, 1},
+       { "search_adclient", wrapper_search_adclient, 1},
        { "getUserGroups_adclient", wrapper_getUserGroups_adclient, 1 },
        { "getUsersInGroup_adclient", wrapper_getUsersInGroup_adclient, 1},
        { "groupAddUser_adclient", wrapper_groupAddUser_adclient, 1 },

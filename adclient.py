@@ -25,15 +25,15 @@ class ADClient:
           """
           _adclient.login_adclient(self.obj, uri, binddn, bindpw, search_base)
 
-      def searchDN_ext(self, filter):
-          """ ADClient searchDN_ext function.
+      def searchDN(self, filter):
+          """ ADClient searchDN function.
           """
-          return _adclient.searchDN_ext_adclient(self.obj, filter)
+          return _adclient.searchDN_adclient(self.obj, filter)
 
-      def search_ext(self, ou, scope, filter, attributes):
-          """ ADClient search_ext function.
+      def search(self, ou, scope, filter, attributes):
+          """ ADClient search function.
           """
-          return _adclient.search_ext_adclient(self.obj, ou, scope, filter, attributes)
+          return _adclient.search_adclient(self.obj, ou, scope, filter, attributes)
 
       def getUserGroups(self, user):
           """ ADClient getUserGroups function.

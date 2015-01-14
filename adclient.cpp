@@ -73,13 +73,13 @@ void adclient::login(string uri, string binddn, string bindpw, string _search_ba
     }
 }
 
-vector <string> adclient::searchDN_ext(string filter) {
+vector <string> adclient::searchDN(string filter) {
     map < string, map < string, vector<string> > > search_result;
 
     vector <string> attributes;
     attributes.push_back("1.1");
 
-    search_result = search_ext(search_base.c_str(), scope, filter, attributes);
+    search_result = search(search_base.c_str(), scope, filter, attributes);
 
     vector <string> result;
 
@@ -100,7 +100,7 @@ string adclient::getObjectDN(string object_short) {
     vector <string> dn;
 
     string filter = "(sAMAccountName=" + object_short + ")";
-    dn = searchDN_ext(filter);
+    dn = searchDN(filter);
     return dn[0];
 }
 
@@ -165,7 +165,7 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
     return value;
 }
 
-map < string, map < string, vector<string> > > adclient::search_ext(string OU, int scope, string filter, vector <string> attributes) {
+map < string, map < string, vector<string> > > adclient::search(string OU, int scope, string filter, vector <string> attributes) {
     int result, errcodep, num_results;
 
     char *attrs[50];
@@ -728,7 +728,7 @@ vector <string> adclient::getDialinUsers() {
     vector <string> dialin_users;
     unsigned int i;
  
-    users_dn = searchDN_ext("(msNPAllowDialin=TRUE)");
+    users_dn = searchDN("(msNPAllowDialin=TRUE)");
 
     for (i=0; i<users_dn.size(); i++) {
         user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
@@ -774,7 +774,7 @@ vector <string> adclient::getAllOUs() {
     vector <string> OUs;
     unsigned int i;
 
-    ou_dns = searchDN_ext("(objectclass=organizationalUnit)");
+    ou_dns = searchDN("(objectclass=organizationalUnit)");
 
     for (i=0; i<ou_dns.size(); i++) {
         OUs.push_back(ou_dns[i]);
@@ -799,7 +799,7 @@ vector <string> adclient::getOUsInOU(string OU) {
     _scope = scope;
     scope = LDAP_SCOPE_ONELEVEL;
 
-    ous_dns = searchDN_ext("(objectclass=organizationalUnit)");
+    ous_dns = searchDN("(objectclass=organizationalUnit)");
 
     search_base = _search_base;
     scope = _scope;
@@ -828,7 +828,7 @@ vector <string> adclient::getUsersInOU(string OU) {
     _scope = scope;
     scope = LDAP_SCOPE_ONELEVEL;
     try {
-        users_dn = searchDN_ext("(&(objectClass=user)(objectCategory=person))");
+        users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
     }
     catch(ADSearchException) {
         /* restore original conditions and then throw exception to upper level */
@@ -863,7 +863,7 @@ vector <string> adclient::getUsersInOU_SubTree(string OU) {
     search_base = OU;
 
     try {
-        users_dn = searchDN_ext("(&(objectClass=user)(objectCategory=person))");
+        users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
     }
     catch(ADSearchException) {
         /* restore original conditions and then throw exception to upper level */
@@ -892,7 +892,7 @@ vector <string> adclient::getGroups() {
     unsigned int i;
 
     try {
-        groups_dn = searchDN_ext("(objectClass=group)");
+        groups_dn = searchDN("(objectClass=group)");
     }
     catch(ADSearchException) {
          throw;
@@ -917,7 +917,7 @@ vector <string> adclient::getUsers() {
     unsigned int i;
 
     try {
-        users_dn = searchDN_ext("(&(objectClass=user)(objectCategory=person))");
+        users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
     }
     catch(ADSearchException) {
         throw;
