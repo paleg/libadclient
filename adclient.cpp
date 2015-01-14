@@ -408,7 +408,6 @@ map < string, map < string, vector<string> > > adclient::search_ext(string OU, i
 
         num_results = ldap_count_entries(ds, res);
         if (num_results == 0) {
-            ldap_msgfree(res);
             error_msg = filter + " not found";
             result = AD_OBJECT_NOT_FOUND;
             break;
