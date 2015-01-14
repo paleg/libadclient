@@ -73,164 +73,23 @@ void adclient::login(string uri, string binddn, string bindpw, string _search_ba
     }
 }
 
-vector <string> adclient::searchDN_ext_single(string filter) {
-/*
-  General search function.
-  It returns vector of DNs, which match the given attribute and value,
-     throws ADSearchException - if error occupied.
-*/
-    int result, num_results, i;
-    char *attrs[] = {"1.1", NULL};
-    LDAPMessage *res = NULL;
-    LDAPMessage *entry;
-    char *dn;
-    vector <string> dnlist;
-    string error_msg;
-    int attrsonly = 1;
-
-    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
-
-    result = ldap_search_ext_s(ds, search_base.c_str(), scope, filter.c_str(), attrs, attrsonly, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
-    if (result != LDAP_SUCCESS) {
-       if (res != NULL) ldap_msgfree(res);
-       error_msg = "Error in ldap_search_ext_s: ";
-       error_msg.append(ldap_err2string(result));
-       throw ADSearchException(error_msg, result);
-    }
-
-    num_results = ldap_count_entries(ds, res);
-    if (num_results == 0) {
-        ldap_msgfree(res);
-        error_msg = filter + " not found";
-        throw ADSearchException(error_msg, AD_OBJECT_NOT_FOUND);
-    }
-
-    entry = ldap_first_entry(ds, res);
-    dn = ldap_get_dn(ds, entry);
-    dnlist.push_back(dn);
-    ldap_memfree(dn);
-
-    for (i=1; (entry=ldap_next_entry(ds, entry))!=NULL; i++) {
-        dn = ldap_get_dn(ds, entry);
-        dnlist.push_back(dn);
-        ldap_memfree(dn);
-    }
-
-    ldap_msgfree(res);
-    return dnlist;
-}
-
 vector <string> adclient::searchDN_ext(string filter) {
-/*
-  General search function.
-  It returns vector of DNs, which match the given attribute and value,
-     throws ADSearchException - if error occupied.
-*/
-    vector <string> dnlist;
+    map < string, map < string, vector<string> > > search_result;
 
-    string error_msg;
-    int attrsonly = 1;
-    char *attrs[] = {"1.1", NULL};
+    vector <string> attributes;
+    attributes.push_back("1.1");
 
-    int result, errcodep, num_results;
+    search_result = search_ext(search_base.c_str(), scope, filter, attributes);
 
-    ber_int_t       pagesize = 1000;
-    ber_int_t       totalcount;
-    struct berval   *cookie = NULL;
-    int             iscritical = 1;
+    vector <string> result;
 
-    LDAPControl     *serverctrls[2] = { NULL, NULL };
-    LDAPControl     *pagecontrol = NULL;
-    LDAPControl     **returnedctrls = NULL;
+    map < string, map < string, vector<string> > >::iterator res_it;
+    for ( res_it=search_result.begin() ; res_it != search_result.end(); res_it++ ) {
+        string dn = (*res_it).first;
+        result.push_back(dn);
+    }
 
-    LDAPMessage *res = NULL;
-    LDAPMessage *entry;
-
-    char        *dn;
-
-    bool morepages;
-
-    do {
-        result = ldap_create_page_control(ds, pagesize, cookie, iscritical, &pagecontrol);
-        if (result != LDAP_SUCCESS) {
-            error_msg = "Failed to create page control: ";
-            error_msg.append(ldap_err2string(result));
-            throw ADSearchException(error_msg, result);
-        }
-        serverctrls[0] = pagecontrol;
-
-        /* Search for entries in the directory using the parmeters.       */
-        result = ldap_search_ext_s(ds, search_base.c_str(), scope, filter.c_str(), attrs, attrsonly, serverctrls, NULL, NULL, LDAP_NO_LIMIT, &res);
-        if ((result != LDAP_SUCCESS) & (result != LDAP_PARTIAL_RESULTS)) {
-            error_msg = "Error in paged ldap_search_ext_s: ";
-            error_msg.append(ldap_err2string(result));
-            throw ADSearchException(error_msg, result);
-        }
-        serverctrls[0] = NULL;
-        ldap_control_free(pagecontrol);
-        pagecontrol = NULL;
-
-        /* Parse the results to retrieve the contols being returned.      */
-        result = ldap_parse_result(ds, res, &errcodep, NULL, NULL, NULL, &returnedctrls, false);
-        if (result != LDAP_SUCCESS) {
-            error_msg = "Failed to parse result: ";
-            error_msg.append(ldap_err2string(result));
-            throw ADSearchException(error_msg, result);
-        }
-
-        /* Parse the page control returned to get the cookie and          */
-        /* determine whether there are more pages.                        */
-        pagecontrol = ldap_control_find( LDAP_CONTROL_PAGEDRESULTS, returnedctrls, NULL );
-        if (pagecontrol == NULL) {
-            error_msg = "Failed to find PAGEDRESULTS control";
-            throw ADSearchException(error_msg, 1);
-        }
-
-        struct berval newcookie;
-        result = ldap_parse_pageresponse_control( ds, pagecontrol, &totalcount, &newcookie );
-        if (result != LDAP_SUCCESS) {
-            error_msg = "Failed to parse pageresponse control: ";
-            error_msg.append(ldap_err2string(result));
-            throw ADSearchException(error_msg, result);
-        }
-        ber_bvfree(cookie);
-        cookie = (berval*) ber_memalloc( sizeof( struct berval ) );
-        if (cookie == NULL) {
-            error_msg = "Failed to allocate memory for cookie";
-            throw ADSearchException(error_msg, 1);
-        }
-        *cookie = newcookie;
-
-        /* Cleanup the controls used. */
-        ldap_controls_free(returnedctrls);
-        returnedctrls = NULL;
-
-        /* Determine if the cookie is not empty, indicating there are more pages for these search parameters. */
-        if (cookie && cookie->bv_val != NULL && (strlen(cookie->bv_val) > 0)) {
-            morepages = true;
-        } else {
-            morepages = false;
-        }
-
-        num_results = ldap_count_entries(ds, res);
-        if (num_results == 0) {
-            ldap_msgfree(res);
-            error_msg = filter + " not found";
-            throw ADSearchException(error_msg, AD_OBJECT_NOT_FOUND);
-        }
-
-        for ( entry = ldap_first_entry(ds, res);
-              entry != NULL;
-              entry = ldap_next_entry(ds, entry) ) {
-            dn = ldap_get_dn(ds, entry);
-            dnlist.push_back(dn);
-            ldap_memfree(dn);
-        }
-    } while (morepages);
-
-    ldap_msgfree(res);
-
-    return dnlist;
+    return result;
 }
 
 string adclient::getObjectDN(string object_short) {
