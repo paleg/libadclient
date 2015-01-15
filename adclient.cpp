@@ -220,6 +220,24 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
         ldap_control_free(pagecontrol);
         pagecontrol = NULL;
 
+        num_results = ldap_count_entries(ds, res);
+        if (num_results == 0) {
+            error_msg = filter + " not found";
+            result = AD_OBJECT_NOT_FOUND;
+            break;
+        }
+
+        map < string, vector<string> > valuesmap;
+
+        for ( entry = ldap_first_entry(ds, res);
+              entry != NULL;
+              entry = ldap_next_entry(ds, entry) ) {
+            dn = ldap_get_dn(ds, entry);
+            valuesmap = _getvalues(entry);
+            search_result[dn] = valuesmap;
+            ldap_memfree(dn);
+        }
+
         /* Parse the results to retrieve the contols being returned.      */
         result = ldap_parse_result(ds, res, &errcodep, NULL, NULL, NULL, &returnedctrls, false);
         if (result != LDAP_SUCCESS) {
@@ -262,24 +280,6 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
             morepages = true;
         } else {
             morepages = false;
-        }
-
-        num_results = ldap_count_entries(ds, res);
-        if (num_results == 0) {
-            error_msg = filter + " not found";
-            result = AD_OBJECT_NOT_FOUND;
-            break;
-        }
-
-        map < string, vector<string> > valuesmap;
-
-        for ( entry = ldap_first_entry(ds, res);
-              entry != NULL;
-              entry = ldap_next_entry(ds, entry) ) {
-            dn = ldap_get_dn(ds, entry);
-            valuesmap = _getvalues(entry);
-            search_result[dn] = valuesmap;
-            ldap_memfree(dn);
         }
 
     } while (morepages);
