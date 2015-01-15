@@ -640,7 +640,7 @@ vector <string> adclient::getObjectAttribute(string object, string attribute) {
         return attrs.at(attribute);
     }
     catch (const std::out_of_range&) {
-        return vector<string>();
+        throw ADSearchException("No such attribute '" + attribute + "' in '" + object + "'", AD_ATTRIBUTE_ENTRY_NOT_FOUND);
     }
 }
 
