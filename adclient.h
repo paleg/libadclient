@@ -72,6 +72,7 @@ public:
       void DeleteDN(string dn);
       void CreateOU(string ou);
       void EnableUser(string user);
+      void UnLockUser(string user);
 
       void setUserPassword(string user, string password);
       void setUserDialinAllowed(string user);
@@ -88,7 +89,6 @@ public:
       void setUserCompany(string user, string company);
       void setUserPhone(string user, string phone);
       void setUserDescription(string user, string descr);
-      void UnlockUser(string user);
 
       string          getObjectDN(string object);
       string          getUserDisplayName(string user);

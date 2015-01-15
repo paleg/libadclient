@@ -986,6 +986,10 @@ void adclient::EnableUser(string user) {
     }
 }
 
+void adclient::UnLockUser(string user) {
+    mod_replace(user, "lockoutTime", "0");
+}
+
 void adclient::setUserDescription(string user, string descr) {
     mod_replace(user, "description", descr);
 }
@@ -1040,10 +1044,6 @@ void adclient::setUserDepartment(string user, string department) {
 
 void adclient::setUserCompany(string user, string company) {
     mod_replace(user, "company", company);
-}
-
-void adclient::UnlockUser(string user) {
-    mod_replace(user, "lockoutTime", "0");
 }
 
 map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
