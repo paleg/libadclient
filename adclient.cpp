@@ -156,7 +156,7 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
         ldap_msgfree(res);
         throw ADSearchException(error_msg, AD_ATTRIBUTE_ENTRY_NOT_FOUND);
     }
-    for (int i=0; _values[i]!=NULL; i++) {
+    for (unsigned int i = 0; _values[i] != NULL; ++i) {
         value = *_values[i];
     }
     ldap_value_free_len(_values);
@@ -195,7 +195,7 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
     unsigned int i;
-    for (i=0; i<attributes.size(); i++) {
+    for (i = 0; i < attributes.size(); ++i) {
         attrs[i] = strdup(attributes[i].c_str());
     }
     attrs[i] = NULL;
@@ -556,7 +556,6 @@ vector <string> adclient::getUserGroups(string user) {
      ADBindException, ADSearchException (from called functions).
 */
     vector <string> groups, group_short;
-    unsigned int i;
     vector <string> groups_names;
 
     try {
@@ -570,7 +569,7 @@ vector <string> adclient::getUserGroups(string user) {
         throw;
     }
 
-    for (i=0; i<groups.size(); i++) {
+    for (unsigned int i = 0; i < groups.size(); ++i) {
         string temp_group = groups[i];
         group_short = getObjectAttribute(temp_group, "sAMAccountName");
         groups_names.push_back(group_short[0]);
@@ -586,11 +585,10 @@ vector <string> adclient::getUsersInGroup(string group) {
 */
     vector <string> users, user_short;
     vector <string> users_names;
-    unsigned int i;
 
     users = getObjectAttribute(group, "member");
 
-    for (i=0; i<users.size(); i++) {
+    for (unsigned int i = 0; i < users.size(); ++i) {
         user_short = getObjectAttribute(users[i], "sAMAccountName");
         users_names.push_back(user_short[0]);
     }
@@ -629,11 +627,10 @@ vector <string> adclient::getDialinUsers() {
     vector <string> users_dn;
     vector <string> user_short;
     vector <string> dialin_users;
-    unsigned int i;
  
     users_dn = searchDN("(msNPAllowDialin=TRUE)");
 
-    for (i=0; i<users_dn.size(); i++) {
+    for (unsigned int i = 0; i < users_dn.size(); ++i) {
         user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
         dialin_users.push_back(user_short[0]);
     }
@@ -675,11 +672,10 @@ vector <string> adclient::getAllOUs() {
 */
     vector <string> ou_dns;
     vector <string> OUs;
-    unsigned int i;
 
     ou_dns = searchDN("(objectclass=organizationalUnit)");
 
-    for (i=0; i<ou_dns.size(); i++) {
+    for (unsigned int i = 0; i < ou_dns.size(); ++i) {
         OUs.push_back(ou_dns[i]);
     }
     return OUs;
@@ -693,7 +689,6 @@ vector <string> adclient::getOUsInOU(string OU) {
     vector <string> ous_dns;
     vector <string> OUs;
     string _search_base;
-    unsigned int i;
     int _scope;
 
     _search_base = search_base;
@@ -707,7 +702,7 @@ vector <string> adclient::getOUsInOU(string OU) {
     search_base = _search_base;
     scope = _scope;
 
-    for (i=0; i<ous_dns.size(); i++) {
+    for (unsigned int i = 0; i < ous_dns.size(); ++i) {
         OUs.push_back(ous_dns[i]);
     }
     return OUs;
@@ -722,7 +717,6 @@ vector <string> adclient::getUsersInOU(string OU) {
     vector <string> user_short;
     string _search_base;
     vector <string> users;
-    unsigned int i;
     int _scope;
 
     _search_base = search_base;
@@ -743,7 +737,7 @@ vector <string> adclient::getUsersInOU(string OU) {
     search_base = _search_base;
     scope = _scope;
 
-    for (i=0; i<users_dn.size(); i++) {
+    for (unsigned int i = 0; i < users_dn.size(); ++i) {
         user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
         users.push_back(user_short[0]);
     }
@@ -760,7 +754,6 @@ vector <string> adclient::getUsersInOU_SubTree(string OU) {
     vector <string> user_short;
     string _search_base;
     vector <string> users;
-    unsigned int i;
 
     _search_base = search_base;
     search_base = OU;
@@ -776,7 +769,7 @@ vector <string> adclient::getUsersInOU_SubTree(string OU) {
 
     search_base = _search_base;
 
-    for (i=0; i<users_dn.size(); i++) {
+    for (unsigned int i = 0; i < users_dn.size(); ++i) {
         user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
         users.push_back(user_short[0]);
     }
@@ -792,7 +785,6 @@ vector <string> adclient::getGroups() {
     vector <string> groups_dn;
     vector <string> group_short;
     vector <string> groups;
-    unsigned int i;
 
     try {
         groups_dn = searchDN("(objectClass=group)");
@@ -801,7 +793,7 @@ vector <string> adclient::getGroups() {
          throw;
     }
 
-    for (i=0; i<groups_dn.size(); i++) {
+    for (unsigned int i = 0; i < groups_dn.size(); ++i) {
         group_short = getObjectAttribute(groups_dn[i], "sAMAccountName");
         groups.push_back(group_short[0]);
     }
@@ -817,7 +809,6 @@ vector <string> adclient::getUsers() {
     vector <string> users_dn;
     vector <string> user_short;
     vector <string> users;
-    unsigned int i;
 
     try {
         users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
@@ -826,7 +817,7 @@ vector <string> adclient::getUsers() {
         throw;
     }
 
-    for (i=0; i<users_dn.size(); i++) {
+    for (unsigned int i = 0; i < users_dn.size(); ++i) {
         try {
             user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
         }
@@ -1144,8 +1135,9 @@ void adclient::setUserPassword(string user, string password) {
 
     char unicode_password[(MAX_PASSWORD_LENGTH+2)*2];
     memset(unicode_password, 0, sizeof(unicode_password));
-    for(unsigned int i=0; i<quoted_password.size(); i++)
+    for (unsigned int i = 0; i < quoted_password.size(); ++i) {
         unicode_password[i*2] = quoted_password[i];
+    }
 
     LDAPMod *attrs[2];
     LDAPMod attr1;
