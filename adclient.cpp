@@ -265,14 +265,7 @@ void adclient::mod_add(string object, string attribute, string value) {
 */
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
+    string dn = getObjectDN(object);
 
     LDAPMod *attrs[2];
     LDAPMod attr;
@@ -308,14 +301,7 @@ void adclient::mod_delete(string object, string attribute, string value) {
 */
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
+    string dn = getObjectDN(object);
 
     LDAPMod *attrs[2];
     LDAPMod attr;
@@ -346,14 +332,7 @@ void adclient::mod_delete(string object, string attribute, string value) {
 void adclient::mod_replace(string object, string attribute, string value) {
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
+    string dn = getObjectDN(object);
 
     LDAPMod *attrs[2];
     LDAPMod attr;
@@ -605,14 +584,7 @@ void adclient::CreateUser(string cn, string container, string user_short) {
 void adclient::setUserPassword(string user, string password) {
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    string dn;
-
-    try {
-        dn = getObjectDN(user);
-    }
-    catch (ADSearchException) {
-        dn = user;
-    }
+    string dn = getObjectDN(user);
 
     string quoted_password = "\"" + password + "\"";
 
@@ -678,16 +650,7 @@ map <string, vector <string> > adclient::getObjectAttributes(string object, cons
   It returns map of attributes with vector of values, with all object attributes
   throws ADSearchException if no values were found, or if error occupied.
 */
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
-
-    cout << "getObjectAttributes dn = " << dn << endl;
+    string dn = getObjectDN(object);
 
     map < string, map < string, vector<string> > > search_result;
 
@@ -704,16 +667,9 @@ void adclient::groupAddUser(string group, string user) {
   Simple wrapper for mod_add to perform LDAP_MOD_ADD user operation only
          on member attribure of group_dn.
 */
-    string user_dn;
+    string dn = getObjectDN(user);
 
-    try {
-        user_dn = getObjectDN(user);
-    }
-    catch (ADSearchException) {
-        user_dn = user;
-    }
-
-    mod_add(group, "member", user_dn);
+    mod_add(group, "member", dn);
 }
 
 void adclient::groupRemoveUser(string group, string user) {
@@ -721,16 +677,9 @@ void adclient::groupRemoveUser(string group, string user) {
   Simple wrapper for mod_delete to perform LDAP_MOD_DELETE user operation only
          on member attribure of group.
 */
-    string user_dn;
+    string dn = getObjectDN(user);
 
-    try {
-        user_dn = getObjectDN(user);
-    }
-    catch (ADSearchException) {
-        user_dn = user;
-    }
-
-    mod_delete(group, "member", user_dn);
+    mod_delete(group, "member", dn);
 }
 
 
@@ -1141,14 +1090,7 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
 
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
+    string dn = getObjectDN(object);
 
     attrs[0] = strdup(attribute.c_str());
     attrs[1] = NULL;
