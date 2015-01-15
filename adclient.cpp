@@ -329,12 +329,22 @@ vector <string> adclient::getObjectAttribute(string object, string attribute) {
   It returns vector of strings with one entry for each attribute/value pair,
   throws ADSearchException if no values were found, or if error occupied.
 */
+    vector <string> attributes;
+    attributes.push_back(attribute);
+
     map < string, vector<string> > attrs;
-    attrs = getObjectAttributes(object);
+    attrs = getObjectAttributes(object, attributes);
+
     return attrs.at(attribute);
 }
 
 map <string, vector <string> > adclient::getObjectAttributes(string object) {
+    vector <string> attributes;
+    attributes.push_back("*");
+    return getObjectAttributes(object, attributes);
+}
+
+map <string, vector <string> > adclient::getObjectAttributes(string object, const vector<string> &attributes) {
 /*
   It returns map of attributes with vector of values, with all object attributes
   throws ADSearchException if no values were found, or if error occupied.
@@ -351,9 +361,6 @@ map <string, vector <string> > adclient::getObjectAttributes(string object) {
     cout << "getObjectAttributes dn = " << dn << endl;
 
     map < string, map < string, vector<string> > > search_result;
-
-    vector <string> attributes;
-    attributes.push_back("*");
 
     search_result = search(dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes);
 

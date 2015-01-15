@@ -116,6 +116,7 @@ public:
       map < string, map < string, vector<string> > > search(string OU, int scope, string filter, const vector <string> &attributes);
 
       map <string, vector <string> > getObjectAttributes(string object);
+      map <string, vector <string> > getObjectAttributes(string object, const vector<string> &attributes);
 private:
       string search_base;
       LDAP *ds;
