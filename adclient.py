@@ -100,8 +100,8 @@ class ADClient:
           else:
              return False
 
-      def ifObjectExists(self, object):
-          if (_adclient.ifObjectExists_adclient(self.obj, object) == 1):
+      def ifDNExists(self, dn, objectclass = '*'):
+          if (_adclient.ifDNExists_adclient(self.obj, dn, objectclass) == 1):
              return True
           else:
              return False

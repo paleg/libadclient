@@ -89,7 +89,9 @@ public:
 
       bool            ifDialinUser(string user);
       bool            ifUserDisabled(string user);
-      bool            ifObjectExists(string object);
+
+      bool            ifDNExists(string object, string objectclass);
+      bool            ifDNExists(string object);
 
       vector <string> getGroups();
       vector <string> getUsers();

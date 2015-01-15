@@ -262,13 +262,15 @@ static PyObject *wrapper_ifUserDisabled_adclient(PyObject *self, PyObject *args)
        }
 }
 
-static PyObject *wrapper_ifObjectExists_adclient(PyObject *self, PyObject *args) {
+static PyObject *wrapper_ifDNExists_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
-       char *object;
-       if (!PyArg_ParseTuple(args, "Os", &obj, &object)) return NULL;
+       char *dn;
+       char *objectclass;
+
+       if (!PyArg_ParseTuple(args, "Oss", &obj, &dn, &objectclass)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          return Py_BuildValue("i", ad->ifObjectExists(object));
+          return Py_BuildValue("i", ad->ifDNExists(dn, objectclass));
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -931,7 +933,7 @@ static PyMethodDef adclient_methods[] = {
        { "setUserCompany_adclient", wrapper_setUserCompany_adclient, 1 },
        { "setUserPhone_adclient", wrapper_setUserPhone_adclient, 1 },
        { "UnlockUser_adclient", wrapper_UnlockUser_adclient, 1 },
-       { "ifObjectExists_adclient", wrapper_ifObjectExists_adclient, 1 },
+       { "ifDNExists_adclient", wrapper_ifDNExists_adclient, 1 },
        { "get_error_num", wrapper_get_error_num, 1 },
        { NULL, NULL }
 };

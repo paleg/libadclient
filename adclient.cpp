@@ -457,7 +457,11 @@ vector < pair <string, vector <string> > >  adclient::getObjectAttributes(string
     return attributes;
 }
 
-bool adclient::ifObjectExists(string object) {
+bool adclient::ifDNExists(string dn) {
+    return ifDNExists(dn, "*");
+}
+
+bool adclient::ifDNExists(string dn, string objectclass) {
     int result;
     char *attrs[] = {"*", NULL};
     LDAPMessage *res;
@@ -466,24 +470,11 @@ bool adclient::ifObjectExists(string object) {
 
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
-
-    string filter = "(objectclass=*)";
+    string filter = "(objectclass=" + objectclass + ")";
     result = ldap_search_ext_s(ds, dn.c_str(), scope, filter.c_str(), attrs, attrsonly, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
     ldap_msgfree(res);
 
-    if (result != LDAP_SUCCESS) {
-	return false;
-    } else {
-	return true;
-    }
+    return (result == LDAP_SUCCESS);
 }
 
 void adclient::groupAddUser(string group, string user) {
@@ -985,7 +976,7 @@ void adclient::CreateOU(string ou) {
        sub_ou.erase(sub_ou.size() - 1, 1);
     domain.erase(domain.size() - 1, 1);
 
-    if ((sub_ou != "")&&(!ifObjectExists(sub_ou+","+domain))) {
+    if ((sub_ou != "")&&(!ifDNExists(sub_ou+","+domain))) {
        CreateOU(sub_ou+","+domain);
     }
 
@@ -1042,7 +1033,7 @@ void adclient::CreateUser(string cn, string container, string user_short) {
 
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    if (!ifObjectExists(container)) CreateOU(container);
+    if (!ifDNExists(container)) CreateOU(container);
 
     string dn = "CN=" + cn + "," + container;
 
