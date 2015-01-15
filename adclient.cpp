@@ -133,17 +133,17 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
     free(attrs[0]);
     if (result != LDAP_SUCCESS) {
         if (res != NULL) ldap_msgfree(res);
-        error_msg = "Error in ldap_search_ext_s for getObjectAttribute: ";
+        error_msg = "Error in ldap_search_ext_s for getBinaryObjectAttribute: ";
         error_msg.append(ldap_err2string(result));
         throw ADSearchException(error_msg, result);
     }
     num_entries=ldap_count_entries(ds, res);
     if (num_entries == 0) {
-        error_msg = "No entries found in getObjectAttribute for user " + dn;
+        error_msg = "No entries found in getBinaryObjectAttribute for user " + dn;
         ldap_msgfree(res);
         throw ADSearchException(error_msg, AD_OBJECT_NOT_FOUND);
     } else if (num_entries > 1) {
-        error_msg = "More than one entry found in getObjectAttribute for user " + dn;
+        error_msg = "More than one entry found in getBinaryObjectAttribute for user " + dn;
         ldap_msgfree(res);
         throw ADSearchException(error_msg, AD_OBJECT_NOT_FOUND);
     }
@@ -152,7 +152,7 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
     struct berval **_values;
     _values=ldap_get_values_len(ds, entry, attribute.c_str());
     if (_values == NULL) {
-       error_msg = "Error in ldap_get_values_len for getObjectAttribute: no values found for attribute " + attribute + " in object " + dn;
+       error_msg = "Error in ldap_get_values_len for getBinaryObjectAttribute: no values found for attribute " + attribute + " in object " + dn;
         ldap_msgfree(res);
         throw ADSearchException(error_msg, AD_ATTRIBUTE_ENTRY_NOT_FOUND);
     }
