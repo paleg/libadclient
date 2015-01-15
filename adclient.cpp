@@ -225,6 +225,38 @@ bool adclient::ifDNExists(string dn, string objectclass) {
     return (result == LDAP_SUCCESS);
 }
 
+vector <string> adclient::searchDN(string filter) {
+    map < string, map < string, vector<string> > > search_result;
+
+    vector <string> attributes;
+    attributes.push_back("1.1");
+
+    search_result = search(search_base.c_str(), scope, filter, attributes);
+
+    vector <string> result;
+
+    map < string, map < string, vector<string> > >::iterator res_it;
+    for ( res_it=search_result.begin() ; res_it != search_result.end(); res_it++ ) {
+        string dn = (*res_it).first;
+        result.push_back(dn);
+    }
+
+    return result;
+}
+
+string adclient::getObjectDN(string object) {
+/*
+  It returns string with DN of object_short.
+  Can throw ADSearchException (from called functions).
+*/
+    if (ifDNExists(object)) {
+        return object;
+    } else {
+        vector <string> dn = searchDN( "(sAMAccountName=" + object + ")" );
+        return dn[0];
+    }
+}
+
 void adclient::mod_add(string object, string attribute, string value) {
 /*
   It performs generic LDAP_MOD_ADD operation on dn.
@@ -621,25 +653,6 @@ void adclient::setUserPassword(string user, string password) {
     }
 }
 
-vector <string> adclient::searchDN(string filter) {
-    map < string, map < string, vector<string> > > search_result;
-
-    vector <string> attributes;
-    attributes.push_back("1.1");
-
-    search_result = search(search_base.c_str(), scope, filter, attributes);
-
-    vector <string> result;
-
-    map < string, map < string, vector<string> > >::iterator res_it;
-    for ( res_it=search_result.begin() ; res_it != search_result.end(); res_it++ ) {
-        string dn = (*res_it).first;
-        result.push_back(dn);
-    }
-
-    return result;
-}
-
 vector <string> adclient::getObjectAttribute(string object, string attribute) {
 /*
   It returns vector of strings with one entry for each attribute/value pair,
@@ -684,17 +697,6 @@ map <string, vector <string> > adclient::getObjectAttributes(string object, cons
     cout << attrs.size() << endl;
 
     return attrs;
-}
-
-string adclient::getObjectDN(string object_short) {
-/*
-  It returns string with DN of object_short.
-  Can throw ADSearchException (from called functions).
-*/
-    vector <string> dn;
-
-    dn = searchDN( "(sAMAccountName=" + object_short + ")" );
-    return dn[0];
 }
 
 void adclient::groupAddUser(string group, string user) {
