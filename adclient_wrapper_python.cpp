@@ -939,9 +939,12 @@ static PyMethodDef adclient_methods[] = {
 extern "C" void init_adclient() {
        PyObject *m;
        m = Py_InitModule("_adclient", adclient_methods);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
        ADBindError = PyErr_NewException("ADBindError.error", NULL, NULL);
        ADSearchError = PyErr_NewException("ADSearchError.error", NULL, NULL);
        ADOperationalError = PyErr_NewException("ADOperationalError.error", NULL, NULL);
+#pragma GCC diagnostic pop
        Py_INCREF(ADBindError);
        Py_INCREF(ADSearchError);
        Py_INCREF(ADOperationalError);
