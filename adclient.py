@@ -178,8 +178,8 @@ class ADClient:
       def CreateOU(self, ou):
           _adclient.CreateOU_adclient(self.obj, ou)
 
-      def UnLockUser(self, short_name):
-          _adclient.UnLockUser_adclient(self.obj, short_name)
+      def EnableUser(self, short_name):
+          _adclient.EnableUser_adclient(self.obj, short_name)
 
       def setUserDescription(self, dn, descr):
           _adclient.setUserDescription_adclient(self.obj, dn, descr)
@@ -226,8 +226,8 @@ class ADClient:
       def setUserPhone(self, user, phone):
           _adclient.setUserPhone_adclient(self.obj, user, phone)
 
-      def UnlockUser(self, user):
-          _adclient.UnlockUser_adclient(self.obj, user)
+      def UnLockUser(self, user):
+          _adclient.UnLockUser_adclient(self.obj, user)
 
       def get_error_num(self):
           return _adclient.get_error_num()

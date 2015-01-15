@@ -515,13 +515,13 @@ static PyObject *wrapper_CreateOU_adclient(PyObject *self, PyObject *args) {
        return Py_None;
 }
 
-static PyObject *wrapper_UnLockUser_adclient(PyObject *self, PyObject *args) {
+static PyObject *wrapper_EnableUser_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *user;
        if (!PyArg_ParseTuple(args, "Os", &obj, &user)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          ad->UnLockUser(user);
+          ad->EnableUser(user);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -867,13 +867,13 @@ static PyObject *wrapper_setUserPhone_adclient(PyObject *self, PyObject *args) {
        return Py_None;
 }
 
-static PyObject * wrapper_UnlockUser_adclient(PyObject *self, PyObject *args) {
+static PyObject * wrapper_UnLockUser_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *user;
        if (!PyArg_ParseTuple(args, "Os", &obj, &user)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          ad->UnlockUser(user);
+          ad->UnLockUser(user);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -914,7 +914,7 @@ static PyMethodDef adclient_methods[] = {
        { "CreateUser_adclient", wrapper_CreateUser_adclient, 1 },
        { "DeleteDN_adclient", wrapper_DeleteDN_adclient, 1 },
        { "CreateOU_adclient", wrapper_CreateOU_adclient, 1 },
-       { "UnLockUser_adclient", wrapper_UnLockUser_adclient, 1 },
+       { "EnableUser_adclient", wrapper_EnableUser_adclient, 1 },
        { "setUserDescription_adclient", wrapper_setUserDescription_adclient, 1 },
        { "setUserPassword_adclient", wrapper_setUserPassword_adclient, 1 },
        { "setUserDialinAllowed_adclient", wrapper_setUserDialinAllowed_adclient, 1 },
@@ -930,7 +930,7 @@ static PyMethodDef adclient_methods[] = {
        { "setUserDepartment_adclient", wrapper_setUserDepartment_adclient, 1 },
        { "setUserCompany_adclient", wrapper_setUserCompany_adclient, 1 },
        { "setUserPhone_adclient", wrapper_setUserPhone_adclient, 1 },
-       { "UnlockUser_adclient", wrapper_UnlockUser_adclient, 1 },
+       { "UnLockUser_adclient", wrapper_UnLockUser_adclient, 1 },
        { "ifDNExists_adclient", wrapper_ifDNExists_adclient, 1 },
        { "get_error_num", wrapper_get_error_num, 1 },
        { NULL, NULL }
