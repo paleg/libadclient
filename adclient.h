@@ -129,6 +129,7 @@ private:
       map < string, vector<string> > _getvalues(LDAPMessage *entry);
       string itos(int num);
       string dn2domain(string dn);
+      vector <string> DNsToShortNames(vector <string> &v);
 };
 
 string vector2string(const vector<string> &v) {

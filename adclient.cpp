@@ -699,25 +699,19 @@ vector <string> adclient::getUserGroups(string user) {
   It returns nothing if operation was successfull, can throw
      ADBindException, ADSearchException (from called functions).
 */
-    vector <string> groups, group_short;
-    vector <string> groups_names;
+    vector <string> groups;
 
     try {
         groups = getObjectAttribute(user, "memberOf");
     }
     catch (ADSearchException& ex) {
         if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
-            return groups_names;
+            return vector<string>();
         }
         throw;
     }
 
-    for (unsigned int i = 0; i < groups.size(); ++i) {
-        string temp_group = groups[i];
-        group_short = getObjectAttribute(temp_group, "sAMAccountName");
-        groups_names.push_back(group_short[0]);
-    }
-    return groups_names;
+    return DNsToShortNames(groups);
 }
 
 vector <string> adclient::getUsersInGroup(string group) {
@@ -726,24 +720,19 @@ vector <string> adclient::getUsersInGroup(string group) {
   It returns nothing if operation was successfull, can throw
      ADBindException, ADSearchException (from called functions).
 */
-    vector <string> users, user_short;
-    vector <string> users_names;
+    vector <string> users;
 
     try {
         users = getObjectAttribute(group, "member");
     }
     catch (ADSearchException& ex) {
         if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
-            return users_names;
+            return vector <string>();
         }
         throw;
     }
 
-    for (unsigned int i = 0; i < users.size(); ++i) {
-        user_short = getObjectAttribute(users[i], "sAMAccountName");
-        users_names.push_back(user_short[0]);
-    }
-    return users_names;
+    return DNsToShortNames(users);
 }
 
 bool adclient::ifDialinUser(string user) {
@@ -776,16 +765,10 @@ vector <string> adclient::getDialinUsers() {
   Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
-    vector <string> user_short;
-    vector <string> dialin_users;
  
     users_dn = searchDN("(msNPAllowDialin=TRUE)");
 
-    for (unsigned int i = 0; i < users_dn.size(); ++i) {
-        user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
-        dialin_users.push_back(user_short[0]);
-    }
-    return dialin_users;
+    return DNsToShortNames(users_dn);
 }
 
 string adclient::getUserDisplayName(string user) {
@@ -873,9 +856,7 @@ vector <string> adclient::getUsersInOU(string OU) {
   Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
-    vector <string> user_short;
     string _search_base;
-    vector <string> users;
     int _scope;
 
     _search_base = search_base;
@@ -896,12 +877,7 @@ vector <string> adclient::getUsersInOU(string OU) {
     search_base = _search_base;
     scope = _scope;
 
-    for (unsigned int i = 0; i < users_dn.size(); ++i) {
-        user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
-        users.push_back(user_short[0]);
-    }
-
-    return users;
+    return DNsToShortNames(users_dn);
 }
 
 // TODO: check if it is works
@@ -911,9 +887,7 @@ vector <string> adclient::getUsersInOU_SubTree(string OU) {
   Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
-    vector <string> user_short;
     string _search_base;
-    vector <string> users;
 
     _search_base = search_base;
     search_base = OU;
@@ -929,12 +903,7 @@ vector <string> adclient::getUsersInOU_SubTree(string OU) {
 
     search_base = _search_base;
 
-    for (unsigned int i = 0; i < users_dn.size(); ++i) {
-        user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
-        users.push_back(user_short[0]);
-    }
-
-    return users;
+    return DNsToShortNames(users_dn);
 }
 
 vector <string> adclient::getGroups() {
@@ -943,8 +912,6 @@ vector <string> adclient::getGroups() {
   Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> groups_dn;
-    vector <string> group_short;
-    vector <string> groups;
 
     try {
         groups_dn = searchDN("(objectClass=group)");
@@ -953,12 +920,7 @@ vector <string> adclient::getGroups() {
          throw;
     }
 
-    for (unsigned int i = 0; i < groups_dn.size(); ++i) {
-        group_short = getObjectAttribute(groups_dn[i], "sAMAccountName");
-        groups.push_back(group_short[0]);
-    }
-
-    return groups;
+    return DNsToShortNames(groups_dn);
 }
 
 vector <string> adclient::getUsers() {
@@ -967,8 +929,6 @@ vector <string> adclient::getUsers() {
   Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
-    vector <string> user_short;
-    vector <string> users;
 
     try {
         users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
@@ -977,20 +937,7 @@ vector <string> adclient::getUsers() {
         throw;
     }
 
-    for (unsigned int i = 0; i < users_dn.size(); ++i) {
-        try {
-            user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
-        }
-        catch (ADSearchException& ex) {
-            if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
-                continue;
-            }
-            throw;
-        }
-        users.push_back(user_short[0]);
-    }
-
-    return users;
+    return DNsToShortNames(users_dn);
 }
 
 void adclient::EnableUser(string user) {
@@ -1124,6 +1071,27 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
 
     ber_free(berptr, 0);
 
+    return result;
+}
+
+vector <string> adclient::DNsToShortNames(vector <string> &v) {
+    vector <string> result;
+
+    vector <string>::iterator it;
+    for (it = v.begin(); it != v.end(); ++it) {
+        vector <string> short_v;
+        try {
+            short_v = getObjectAttribute(*it, "sAMAccountName");
+        }
+        catch (ADSearchException& ex) {
+            if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+                result.push_back(*it);
+                continue;
+            }
+            throw;
+        }
+        result.push_back(short_v[0]);
+    }
     return result;
 }
 
