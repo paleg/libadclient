@@ -29,7 +29,11 @@
 #define AD_SCOPE_BASE LDAP_SCOPE_BASE
 #define AD_SCOPE_SUBTREE LDAP_SCOPE_SUBTREE
 
-using namespace std;
+using std::vector;
+using std::map;
+using std::string;
+using std::cout;
+using std::endl;
 
 class ADException {
 public:

@@ -1263,7 +1263,7 @@ void adclient::setUserPassword(string user, string password) {
 }
 
 string adclient::itos(int num) {
-    stringstream ss;
+    std::stringstream ss;
     ss << num;
     return(ss.str());
 }

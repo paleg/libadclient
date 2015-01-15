@@ -3,7 +3,6 @@
 */
 #include <Python.h>
 #include "adclient.h"
-using namespace std;
 
 static PyObject *ADBindError;
 static PyObject *ADSearchError;
