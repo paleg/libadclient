@@ -99,8 +99,7 @@ string adclient::getObjectDN(string object_short) {
 */
     vector <string> dn;
 
-    string filter = "(sAMAccountName=" + object_short + ")";
-    dn = searchDN(filter);
+    dn = searchDN( "(sAMAccountName=" + object_short + ")" );
     return dn[0];
 }
 
