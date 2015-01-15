@@ -463,7 +463,7 @@ bool adclient::ifDNExists(string dn) {
 
 bool adclient::ifDNExists(string dn, string objectclass) {
     int result;
-    char *attrs[] = {"*", NULL};
+    char *attrs[] = {"1.1", NULL};
     LDAPMessage *res;
     string error_msg;
     int attrsonly = 1;
