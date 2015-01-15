@@ -106,7 +106,7 @@ public:
       vector <string> getObjectAttribute(string object, string attribute);
 
       vector <string> searchDN(string filter);
-      map < string, map < string, vector<string> > > search(string OU, int scope, string filter, vector <string> attributes);
+      map < string, map < string, vector<string> > > search(string OU, int scope, string filter, const vector <string> &attributes);
 
       vector < pair <string, vector <string> > > getObjectAttributes(string object);
 private:
@@ -117,7 +117,7 @@ private:
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);
       void mod_replace(string object, string attribute, string value);
-      map < string, vector<string> > _getvalues(LDAPMessage *entry, vector <string> attributes);
+      map < string, vector<string> > _getvalues(LDAPMessage *entry, const vector <string> &attributes);
       string itos(int num);
       string dn2domain(string dn);
 };

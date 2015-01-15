@@ -164,7 +164,7 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
     return value;
 }
 
-map < string, map < string, vector<string> > > adclient::search(string OU, int scope, string filter, vector <string> attributes) {
+map < string, map < string, vector<string> > > adclient::search(string OU, int scope, string filter, const vector <string> &attributes) {
     int result, errcodep, num_results;
 
     char *attrs[50];
@@ -293,7 +293,7 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
     }
 }
 
-map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry, vector <string> attributes) {
+map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry, const vector <string> &attributes) {
     if ((ds == NULL) || (entry == NULL)) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
     map < string, vector<string> > result;
