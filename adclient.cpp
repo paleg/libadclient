@@ -208,7 +208,10 @@ bool adclient::ifDNExists(string dn) {
 
 bool adclient::ifDNExists(string dn, string objectclass) {
     int result;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
     char *attrs[] = {"1.1", NULL};
+#pragma GCC diagnostic pop
     LDAPMessage *res;
     string error_msg;
     int attrsonly = 1;
@@ -405,6 +408,8 @@ void adclient::CreateOU(string ou) {
     LDAPMod *attrs[3];
     LDAPMod attr1, attr2;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
     char *objectClass_values[] = {"organizationalUnit", NULL};
 
     attr1.mod_op = LDAP_MOD_ADD;
@@ -418,6 +423,7 @@ void adclient::CreateOU(string ou) {
     attr2.mod_op = LDAP_MOD_ADD;
     attr2.mod_type = "name";
     attr2.mod_values = name_values;
+#pragma GCC diagnostic pop
 
     attrs[0] = &attr1;
     attrs[1] = &attr2;
@@ -515,6 +521,8 @@ void adclient::CreateUser(string cn, string container, string user_short) {
 
     string dn = "CN=" + cn + "," + container;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
     char *objectClass_values[] = {"user", NULL};
     char *name_values[2];
     char *accountControl_values[] = {"66050", NULL};
@@ -543,6 +551,7 @@ void adclient::CreateUser(string cn, string container, string user_short) {
     attr4.mod_op = LDAP_MOD_ADD;
     attr4.mod_type = "userPrincipalName";
     attr4.mod_values = upn_values;
+#pragma GCC diagnostic pop
 
     attrs[0] = &attr1;
     attrs[1] = &attr2;
@@ -592,7 +601,10 @@ void adclient::setUserPassword(string user, string password) {
     bervalues[0] = &pw;
     bervalues[1] = NULL;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
     attr1.mod_type="unicodePwd";
+#pragma GCC diagnostic pop
     attr1.mod_op = LDAP_MOD_REPLACE|LDAP_MOD_BVALUES;
     attr1.mod_bvalues = bervalues;
 
