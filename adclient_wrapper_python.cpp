@@ -413,12 +413,10 @@ static PyObject *wrapper_getObjectAttribute_adclient(PyObject *self, PyObject *a
        return vector2list(result);
 }
 
-
 static PyObject *wrapper_getObjectAttributes_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *object_short;
-       unsigned int i,j;
-       vector < pair <string, vector <string> > > result;
+       map <string, vector <string> > result;
        if (!PyArg_ParseTuple(args, "Os", &obj, &object_short)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
@@ -437,15 +435,16 @@ static PyObject *wrapper_getObjectAttributes_adclient(PyObject *self, PyObject *
        PyObject *tuple;
        PyObject *temp_list;
 
-       for (i=0; i<result.size(); i++) {
-           attr = result[i].first;
-           values = result[i].second;
+       map<string, vector<string> >::iterator it;
+       for (it = result.begin(); it != result.end(); ++it) {
+           attr = it->first;
+           values = it->second;
            temp_list = PyList_New(values.size());
-           for (j=0; j<values.size(); j++) {
+           for (unsigned int j = 0; j < values.size(); ++j) {
                PyList_SET_ITEM(temp_list, j, PyString_FromString(values[j].c_str()));
            }
            tuple = Py_BuildValue("(s,N)", attr.c_str(), temp_list);
-           PyList_SET_ITEM(fin_list, i, tuple);
+           PyList_SET_ITEM(fin_list, std::distance(result.begin(), it), tuple);
        }
        return fin_list;
 }

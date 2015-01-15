@@ -277,7 +277,7 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
               entry != NULL;
               entry = ldap_next_entry(ds, entry) ) {
             dn = ldap_get_dn(ds, entry);
-            valuesmap = _getvalues(entry, attributes);
+            valuesmap = _getvalues(entry);
             search_result[dn] = valuesmap;
             ldap_memfree(dn);
         }
@@ -293,168 +293,74 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
     }
 }
 
-map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry, const vector <string> &attributes) {
+map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
     if ((ds == NULL) || (entry == NULL)) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
     map < string, vector<string> > result;
-    for (unsigned int i=0; i<attributes.size(); i++) {
-       vector <string> values;
-       struct berval **_values;
-       _values=ldap_get_values_len(ds, entry, attributes[i].c_str());
-       if (_values == NULL) {
-           /*error_msg = "Error in ldap_get_values_len for search_ext: no values found for attribute " + attributes[i] + " in object " + dn;
-           ldap_msgfree(res);
-           throw ADSearchException(error_msg, AD_ATTRIBUTE_ENTRY_NOT_FOUND);*/
-           ldap_value_free_len(_values);
-           continue;
-       }
-       struct berval data;
-       for (unsigned int j=0; _values[j]!=NULL; j++) {
-           data = *_values[j];
-           values.push_back(data.bv_val);
-       }
-       ldap_value_free_len(_values);
-       result[attributes[i]] = values;
-    }
-    return result;
-}
 
-vector <string> adclient::getObjectAttribute(string object, string attribute) {
-/* 
-  It returns vector of strings with one entry for each attribute/value pair,
-  throws ADSearchException if no values were found, or if error occupied.
-*/
-    int result, num_entries;
-    char *attrs[2];
-    LDAPMessage *res=NULL;
-    LDAPMessage *entry;
-
-    vector <string> values;
-    string error_msg;
-
-    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
-
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
-
-    attrs[0] = strdup(attribute.c_str());
-    attrs[1] = NULL;
-    result = ldap_search_ext_s(ds, dn.c_str(), LDAP_SCOPE_BASE, "(objectclass=*)", attrs, 0, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
-    free(attrs[0]);
-    if (result != LDAP_SUCCESS) {
-        if (res != NULL) ldap_msgfree(res);
-        error_msg = "Error in ldap_search_ext_s for getObjectAttribute: ";
-        error_msg.append(ldap_err2string(result));
-        throw ADSearchException(error_msg, result);
-    }
-
-    num_entries=ldap_count_entries(ds, res);
-    if (num_entries == 0) {
-        error_msg = "No entries found in getObjectAttribute for user " + dn;
-        ldap_msgfree(res);
-        throw ADSearchException(error_msg, AD_OBJECT_NOT_FOUND);
-    } else if (num_entries > 1) {
-        error_msg = "More than one entry found in getObjectAttribute for user " + dn;
-        ldap_msgfree(res);
-        throw ADSearchException(error_msg, AD_OBJECT_NOT_FOUND);
-    }
-
-    entry=ldap_first_entry(ds, res);
-    struct berval **_values;
-    _values=ldap_get_values_len(ds, entry, attribute.c_str());
-    if (_values == NULL) {
-        error_msg = "Error in ldap_get_values_len for getObjectAttribute: no values found for attribute " + attribute + " in object " + dn;
-        ldap_msgfree(res);
-        throw ADSearchException(error_msg, AD_ATTRIBUTE_ENTRY_NOT_FOUND);
-    }
-    struct berval data;
-    for (int i=0; _values[i]!=NULL; i++) {
-        data = *_values[i];
-        values.push_back(data.bv_val);
-    }
-    ldap_value_free_len(_values);
-    ldap_msgfree(res);
-    return values;
-}
-
-vector < pair <string, vector <string> > >  adclient::getObjectAttributes(string object) {
-/*
-  It returns vector of pair's: attribute - vector of values, with all object attributes
-  throws ADSearchException if no values were found, or if error occupied.
-*/
-    int result, num_results, i;
-    char * attrs[] = {"*", NULL};
-    LDAPMessage *res;
-    LDAPMessage *entry;
-    string error_msg;
-    int attrsonly = 0;
-    vector < pair < string, vector <string> > > attributes;
-    vector <string> temp;
     BerElement *berptr;
-    char *next;
 
-    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
-
-    string dn;
-
-    try {
-        dn = getObjectDN(object);
-    }
-    catch (ADSearchException) {
-        dn = object;
-    }
-
-    string filter = "(objectclass=*)";
-    result = ldap_search_ext_s(ds, dn.c_str(), scope, filter.c_str(), attrs, attrsonly, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
-    if (result != LDAP_SUCCESS) {
-        error_msg = "Error in ldap_search_ext_s: ";
-        error_msg.append(ldap_err2string(result));
-        throw ADSearchException(error_msg, result);
-    }
-
-    num_results = ldap_count_entries(ds, res);
-    if (num_results == 0) {
-        ldap_msgfree(res);
-        error_msg = filter + " not found";
-        throw ADSearchException(error_msg, AD_OBJECT_NOT_FOUND);
-    }
-
-    entry = ldap_first_entry(ds, res);
-
-    next = ldap_first_attribute(ds, entry, &berptr);
     struct berval **values;
     struct berval data;
-    values = ldap_get_values_len(ds, entry, next);
-    for (i=0; values[i] != NULL; i++) {
-        data = *values[i];
-        temp.push_back(data.bv_val);
-    }
-    attributes.push_back(make_pair(next, temp));
-    temp.clear();
-    ldap_memfree(next);
-    ldap_value_free_len(values);
 
-    while ((next = ldap_next_attribute(ds, entry, berptr)) != NULL) {
+    for ( char *next = ldap_first_attribute(ds, entry, &berptr);
+          next != NULL;
+          next = ldap_next_attribute(ds, entry, berptr) ) {
+
+        vector <string> temp;
         values = ldap_get_values_len(ds, entry, next);
-        for (i=0; values[i] != NULL; i++) {
+        for (unsigned int i = 0; values[i] != NULL; ++i) {
             data = *values[i];
             temp.push_back(data.bv_val);
         }
-        attributes.push_back(make_pair(next, temp));
-        temp.clear();
+        cout << "attribute - " << next << endl;
+        result[next] = temp;
         ldap_memfree(next);
         ldap_value_free_len(values);
     }
 
     ber_free(berptr, 0);
-    ldap_msgfree(res);
-    return attributes;
+
+    return result;
+}
+
+vector <string> adclient::getObjectAttribute(string object, string attribute) {
+/*
+  It returns vector of strings with one entry for each attribute/value pair,
+  throws ADSearchException if no values were found, or if error occupied.
+*/
+    map < string, vector<string> > attrs;
+    attrs = getObjectAttributes(object);
+    return attrs.at(attribute);
+}
+
+map <string, vector <string> > adclient::getObjectAttributes(string object) {
+/*
+  It returns map of attributes with vector of values, with all object attributes
+  throws ADSearchException if no values were found, or if error occupied.
+*/
+    string dn;
+
+    try {
+        dn = getObjectDN(object);
+    }
+    catch (ADSearchException) {
+        dn = object;
+    }
+
+    cout << "getObjectAttributes dn = " << dn << endl;
+
+    map < string, map < string, vector<string> > > search_result;
+
+    vector <string> attributes;
+    attributes.push_back("*");
+
+    search_result = search(dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes);
+
+    map < string, vector<string> > attrs = search_result.at(dn);
+    cout << attrs.size() << endl;
+
+    return attrs;
 }
 
 bool adclient::ifDNExists(string dn) {
