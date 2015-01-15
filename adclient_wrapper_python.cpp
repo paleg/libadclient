@@ -58,7 +58,7 @@ static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
        char *ou, *filter;
        PyObject * listObj;
        PyObject * strObj;
-       int numLines;
+       unsigned int numLines;
        int scope;
 
        map < string, map < string, vector<string> > > res;
