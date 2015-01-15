@@ -18,6 +18,7 @@
 #include <sstream>
 #include <iostream>
 #include <iterator>     // std::distance
+#include <stdexcept>    // std::out_of_range
 
 #define AD_SUCCESS 1
 #define AD_LDAP_CONNECTION_ERROR 2
@@ -89,7 +90,7 @@ public:
       void setUserDescription(string user, string descr);
       void UnlockUser(string user);
 
-      string          getObjectDN(string object_short);
+      string          getObjectDN(string object);
       string          getUserDisplayName(string user);
 
       bool            ifDialinUser(string user);

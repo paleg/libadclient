@@ -636,7 +636,12 @@ vector <string> adclient::getObjectAttribute(string object, string attribute) {
     map < string, vector<string> > attrs;
     attrs = getObjectAttributes(object, attributes);
 
-    return attrs.at(attribute);
+    try {
+        return attrs.at(attribute);
+    }
+    catch (const std::out_of_range&) {
+        return vector<string>();
+    }
 }
 
 map <string, vector <string> > adclient::getObjectAttributes(string object) {
@@ -656,8 +661,13 @@ map <string, vector <string> > adclient::getObjectAttributes(string object, cons
 
     search_result = search(dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes);
 
-    map < string, vector<string> > attrs = search_result.at(dn);
-    cout << attrs.size() << endl;
+    map < string, vector<string> > attrs;
+    try {
+        attrs = search_result.at(dn);
+    }
+    catch (const std::out_of_range&) {
+        attrs = map < string,vector<string> >();
+    }
 
     return attrs;
 }
@@ -1058,7 +1068,6 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
             data = *values[i];
             temp.push_back(data.bv_val);
         }
-        cout << "attribute - " << next << endl;
         result[next] = temp;
         ldap_memfree(next);
         ldap_value_free_len(values);
