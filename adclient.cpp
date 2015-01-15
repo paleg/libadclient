@@ -705,7 +705,6 @@ vector <string> adclient::getUserGroups(string user) {
     try {
         groups = getObjectAttribute(user, "memberOf");
     }
-    // TODO: Check
     catch (ADSearchException& ex) {
         if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
             return groups_names;
@@ -730,7 +729,15 @@ vector <string> adclient::getUsersInGroup(string group) {
     vector <string> users, user_short;
     vector <string> users_names;
 
-    users = getObjectAttribute(group, "member");
+    try {
+        users = getObjectAttribute(group, "member");
+    }
+    catch (ADSearchException& ex) {
+        if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+            return users_names;
+        }
+        throw;
+    }
 
     for (unsigned int i = 0; i < users.size(); ++i) {
         user_short = getObjectAttribute(users[i], "sAMAccountName");
@@ -786,8 +793,16 @@ string adclient::getUserDisplayName(string user) {
   It returns string with DisplayName of user.
   Can throw ADSearchException (from called functions).
 */
-    vector <string> name = getObjectAttribute(user, "DisplayName");
-
+    vector <string> name;
+    try {
+        name = getObjectAttribute(user, "displayName");
+    }
+    catch (ADSearchException& ex) {
+        if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+            return "";
+        }
+        throw;
+    }
     return name[0];
 }
 
@@ -965,8 +980,11 @@ vector <string> adclient::getUsers() {
         try {
             user_short = getObjectAttribute(users_dn[i], "sAMAccountName");
         }
-        catch (ADSearchException) {
-            continue;
+        catch (ADSearchException& ex) {
+            if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+                continue;
+            }
+            throw;
         }
         users.push_back(user_short[0]);
     }
