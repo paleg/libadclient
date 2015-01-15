@@ -974,9 +974,7 @@ vector <string> adclient::getUsers() {
     return users;
 }
 
-void adclient::UnLockUser(string user) {
-    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
-
+void adclient::EnableUser(string user) {
     vector <string> flags = getObjectAttribute(user, "userAccountControl");
 
     int iflags = atoi(flags[0].c_str());

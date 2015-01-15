@@ -71,7 +71,7 @@ public:
       void CreateUser(string cn, string container, string user_short);
       void DeleteDN(string dn);
       void CreateOU(string ou);
-      void UnLockUser(string user);
+      void EnableUser(string user);
 
       void setUserPassword(string user, string password);
       void setUserDialinAllowed(string user);
