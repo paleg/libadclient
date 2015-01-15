@@ -904,6 +904,7 @@ vector <string> adclient::getUsersInOU(string OU) {
     return users;
 }
 
+// TODO: check if it is works
 vector <string> adclient::getUsersInOU_SubTree(string OU) {
 /*
   It returns vector of strings with all users in OU and subOUs.
@@ -1116,6 +1117,7 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
             temp.push_back(data.bv_val);
         }
         result[next] = temp;
+        //cout << "_getvalues['" << next << "'] = '" << vector2string(temp) << "'" << endl;
         ldap_memfree(next);
         ldap_value_free_len(values);
     }

@@ -130,3 +130,12 @@ private:
       string itos(int num);
       string dn2domain(string dn);
 };
+
+string vector2string(const vector<string> &v) {
+    std::stringstream ss;
+    for(size_t i = 0; i < v.size(); ++i) {
+        if (i != 0) ss << ",";
+        ss << v[i];
+    }
+    return ss.str();
+}
