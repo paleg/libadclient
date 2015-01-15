@@ -1046,6 +1046,33 @@ void adclient::setUserCompany(string user, string company) {
     mod_replace(user, "company", company);
 }
 
+/*
+AD can set following limit (http://support.microsoft.com/kb/315071/en-us):
+ MaxValRange - This value controls the number of values that are returned
+   for an attribute of an object, independent of how many attributes that
+   object has, or of how many objects were in the search result. If an
+   attribute has more than the number of values that are specified by the
+   MaxValRange value, you must use value range controls in LDAP to retrieve
+   values that exceed the MaxValRange value. MaxValueRange controls the
+   number of values that are returned on a single attribute on a single object.
+
+OpenLDAP does not support ranged controls for values:
+  https://www.mail-archive.com/openldap-its@openldap.org/msg00962.html
+
+So the only way is it increase MaxValRange in DC:
+ Ntdsutil.exe
+   LDAP policies
+     connections
+       connect to server "DNS name of server"
+       q
+     Show Values
+     Set MaxValRange to 10000
+     Show Values
+     Commit Changes
+     Show Values
+     q
+   q
+*/
 map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
     if ((ds == NULL) || (entry == NULL)) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
@@ -1062,6 +1089,10 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
 
         vector <string> temp;
         values = ldap_get_values_len(ds, entry, next);
+        if (values == NULL) {
+            string error = "Error in ldap_get_values_len for _getvalues: no values found";
+            throw ADSearchException(error, AD_ATTRIBUTE_ENTRY_NOT_FOUND);
+        }
         for (unsigned int i = 0; values[i] != NULL; ++i) {
             data = *values[i];
             temp.push_back(data.bv_val);
