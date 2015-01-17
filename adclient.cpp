@@ -39,6 +39,8 @@ void adclient::login(string uri, string binddn, string bindpw, string _search_ba
     result = ldap_initialize(&ds, uri.c_str());
 #elif defined SUNLDAP
     result = ldapssl_init(uri.c_str(), LDAPS_PORT, 1);
+#else
+    result = 255;
 #endif
     if (result != LDAP_SUCCESS) {
         error_msg = "Error in ldap_initialize to " + uri + ": ";
@@ -74,7 +76,7 @@ void adclient::login(string uri, string binddn, string bindpw, string _search_ba
 }
 
 map < string, map < string, vector<string> > > adclient::search(string OU, int scope, string filter, const vector <string> &attributes) {
-    int result, errcodep, num_results;
+    int result, errcodep;
 
     char *attrs[50];
     int attrsonly = 0;
@@ -129,7 +131,7 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
         ldap_control_free(pagecontrol);
         pagecontrol = NULL;
 
-        num_results = ldap_count_entries(ds, res);
+        int num_results = ldap_count_entries(ds, res);
         if (num_results == 0) {
             error_msg = filter + " not found";
             result = AD_OBJECT_NOT_FOUND;
@@ -236,7 +238,7 @@ vector <string> adclient::searchDN(string filter) {
     vector <string> result;
 
     map < string, map < string, vector<string> > >::iterator res_it;
-    for ( res_it=search_result.begin() ; res_it != search_result.end(); res_it++ ) {
+    for ( res_it=search_result.begin() ; res_it != search_result.end(); ++res_it ) {
         string dn = (*res_it).first;
         result.push_back(dn);
     }
@@ -519,6 +521,10 @@ string adclient::dn2domain(string dn) {
     domain.erase(domain.size()-1,1);
     ldap_value_free(dns);
     return domain;
+}
+#else
+string adclient::dn2domain(string dn) {
+    throw ADOperationalException("Don't know how to do dn2domain", 255);
 }
 #endif
 
@@ -1046,7 +1052,6 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
 
     BerElement *berptr;
 
-    struct berval **values;
     struct berval data;
 
     for ( char *next = ldap_first_attribute(ds, entry, &berptr);
@@ -1054,7 +1059,7 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
           next = ldap_next_attribute(ds, entry, berptr) ) {
 
         vector <string> temp;
-        values = ldap_get_values_len(ds, entry, next);
+        struct berval **values = ldap_get_values_len(ds, entry, next);
         if (values == NULL) {
             string error = "Error in ldap_get_values_len for _getvalues: no values found";
             throw ADSearchException(error, AD_ATTRIBUTE_ENTRY_NOT_FOUND);

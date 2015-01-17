@@ -57,7 +57,6 @@ static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *ou, *filter;
        PyObject * listObj;
-       PyObject * strObj;
        unsigned int numLines;
        int scope;
 
@@ -70,7 +69,7 @@ static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
        vector <string> attrs;
 
        for (unsigned int i=0; i<numLines; i++) {
-          strObj = PyList_GetItem(listObj, i);
+          PyObject *strObj = PyList_GetItem(listObj, i);
           string item = PyString_AsString(strObj);
           attrs.push_back(item);
        }
@@ -87,12 +86,12 @@ static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
 
        PyObject *res_dict = PyDict_New();
        map < string, map < string, vector<string> > >::iterator res_it;
-       for ( res_it=res.begin() ; res_it != res.end(); res_it++ ) {
+       for ( res_it=res.begin() ; res_it != res.end(); ++res_it ) {
            PyObject *attrs_dict = PyDict_New();
            string dn = (*res_it).first;
            map < string, vector<string> > attrs = (*res_it).second;
            map < string, vector<string> >::iterator attrs_it;
-           for ( attrs_it=attrs.begin() ; attrs_it != attrs.end(); attrs_it++ ) {
+           for ( attrs_it=attrs.begin() ; attrs_it != attrs.end(); ++attrs_it ) {
                string attribute = (*attrs_it).first;
                vector<string> values_v = (*attrs_it).second;
                PyObject *values_list = vector2list(values_v);
@@ -432,18 +431,16 @@ static PyObject *wrapper_getObjectAttributes_adclient(PyObject *self, PyObject *
        vector <string> values;
 
        PyObject *fin_list = PyList_New(result.size());
-       PyObject *tuple;
-       PyObject *temp_list;
 
        map<string, vector<string> >::iterator it;
        for (it = result.begin(); it != result.end(); ++it) {
            attr = it->first;
            values = it->second;
-           temp_list = PyList_New(values.size());
+           PyObject *temp_list = PyList_New(values.size());
            for (unsigned int j = 0; j < values.size(); ++j) {
                PyList_SET_ITEM(temp_list, j, PyString_FromString(values[j].c_str()));
            }
-           tuple = Py_BuildValue("(s,N)", attr.c_str(), temp_list);
+           PyObject *tuple = Py_BuildValue("(s,N)", attr.c_str(), temp_list);
            PyList_SET_ITEM(fin_list, std::distance(result.begin(), it), tuple);
        }
        return fin_list;
