@@ -193,13 +193,21 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
             morepages = false;
         }
 
+        ldap_msgfree(res);
     } while (morepages);
 
-    ldap_msgfree(res);
+    for (i = 0; i < attributes.size(); ++i) {
+        free(attrs[i]);
+    }
+
+    if (cookie != NULL) {
+        ber_bvfree(cookie);
+    }
 
     if (error_msg.empty()) {
         return search_result;
     } else {
+        ldap_msgfree(res);
         throw ADSearchException(error_msg, result);
     }
 }
