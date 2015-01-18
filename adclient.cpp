@@ -855,7 +855,7 @@ Account-Expires attribute - http://msdn.microsoft.com/en-us/library/windows/desk
 ms-DS-User-Account-Control-Computed attribute - http://msdn.microsoft.com/en-us/library/ms677840(v=vs.85).aspx
 UserAccountControl - http://support.microsoft.com/kb/305144/en-us
 */
-map <string, bool> adclient::getUsersControls(string user) {
+map <string, bool> adclient::getUserControls(string user) {
     vector <string> attrs;
     attrs.push_back("userAccountControl");
     attrs.push_back("msDS-User-Account-Control-Computed");
@@ -886,30 +886,30 @@ map <string, bool> adclient::getUsersControls(string user) {
     return controls;
 }
 
-bool adclient::getUsersControl(string user, string control) {
+bool adclient::getUserControl(string user, string control) {
     map <string, bool> controls;
-    controls = getUsersControls(user);
+    controls = getUserControls(user);
     return controls[control];
 }
 
 bool adclient::ifUserExpired(string user) {
-    return getUsersControl(user, "expired");
+    return getUserControl(user, "expired");
 }
 
 bool adclient::ifUserLocked(string user) {
-    return getUsersControl(user, "locked");
+    return getUserControl(user, "locked");
 }
 
 bool adclient::ifUserDisabled(string user) {
-    return getUsersControl(user, "disabled");
+    return getUserControl(user, "disabled");
 }
 
 bool adclient::ifUserMustChangePassword(string user) {
-    return getUsersControl(user, "mustChangePassword");
+    return getUserControl(user, "mustChangePassword");
 }
 
 bool adclient::ifUserDontExpirePassword(string user) {
-    return getUsersControl(user, "dontExpirePassword");
+    return getUserControl(user, "dontExpirePassword");
 }
 
 vector <string> adclient::getAllOUs() {

@@ -97,9 +97,9 @@ public:
       void setUserPhone(string user, string phone);
       void setUserDescription(string user, string descr);
 
-      map <string, bool>    getUsersControls(string user);
+      map <string, bool>    getUserControls(string user);
 
-      bool                  getUsersControl(string user, string control);
+      bool                  getUserControl(string user, string control);
 
       bool                  ifUserExpired(string user);
       bool                  ifUserLocked(string user);
