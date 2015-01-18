@@ -578,6 +578,21 @@ static PyObject *wrapper_setUserPassword_adclient(PyObject *self, PyObject *args
        return Py_None;
 }
 
+static PyObject *wrapper_checkUserPassword_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *user, *password;
+       if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &password)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          return Py_BuildValue("N", PyBool_FromLong(ad->checkUserPassword(user, password)));
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+}
+
 static PyObject *wrapper_setUserDialinAllowed_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *user;
@@ -914,6 +929,7 @@ static PyMethodDef adclient_methods[] = {
        { "EnableUser_adclient", wrapper_EnableUser_adclient, 1 },
        { "setUserDescription_adclient", wrapper_setUserDescription_adclient, 1 },
        { "setUserPassword_adclient", wrapper_setUserPassword_adclient, 1 },
+       { "checkUserPassword_adclient", wrapper_checkUserPassword_adclient, 1 },
        { "setUserDialinAllowed_adclient", wrapper_setUserDialinAllowed_adclient, 1 },
        { "setUserDialinDisabled_adclient", wrapper_setUserDialinDisabled_adclient, 1 },
        { "setUserSN_adclient", wrapper_setUserSN_adclient, 1 },

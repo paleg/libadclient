@@ -67,6 +67,7 @@ public:
       ~adclient();
 
       void login(string uri, string binddn, string bindpw, string _search_base);
+      void login(string uri, string binddn, string bindpw, string _search_base, LDAP **ds);
 
       void groupAddUser(string group, string user);
       void groupRemoveUser(string group, string user);
@@ -77,6 +78,7 @@ public:
       void UnLockUser(string user);
 
       void setUserPassword(string user, string password);
+      bool checkUserPassword(string user, string password);
       void setUserDialinAllowed(string user);
       void setUserDialinDisabled(string user);
       void setUserSN(string user, string sn);
@@ -130,6 +132,7 @@ public:
       map <string, vector <string> > getObjectAttributes(string object);
       map <string, vector <string> > getObjectAttributes(string object, const vector<string> &attributes);
 private:
+      string uri;
       string search_base;
       LDAP *ds;
       int scope;

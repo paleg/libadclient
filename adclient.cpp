@@ -14,15 +14,21 @@ adclient::~adclient() {
   Destructor, to automaticaly free initial values allocated at login().
 */
     if (ds != NULL)
-    ldap_unbind_ext(ds, NULL, NULL);
+        ldap_unbind_ext(ds, NULL, NULL);
 }
 
-void adclient::login(string uri, string binddn, string bindpw, string _search_base) {
+void adclient::login(string _uri, string binddn, string bindpw, string _search_base) {
+    login(_uri, binddn, bindpw, _search_base, &ds);
+}
+
+void adclient::login(string _uri, string binddn, string bindpw, string _search_base, LDAP **ds) {
 /*
   To set various LDAP options and bind to LDAP server.
   It set private pointer to LDAP connection identifier - ds.
   It returns nothing if operation was successfull, throws ADBindException otherwise.
 */
+    uri = _uri;
+
     int result, version, bindresult;
 
     struct berval cred;
@@ -36,7 +42,7 @@ void adclient::login(string uri, string binddn, string bindpw, string _search_ba
     search_base = _search_base;
 
 #if defined OPENLDAP
-    result = ldap_initialize(&ds, uri.c_str());
+    result = ldap_initialize(ds, uri.c_str());
 #elif defined SUNLDAP
     result = ldapssl_init(uri.c_str(), LDAPS_PORT, 1);
 #else
@@ -49,21 +55,21 @@ void adclient::login(string uri, string binddn, string bindpw, string _search_ba
     }
 
     version = LDAP_VERSION3;
-    result = ldap_set_option(ds, LDAP_OPT_PROTOCOL_VERSION, &version);
+    result = ldap_set_option(*ds, LDAP_OPT_PROTOCOL_VERSION, &version);
     if (result != LDAP_OPT_SUCCESS) {
         error_msg = "Error in ldap_set_option (protocol->v3): ";
         error_msg.append(ldap_err2string(result));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
-    result = ldap_set_option(ds, LDAP_OPT_REFERRALS, LDAP_OPT_OFF);
+    result = ldap_set_option(*ds, LDAP_OPT_REFERRALS, LDAP_OPT_OFF);
     if (result != LDAP_OPT_SUCCESS) {
         error_msg = "Error in ldap_set_option (referrals->off): ";
         error_msg.append(ldap_err2string(result));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
-    bindresult = ldap_sasl_bind_s(ds, binddn.c_str(), NULL, &cred, NULL, NULL, &servcred);
+    bindresult = ldap_sasl_bind_s(*ds, binddn.c_str(), NULL, &cred, NULL, NULL, &servcred);
 
     memset(cred.bv_val, 0, cred.bv_len);
     free(cred.bv_val);
@@ -73,6 +79,23 @@ void adclient::login(string uri, string binddn, string bindpw, string _search_ba
         error_msg.append(ldap_err2string(bindresult));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
+}
+
+bool adclient::checkUserPassword(string user, string password) {
+    LDAP *ld;
+
+    string dn = getObjectDN(user);
+
+    bool result = true;
+    try {
+        login(uri, dn, password, search_base, &ld);
+    }
+    catch (ADBindException& ex) {
+        result = false;
+    }
+    if (ld != NULL)
+        ldap_unbind_ext(ld, NULL, NULL);
+    return result;
 }
 
 map < string, map < string, vector<string> > > adclient::search(string OU, int scope, string filter, const vector <string> &attributes) {

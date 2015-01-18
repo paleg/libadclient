@@ -187,6 +187,9 @@ class ADClient:
       def setUserPassword(self, dn, password):
           _adclient.setUserPassword_adclient(self.obj, dn, password)
 
+      def checkUserPassword(self, dn, password):
+          return _adclient.checkUserPassword_adclient(self.obj, dn, password)
+
       def setUserDialinAllowed(self, user):
           _adclient.setUserDialinAllowed_adclient(self.obj, user)
 
