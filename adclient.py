@@ -57,6 +57,14 @@ class ADClient:
           """
           return _adclient.getUsersInGroup_adclient(self.obj, group)
 
+      def getUserControls(self, user):
+          """ ADClient getUserControls function.
+                It returns map with "user" controls if operation was successfull,
+                   throws ADBindError, ADSearchError  - otherwise.
+          """
+          return _adclient.getUserControls_adclient(self.obj, user)
+
+
       def groupAddUser(self, group, user):
           """ ADClient groupAddUser function.
                 It adds "user" to Active Directory "group".

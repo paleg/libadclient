@@ -165,6 +165,30 @@ static PyObject *wrapper_getUsersInGroup_adclient(PyObject *self, PyObject *args
        return vector2list(result);
 }
 
+static PyObject *wrapper_getUserControls_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *user;
+       map <string, bool> result;
+       if (!PyArg_ParseTuple(args, "Os", &obj, &user)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+            result = ad->getUserControls(user);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       PyObject *res_dict = PyDict_New();
+       map <string, bool>::iterator it;
+       for (it = result.begin(); it != result.end(); ++it) {
+            if (PyDict_SetItemString(res_dict, (*it).first.c_str(), PyBool_FromLong((*it).second)) < 0)
+                 return NULL;
+       }
+
+       return res_dict;
+}
+
 static PyObject *wrapper_groupAddUser_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *group, *user;
@@ -920,6 +944,7 @@ static PyMethodDef adclient_methods[] = {
        { "search_adclient", wrapper_search_adclient, 1},
        { "getUserGroups_adclient", wrapper_getUserGroups_adclient, 1 },
        { "getUsersInGroup_adclient", wrapper_getUsersInGroup_adclient, 1},
+       { "getUserControls_adclient", wrapper_getUserControls_adclient, 1 },
        { "groupAddUser_adclient", wrapper_groupAddUser_adclient, 1 },
        { "groupRemoveUser_adclient", wrapper_groupRemoveUser_adclient, 1 },
        { "ifDialinUser_adclient", wrapper_ifDialinUser_adclient, 1 },
