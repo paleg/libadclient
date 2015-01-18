@@ -803,22 +803,67 @@ string adclient::getUserDisplayName(string user) {
     return name[0];
 }
 
-bool adclient::ifUserDisabled(string user) {
 /*
-  It returns true if userAccountControl flag of user contain ACCOUNTDISABLE property,
-             false - otherwise.
-  Can throw ADBindException, ADSearchException (from called functions).
+Pwd-Last-Set attribute - http://msdn.microsoft.com/en-us/library/windows/desktop/ms679430%28v=vs.85%29.aspx
+Account-Expires attribute - http://msdn.microsoft.com/en-us/library/windows/desktop/ms675098%28v=vs.85%29.aspx
+ms-DS-User-Account-Control-Computed attribute - http://msdn.microsoft.com/en-us/library/ms677840(v=vs.85).aspx
+UserAccountControl - http://support.microsoft.com/kb/305144/en-us
 */
-    vector <string> flags;
-    int iflags;
+map <string, bool> adclient::getUsersControls(string user) {
+    vector <string> attrs;
+    attrs.push_back("userAccountControl");
+    attrs.push_back("msDS-User-Account-Control-Computed");
+    attrs.push_back("pwdLastSet");
+    attrs.push_back("accountExpires");
 
-    flags = getObjectAttribute(user, "userAccountControl");
+    map <string, vector <string> > flags;
+    flags = getObjectAttributes(user, attrs);
 
-    iflags = atoi(flags[0].c_str());
+    int iflags1 = atoi(flags["userAccountControl"][0].c_str());
+    int iflags2 = atoi(flags["msDS-User-Account-Control-Computed"][0].c_str());
+    int iflags3 = atoi(flags["pwdLastSet"][0].c_str());
 
-    if (iflags&2) {
-        return true;
-    } else { return false; }
+    long long iflags4 = atoll(flags["accountExpires"][0].c_str());
+    time_t expires = FileTimeToPOSIX(iflags4);
+    time_t now = time(0);
+
+    map <string, bool> controls;
+
+    controls["disabled"] = (iflags1 & 2);
+    controls["locked"] = (iflags2 & 16);
+
+    controls["dontExpirePassword"] = (iflags1 & 65536);
+    controls["mustChangePassword"] = ((iflags3 == 0) and (not controls["dontExpirePassword"]));
+
+    controls["expired"] = (now > expires);
+
+    return controls;
+}
+
+bool adclient::getUsersControl(string user, string control) {
+    map <string, bool> controls;
+    controls = getUsersControls(user);
+    return controls[control];
+}
+
+bool adclient::ifUserExpired(string user) {
+    return getUsersControl(user, "expired");
+}
+
+bool adclient::ifUserLocked(string user) {
+    return getUsersControl(user, "locked");
+}
+
+bool adclient::ifUserDisabled(string user) {
+    return getUsersControl(user, "disabled");
+}
+
+bool adclient::ifUserMustChangePassword(string user) {
+    return getUsersControl(user, "mustChangePassword");
+}
+
+bool adclient::ifUserDontExpirePassword(string user) {
+    return getUsersControl(user, "dontExpirePassword");
 }
 
 vector <string> adclient::getAllOUs() {

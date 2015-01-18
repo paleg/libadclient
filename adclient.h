@@ -19,6 +19,8 @@
 #include <iostream>
 #include <iterator>     // std::distance
 #include <stdexcept>    // std::out_of_range
+#include <ctime>
+#include <limits>
 
 #define AD_SUCCESS 1
 #define AD_LDAP_CONNECTION_ERROR 2
@@ -90,11 +92,20 @@ public:
       void setUserPhone(string user, string phone);
       void setUserDescription(string user, string descr);
 
+      map <string, bool>    getUsersControls(string user);
+
+      bool                  getUsersControl(string user, string control);
+
+      bool                  ifUserExpired(string user);
+      bool                  ifUserLocked(string user);
+      bool                  ifUserDisabled(string user);
+      bool                  ifUserMustChangePassword(string user);
+      bool                  ifUserDontExpirePassword(string user);
+
       string          getObjectDN(string object);
       string          getUserDisplayName(string user);
 
       bool            ifDialinUser(string user);
-      bool            ifUserDisabled(string user);
 
       bool            ifDNExists(string object, string objectclass);
       bool            ifDNExists(string object);
@@ -139,4 +150,24 @@ string vector2string(const vector<string> &v) {
         ss << v[i];
     }
     return ss.str();
+}
+
+// ft is the number of 100-nanosecond intervals since January 1, 1601 (UTC)
+time_t FileTimeToPOSIX(long long ft) {
+    // never expired
+    if (ft == 0) {
+        ft = 9223372036854775807;
+    }
+
+    long long result;
+    // Between Jan 1, 1601 and Jan 1, 1970 there are 11644473600 seconds
+    // 100-nanoseconds = milliseconds * 10000 = seconds * 1000 * 10000
+    result = ft - 11644473600 * 1000 * 10000;
+    // convert back from 100-nanoseconds to seconds
+    result = result / 10000000;
+    if (result > std::numeric_limits<time_t>::max()) {
+        return std::numeric_limits<time_t>::max();
+    } else {
+        return result;
+    }
 }
