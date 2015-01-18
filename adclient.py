@@ -1,3 +1,5 @@
+import sys
+
 import _adclient
 from _adclient import *
 
@@ -14,7 +16,7 @@ class ADClient:
           """
           self.obj = _adclient.new_adclient()
 
-      def login(self, uri, binddn, bindpw, search_base):
+      def login(self, uries, binddn, bindpw, search_base):
           """ ADClient login function.
                 It binds to Active Directory uri (e.g. "ldap://example.org") 
                    as binddn (e.g. "administrator@example.org") identified by 
@@ -23,7 +25,13 @@ class ADClient:
                    It returns nothing if operation was successfull, 
                       throws ADBindError - otherwise.
           """
-          _adclient.login_adclient(self.obj, uri, binddn, bindpw, search_base)
+          if sys.version_info[0] == 3:
+             string_type = str
+          else:
+             string_type = basestring
+          if isinstance(uries, string_type):
+             uries = [uries]
+          _adclient.login_adclient(self.obj, uries, binddn, bindpw, search_base)
 
       def searchDN(self, filter):
           """ ADClient searchDN function.

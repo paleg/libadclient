@@ -67,7 +67,7 @@ public:
       ~adclient();
 
       void login(string uri, string binddn, string bindpw, string _search_base);
-      void login(string uri, string binddn, string bindpw, string _search_base, LDAP **ds);
+      void login(vector <string> uries, string binddn, string bindpw, string _search_base);
 
       void groupAddUser(string group, string user);
       void groupRemoveUser(string group, string user);
@@ -136,6 +136,8 @@ private:
       string search_base;
       LDAP *ds;
       int scope;
+
+      void login(string uri, string binddn, string bindpw, string _search_base, LDAP **ds);
 
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);

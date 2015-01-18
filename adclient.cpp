@@ -17,6 +17,28 @@ adclient::~adclient() {
         ldap_unbind_ext(ds, NULL, NULL);
 }
 
+void adclient::login(vector <string> uries, string binddn, string bindpw, string _search_base) {
+    vector <string>::iterator it;
+    for (it = uries.begin(); it != uries.end(); ++it) {
+        try {
+            login(*it, binddn, bindpw, _search_base, &ds);
+            return;
+        }
+        catch (ADBindException&) {
+            if (ds != NULL) {
+                ldap_unbind_ext(ds, NULL, NULL);
+                ds = NULL;
+            }
+
+            if (it != (uries.end() - 1)) {
+                continue;
+            } else {
+                throw;
+            }
+        }
+    }
+}
+
 void adclient::login(string _uri, string binddn, string bindpw, string _search_base) {
     login(_uri, binddn, bindpw, _search_base, &ds);
 }
@@ -27,8 +49,6 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
   It set private pointer to LDAP connection identifier - ds.
   It returns nothing if operation was successfull, throws ADBindException otherwise.
 */
-    uri = _uri;
-
     int result, version, bindresult;
 
     struct berval cred;
@@ -42,14 +62,14 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
     search_base = _search_base;
 
 #if defined OPENLDAP
-    result = ldap_initialize(ds, uri.c_str());
+    result = ldap_initialize(ds, _uri.c_str());
 #elif defined SUNLDAP
-    result = ldapssl_init(uri.c_str(), LDAPS_PORT, 1);
+    result = ldapssl_init(_uri.c_str(), LDAPS_PORT, 1);
 #else
     result = 255;
 #endif
     if (result != LDAP_SUCCESS) {
-        error_msg = "Error in ldap_initialize to " + uri + ": ";
+        error_msg = "Error in ldap_initialize to " + _uri + ": ";
         error_msg.append(ldap_err2string(result));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
@@ -75,10 +95,12 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
     free(cred.bv_val);
 
     if (bindresult != LDAP_SUCCESS) {
-        error_msg = "Error while ldap binding with " + binddn + " " + bindpw + ": ";
+        error_msg = "Error while ldap binding to " + _uri + " with " + binddn + " " + bindpw + ": ";
         error_msg.append(ldap_err2string(bindresult));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
+
+    uri = _uri;
 }
 
 bool adclient::checkUserPassword(string user, string password) {
@@ -93,8 +115,9 @@ bool adclient::checkUserPassword(string user, string password) {
     catch (ADBindException& ex) {
         result = false;
     }
-    if (ld != NULL)
+    if (ld != NULL) {
         ldap_unbind_ext(ld, NULL, NULL);
+    }
     return result;
 }
 
