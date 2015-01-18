@@ -5,6 +5,7 @@ Requirements: openldap or SunLDAP
 
 DESCRIPTION:
   This simple C++/Python classes can be used to manipulate Active Directory from c++ or Python programs.
+  
   This module reuses some code from adtool by Mike Dawson.
 
 INSTALL (*nix):
