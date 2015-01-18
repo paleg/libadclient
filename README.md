@@ -9,14 +9,16 @@ DESCRIPTION:
 
 INSTALL (*nix):
 
-note: you must have scons installed
+Note: you must have scons installed
 
   1. $ git clone https://github.com/paleg/libadclient.git
   2. $ cd libadclient
   3. $ scons install (to build/install c++ library)
   4. $ python setup.py install (to build/install python library)
 
-note: step 4 depends on step 3. So if your want to upgrade python module, you should upgrade c++ library first. 
+Note: step 4 depends on step 3. So if your want to upgrade python module, you should upgrade c++ library first. 
+
+Full list of supported methods can be found in [adclient.h](https://github.com/paleg/libadclient/blob/master/adclient.h) (for c++) and [adclient.py](https://github.com/paleg/libadclient/blob/master/adclient.py) (for python)
 
 USAGE SAMPLE (c++):
 ```
