@@ -1,3 +1,7 @@
+"""
+   Active Directory manipulation class wrapper for low level c++ class.
+"""
+
 import sys
 
 import _adclient
@@ -5,25 +9,27 @@ from _adclient import *
 
 class ADClient:
       """
-         Active Directory manipulation class wrapper for low level c++ class.
+        ADClient.login can throw ADBindError on errors.
+        all search functions can throw ADSearchError on errors.
+        all modify functions can throw both ADSearchError and ADOperationalError on errors.
+          text description will be in exception object
+          numeric code can be obtained from 'get_error_num' function
       """
+
       AD_SCOPE_BASE = 0
       AD_SCOPE_ONELEVEL = 1
       AD_SCOPE_SUBTREE = 2
 
       def __init__(self):
-          """ Returns a copy of adclient object.
-          """
           self.obj = _adclient.new_adclient()
 
       def login(self, uries, binddn, bindpw, search_base):
-          """ ADClient login function.
-                It binds to Active Directory uri (e.g. "ldap://example.org") 
+          """ It binds to Active Directory uries (e.g. "ldap://example.org") 
                    as binddn (e.g. "administrator@example.org") identified by 
                    bindpw (e.g. "password"). Search Base for every ldap search 
                    would be search_base (e.g. "dc=example,dc=org").
-                   It returns nothing if operation was successfull, 
-                      throws ADBindError - otherwise.
+                   It returns nothing if operation was successfull.
+                uries can be single string or list of strings
           """
           if sys.version_info[0] == 3:
              string_type = str
@@ -34,57 +40,46 @@ class ADClient:
           _adclient.login_adclient(self.obj, uries, binddn, bindpw, search_base)
 
       def searchDN(self, filter):
-          """ ADClient searchDN function.
+          """ It returns list with DNs found with 'filter'
           """
           return _adclient.searchDN_adclient(self.obj, filter)
 
       def search(self, ou, scope, filter, attributes):
-          """ ADClient search function.
+          """ General search function.
+                It returns dict with users found with 'filter' with specified 'attributes'.
           """
           return _adclient.search_adclient(self.obj, ou, scope, filter, attributes)
 
       def getUserGroups(self, user):
-          """ ADClient getUserGroups function.
-                It returns list with "user" groups if operation was successfull,
-                   throws ADBindError, ADSearchError  - otherwise.
+          """ It returns list with "user" groups if operation was successfull.
           """
           return _adclient.getUserGroups_adclient(self.obj, user)
 
       def getUsersInGroup(self, group):
-          """ ADClient getUsersInGroup function.
-                It returns list with members of Active Directory "group" if operation was successfull,
-                   throws ADBindError, ADSearchError  - otherwise.
+          """ It returns list with members of Active Directory "group" if operation was successfull.
           """
           return _adclient.getUsersInGroup_adclient(self.obj, group)
 
       def getUserControls(self, user):
-          """ ADClient getUserControls function.
-                It returns map with "user" controls if operation was successfull,
-                   throws ADBindError, ADSearchError  - otherwise.
+          """ It returns map with "user" controls ('disabled', 'locked', 'dontExpirePassword', 'mustChangePassword', 'expired').
           """
           return _adclient.getUserControls_adclient(self.obj, user)
 
 
       def groupAddUser(self, group, user):
-          """ ADClient groupAddUser function.
-                It adds "user" to Active Directory "group".
-                It returns nothing if operation was successfull, 
-                   throws ADBindError, ADSearchError, ADOperationalError - otherwise.
+          """  It adds "user" to Active Directory "group".
+               It returns nothing if operation was successfull.
           """
           _adclient.groupAddUser_adclient(self.obj, group, user)
 
       def groupRemoveUser(self, group, user):
-          """ ADClient groupRemoveUser function.
-                It removes "user" from Active Directory "group".
-                It returns nothing if operation was successfull, 
-                   throws ADBindError, ADSearchError, ADOperationalError - otherwise.
+          """ It removes "user" from Active Directory "group".
+              It returns nothing if operation was successfull.
           """
           _adclient.groupRemoveUser_adclient(self.obj, group, user)
 
       def ifDialinUser(self, user):
-          """ ADClient ifDialinUser function.
-                It returns True if msNPAllowDialin user attribute set to TRUE, False - otherwise.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns True if msNPAllowDialin user attribute set to TRUE, False - otherwise.
           """
           if (_adclient.ifDialinUser_adclient(self.obj, user) == 1):
              return True
@@ -92,24 +87,18 @@ class ADClient:
              return False
 
       def getDialinUsers(self):
-          """ ADClient getDialinUsers function.
-                It returns list of all users with msNPAllowDialin = TRUE.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list of all users with msNPAllowDialin = TRUE.
           """
           return _adclient.getDialinUsers_adclient(self.obj)
 
       def getObjectDN(self, user):
-          """ ADClient getObjectDN function.
-                It returns user DN by short name.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns user DN by short name.
           """
           return _adclient.getObjectDN_adclient(self.obj, user)
 
       def ifUserDisabled(self, user):
-          """ ADClient ifUserDisabled function.
-                It returns True if UserAccountControl flag contain ACCOUNTDISABLE property, 
-                   False - otherwise.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns True if UserAccountControl flag contain ACCOUNTDISABLE property, 
+                         False - otherwise.
           """
           return _adclient.ifUserDisabled_adclient(self.obj, user)
 
@@ -120,78 +109,68 @@ class ADClient:
           return _adclient.ifDNExists_adclient(self.obj, dn, objectclass)
 
       def getAllOUs(self):
-          """ ADClient getAllOUs function.
-                It returns list of all organizationalUnits in search_base.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list of all organizationalUnits in search_base.
           """
           return _adclient.getAllOUs_adclient(self.obj)
 
       def getUsersInOU(self, OU):
-          """ ADClient getUsersInOU function.
-                It returns list of all users in OU.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list of all users in OU.
           """
           return _adclient.getUsersInOU_adclient(self.obj, OU)
 
       def getUsersInOU_SubTree(self, OU):
-          """ ADClient getUsersInOU function.
-                It returns list of all users in OU.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list of all users in OU and subOUs.
           """
           return _adclient.getUsersInOU_SubTree_adclient(self.obj, OU)
 
       def getGroups(self):
-          """ ADClient getUsersInOU function.
-                It returns list of all users in OU.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list of all groups in Active Directory.
           """
           return _adclient.getGroups_adclient(self.obj)
 
       def getUsers(self):
-          """ ADClient getUsers function.
-                It returns list of all users in AD.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list of all users in Active Directory.
           """
           return _adclient.getUsers_adclient(self.obj)
 
       def getOUsInOU(self, OU):
-          """ ADClient getOUsInOU function.
-                It returns list of all OUs in OU.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list of all OUs in OU.
           """
           return _adclient.getOUsInOU_adclient(self.obj, OU)
 
       def getUserDisplayName(self, user):
-          """ ADClient getUserDisplayName function.
-                It returns string with user DisplayName property.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns string with user DisplayName property.
           """
           return _adclient.getUserDisplayName_adclient(self.obj, user)
 
       def getObjectAttribute(self, object, attribute):
-          """ ADClient getObjectAttribute function.
-                It returns string with attribute of object.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns list with values of object attribute.
           """
           return _adclient.getObjectAttribute_adclient(self.obj, object, attribute)
 
       def getObjectAttributes(self, object):
-          """ ADClient getObjectAttributes function.
-                It returns list of tuples (attribute, list_of_values) with all object attributes.
-                   Can throws ADBindError, ADSearchError on errors.
+          """ It returns map of all object attributes.
           """
           return _adclient.getObjectAttributes_adclient(self.obj, object)
 
       def CreateUser(self, cn, container, short_name):
+          """ It creates user with given common name and short name in given container.
+          """
           _adclient.CreateUser_adclient(self.obj, cn, container, short_name)
 
       def DeleteDN(self, dn):
+          """ It deletes given DN.
+          """
           _adclient.DeleteDN_adclient(self.obj, dn)
 
       def CreateOU(self, ou):
+          """ It creates given OU (with subOUs if needed).
+          """
           _adclient.CreateOU_adclient(self.obj, ou)
 
       def EnableUser(self, short_name):
+          """ It enables given user.
+          """
           _adclient.EnableUser_adclient(self.obj, short_name)
 
       def setUserDescription(self, dn, descr):
@@ -201,6 +180,7 @@ class ADClient:
           _adclient.setUserPassword_adclient(self.obj, dn, password)
 
       def checkUserPassword(self, dn, password):
+          """ It returns True of False depends on user credentials correctness. """
           return _adclient.checkUserPassword_adclient(self.obj, dn, password)
 
       def setUserDialinAllowed(self, user):
@@ -243,7 +223,11 @@ class ADClient:
           _adclient.setUserPhone_adclient(self.obj, user, phone)
 
       def UnLockUser(self, user):
+          """ It unlocks given user.
+          """
           _adclient.UnLockUser_adclient(self.obj, user)
 
       def get_error_num(self):
+          """ It returns int of last error occured
+          """
           return _adclient.get_error_num()

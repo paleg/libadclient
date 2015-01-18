@@ -1,5 +1,5 @@
 # libadclient
-Active Director client for c++ and python
+Active Directory client for c++ and python
 
 Requirements: openldap or SunLDAP
 

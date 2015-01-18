@@ -1,6 +1,16 @@
 #include "stdlib.h"
 #include "adclient.h"
 
+/*
+  Active Directory class.
+
+  adclient::login can throw ADBindException on errors.
+  all search functions can throw ADSearchException on errors.
+  all modify functions can throw both ADSearchException and ADOperationalException on errors.
+   text description will be in 'msg' property
+   numeric code in 'code' property
+*/
+
 adclient::adclient() {
 /*
   Constructor, to initialize default values of global variables.
@@ -18,6 +28,9 @@ adclient::~adclient() {
 }
 
 void adclient::login(vector <string> uries, string binddn, string bindpw, string _search_base) {
+/*
+  Wrapper around login to support list of uries
+*/
     vector <string>::iterator it;
     for (it = uries.begin(); it != uries.end(); ++it) {
         try {
@@ -40,6 +53,9 @@ void adclient::login(vector <string> uries, string binddn, string bindpw, string
 }
 
 void adclient::login(string _uri, string binddn, string bindpw, string _search_base) {
+/*
+  Wrapper around login to fill LDAP* structure
+*/
     login(_uri, binddn, bindpw, _search_base, &ds);
 }
 
@@ -104,6 +120,9 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
 }
 
 bool adclient::checkUserPassword(string user, string password) {
+/*
+  It returns true of false depends on user credentials correctness.
+*/
     LDAP *ld;
 
     string dn = getObjectDN(user);
@@ -122,6 +141,13 @@ bool adclient::checkUserPassword(string user, string password) {
 }
 
 map < string, map < string, vector<string> > > adclient::search(string OU, int scope, string filter, const vector <string> &attributes) {
+/*
+  General search function.
+  It returns map with users found with 'filter' with specified 'attributes'.
+*/
+
+    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
+
     int result, errcodep;
 
     char *attrs[50];
@@ -259,10 +285,16 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
 }
 
 bool adclient::ifDNExists(string dn) {
+/*
+  Wrapper around two arguments ifDNExists for searching any objectclass DN
+*/
     return ifDNExists(dn, "*");
 }
 
 bool adclient::ifDNExists(string dn, string objectclass) {
+/*
+  It returns true of false depends on object DN existence.
+*/
     int result;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
@@ -282,6 +314,9 @@ bool adclient::ifDNExists(string dn, string objectclass) {
 }
 
 vector <string> adclient::searchDN(string filter) {
+/*
+  It returns vector with DNs found with 'filter'.
+*/
     map < string, map < string, vector<string> > > search_result;
 
     vector <string> attributes;
@@ -302,8 +337,7 @@ vector <string> adclient::searchDN(string filter) {
 
 string adclient::getObjectDN(string object) {
 /*
-  It returns string with DN of object_short.
-  Can throw ADSearchException (from called functions).
+  It returns user DN by short name.
 */
     if (ifDNExists(object)) {
         return object;
@@ -315,7 +349,7 @@ string adclient::getObjectDN(string object) {
 
 void adclient::mod_add(string object, string attribute, string value) {
 /*
-  It performs generic LDAP_MOD_ADD operation on dn.
+  It performs generic LDAP_MOD_ADD operation on object (short_name/DN).
   It adds value to attribute.
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
@@ -351,7 +385,7 @@ void adclient::mod_add(string object, string attribute, string value) {
 
 void adclient::mod_delete(string object, string attribute, string value) {
 /*
-  It performs generic LDAP_MOD_DELETE operation on dn.
+  It performs generic LDAP_MOD_DELETE operation on object (short_name/DN).
   It removes value from attribute.
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
@@ -386,6 +420,11 @@ void adclient::mod_delete(string object, string attribute, string value) {
 }
 
 void adclient::mod_replace(string object, string attribute, string value) {
+/*
+  It performs generic LDAP_MOD_REPLACE operation on object (short_name/DN).
+  It removes value from attribute.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
     string dn = getObjectDN(object);
@@ -417,6 +456,10 @@ void adclient::mod_replace(string object, string attribute, string value) {
 }
 
 void adclient::CreateOU(string ou) {
+/*
+  It creates given OU (with subOUs if needed).
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
     vector <string> ous;
     string sub_ou = "";
     // Split OU to vector
@@ -509,6 +552,10 @@ void adclient::CreateOU(string ou) {
 }
 
 void adclient::DeleteDN(string dn) {
+/*
+  It deletes given DN.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
     int result=ldap_delete_ext_s(ds, dn.c_str(), NULL, NULL);
@@ -583,6 +630,10 @@ string adclient::dn2domain(string dn) {
 #endif
 
 void adclient::CreateUser(string cn, string container, string user_short) {
+/*
+  It creates user with given common name and short name in given container.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
     LDAPMod *attrs[5];
     LDAPMod attr1, attr2, attr3, attr4;
 
@@ -642,6 +693,10 @@ void adclient::CreateUser(string cn, string container, string user_short) {
 }
 
 void adclient::setUserPassword(string user, string password) {
+/*
+  It sets user password.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
     string dn = getObjectDN(user);
@@ -687,8 +742,7 @@ void adclient::setUserPassword(string user, string password) {
 
 vector <string> adclient::getObjectAttribute(string object, string attribute) {
 /*
-  It returns vector of strings with one entry for each attribute/value pair,
-  throws ADSearchException if no values were found, or if error occupied.
+  It returns vector of strings with values for given attribute.
 */
     vector <string> attributes;
     attributes.push_back(attribute);
@@ -705,6 +759,9 @@ vector <string> adclient::getObjectAttribute(string object, string attribute) {
 }
 
 map <string, vector <string> > adclient::getObjectAttributes(string object) {
+/*
+  It returns map of all object attributes.
+*/
     vector <string> attributes;
     attributes.push_back("*");
     return getObjectAttributes(object, attributes);
@@ -712,8 +769,7 @@ map <string, vector <string> > adclient::getObjectAttributes(string object) {
 
 map <string, vector <string> > adclient::getObjectAttributes(string object, const vector<string> &attributes) {
 /*
-  It returns map of attributes with vector of values, with all object attributes
-  throws ADSearchException if no values were found, or if error occupied.
+  It returns map of given object attributes.
 */
     string dn = getObjectDN(object);
 
@@ -756,8 +812,6 @@ void adclient::groupRemoveUser(string group, string user) {
 vector <string> adclient::getUserGroups(string user) {
 /*
   It return vector of strings with user groups.
-  It returns nothing if operation was successfull, can throw
-     ADBindException, ADSearchException (from called functions).
 */
     vector <string> groups;
 
@@ -777,8 +831,6 @@ vector <string> adclient::getUserGroups(string user) {
 vector <string> adclient::getUsersInGroup(string group) {
 /*
   It return vector of strings with members of Active Directory "group".
-  It returns nothing if operation was successfull, can throw
-     ADBindException, ADSearchException (from called functions).
 */
     vector <string> users;
 
@@ -799,7 +851,6 @@ bool adclient::ifDialinUser(string user) {
 /*
   It returns true if msNPAllowDialin user attribute set to TRUE, 
              false - otherwise.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> user_dn;
     vector <string> dialin;
@@ -822,7 +873,6 @@ bool adclient::ifDialinUser(string user) {
 vector <string> adclient::getDialinUsers() {
 /*
   It returns vector of strings with all users with msNPAllowDialin = TRUE.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
  
@@ -834,7 +884,6 @@ vector <string> adclient::getDialinUsers() {
 string adclient::getUserDisplayName(string user) {
 /*
   It returns string with DisplayName of user.
-  Can throw ADSearchException (from called functions).
 */
     vector <string> name;
     try {
@@ -856,6 +905,9 @@ ms-DS-User-Account-Control-Computed attribute - http://msdn.microsoft.com/en-us/
 UserAccountControl - http://support.microsoft.com/kb/305144/en-us
 */
 map <string, bool> adclient::getUserControls(string user) {
+/*
+  It returns boolean map of user controls ('disabled', 'locked', 'dontExpirePassword', 'mustChangePassword', 'expired').
+*/
     vector <string> attrs;
     attrs.push_back("userAccountControl");
     attrs.push_back("msDS-User-Account-Control-Computed");
@@ -887,35 +939,52 @@ map <string, bool> adclient::getUserControls(string user) {
 }
 
 bool adclient::getUserControl(string user, string control) {
+/*
+  It returns given user control from adclient::getUserControls.
+*/
     map <string, bool> controls;
     controls = getUserControls(user);
     return controls[control];
 }
 
 bool adclient::ifUserExpired(string user) {
+/*
+  It returns 'expired' user control value.
+*/
     return getUserControl(user, "expired");
 }
 
 bool adclient::ifUserLocked(string user) {
+/*
+  It returns 'locked' user control value.
+*/
     return getUserControl(user, "locked");
 }
 
 bool adclient::ifUserDisabled(string user) {
+/*
+  It returns 'disabled' user control value.
+*/
     return getUserControl(user, "disabled");
 }
 
 bool adclient::ifUserMustChangePassword(string user) {
+/*
+  It returns 'mustChangePassword' user control value.
+*/
     return getUserControl(user, "mustChangePassword");
 }
 
 bool adclient::ifUserDontExpirePassword(string user) {
+/*
+  It returns 'dontExpirePassword' user control value.
+*/
     return getUserControl(user, "dontExpirePassword");
 }
 
 vector <string> adclient::getAllOUs() {
 /*
   It returns vector of strings with all organizationalUnit in scope.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> ou_dns;
     vector <string> OUs;
@@ -931,7 +1000,6 @@ vector <string> adclient::getAllOUs() {
 vector <string> adclient::getOUsInOU(string OU) {
 /*
   It returns vector of strings with OU's in OU.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> ous_dns;
     vector <string> OUs;
@@ -958,7 +1026,6 @@ vector <string> adclient::getOUsInOU(string OU) {
 vector <string> adclient::getUsersInOU(string OU) {
 /*
   It returns vector of strings with all users in OU.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
     string _search_base;
@@ -989,7 +1056,6 @@ vector <string> adclient::getUsersInOU(string OU) {
 vector <string> adclient::getUsersInOU_SubTree(string OU) {
 /*
   It returns vector of strings with all users in OU and subOUs.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
     string _search_base;
@@ -1014,7 +1080,6 @@ vector <string> adclient::getUsersInOU_SubTree(string OU) {
 vector <string> adclient::getGroups() {
 /*
   It returns vector of strings with all groups in Active Directory.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> groups_dn;
 
@@ -1031,7 +1096,6 @@ vector <string> adclient::getGroups() {
 vector <string> adclient::getUsers() {
 /*
   It returns vector of strings with all users in Active Directory.
-  Can throw ADBindException, ADSearchException (from called functions).
 */
     vector <string> users_dn;
 
@@ -1046,6 +1110,9 @@ vector <string> adclient::getUsers() {
 }
 
 void adclient::EnableUser(string user) {
+/*
+  It enables given user.
+*/
     vector <string> flags = getObjectAttribute(user, "userAccountControl");
 
     int iflags = atoi(flags[0].c_str());
