@@ -22,16 +22,19 @@
 #include <ctime>
 #include <limits>
 
-#define AD_SUCCESS 1
-#define AD_LDAP_CONNECTION_ERROR 2
-#define AD_PARAMS_ERROR 2
-#define AD_SERVER_CONNECT_FAILURE 4
-#define AD_OBJECT_NOT_FOUND 6
-#define AD_ATTRIBUTE_ENTRY_NOT_FOUND 7
-#define AD_OU_SYNTAX_ERROR 8
+#define AD_SUCCESS                      1
+#define AD_LDAP_CONNECTION_ERROR        2
+#define AD_PARAMS_ERROR                 4
+#define AD_SERVER_CONNECT_FAILURE       6
+#define AD_OBJECT_NOT_FOUND             8
+#define AD_ATTRIBUTE_ENTRY_NOT_FOUND    10
+#define AD_OU_SYNTAX_ERROR              12
+
 #define MAX_PASSWORD_LENGTH 22
-#define AD_SCOPE_BASE LDAP_SCOPE_BASE
-#define AD_SCOPE_SUBTREE LDAP_SCOPE_SUBTREE
+
+#define AD_SCOPE_BASE       LDAP_SCOPE_BASE
+#define AD_SCOPE_ONELEVEL   LDAP_SCOPE_ONELEVEL
+#define AD_SCOPE_SUBTREE    LDAP_SCOPE_SUBTREE
 
 using std::vector;
 using std::map;

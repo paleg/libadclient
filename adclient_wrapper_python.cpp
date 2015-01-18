@@ -976,4 +976,16 @@ extern "C" void init_adclient() {
        PyModule_AddObject(m, "ADBindError", ADBindError);
        PyModule_AddObject(m, "ADSearchError", ADSearchError);
        PyModule_AddObject(m, "ADOperationalError", ADOperationalError);
+
+       PyModule_AddIntMacro(m, AD_SUCCESS);
+       PyModule_AddIntMacro(m, AD_LDAP_CONNECTION_ERROR);
+       PyModule_AddIntMacro(m, AD_PARAMS_ERROR);
+       PyModule_AddIntMacro(m, AD_SERVER_CONNECT_FAILURE);
+       PyModule_AddIntMacro(m, AD_OBJECT_NOT_FOUND);
+       PyModule_AddIntMacro(m, AD_ATTRIBUTE_ENTRY_NOT_FOUND);
+       PyModule_AddIntMacro(m, AD_OU_SYNTAX_ERROR);
+
+       PyModule_AddIntMacro(m, AD_SCOPE_BASE);
+       PyModule_AddIntMacro(m, AD_SCOPE_ONELEVEL);
+       PyModule_AddIntMacro(m, AD_SCOPE_SUBTREE);
 }
