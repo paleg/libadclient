@@ -111,16 +111,13 @@ class ADClient:
                    False - otherwise.
                    Can throws ADBindError, ADSearchError on errors.
           """
-          if (_adclient.ifUserDisabled_adclient(self.obj, user) == 1):
-             return True
-          else:
-             return False
+          return _adclient.ifUserDisabled_adclient(self.obj, user)
 
       def ifDNExists(self, dn, objectclass = '*'):
-          if (_adclient.ifDNExists_adclient(self.obj, dn, objectclass) == 1):
-             return True
-          else:
-             return False
+          """ It returns True of False depends on object DN existence.
+              dn objectclass can be limited with corresponding argument.
+          """
+          return _adclient.ifDNExists_adclient(self.obj, dn, objectclass)
 
       def getAllOUs(self):
           """ ADClient getAllOUs function.

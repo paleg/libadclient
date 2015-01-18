@@ -287,7 +287,7 @@ static PyObject *wrapper_ifUserDisabled_adclient(PyObject *self, PyObject *args)
        if (!PyArg_ParseTuple(args, "Os", &obj, &user)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          return Py_BuildValue("i", ad->ifUserDisabled(user));
+          return Py_BuildValue("N", PyBool_FromLong(ad->ifUserDisabled(user)));
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -304,7 +304,7 @@ static PyObject *wrapper_ifDNExists_adclient(PyObject *self, PyObject *args) {
        if (!PyArg_ParseTuple(args, "Oss", &obj, &dn, &objectclass)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          return Py_BuildValue("i", ad->ifDNExists(dn, objectclass));
+          return Py_BuildValue("N", PyBool_FromLong(ad->ifDNExists(dn, objectclass)));
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
