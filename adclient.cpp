@@ -342,6 +342,8 @@ string adclient::getObjectDN(string object) {
     if (ifDNExists(object)) {
         return object;
     } else {
+        replace(object, "(", "\\(");
+        replace(object, ")", "\\)");
         vector <string> dn = searchDN( "(sAMAccountName=" + object + ")" );
         return dn[0];
     }
