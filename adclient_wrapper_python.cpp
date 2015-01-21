@@ -570,6 +570,28 @@ static PyObject *wrapper_EnableUser_adclient(PyObject *self, PyObject *args) {
        return Py_None;
 }
 
+static PyObject *wrapper_DisableUser_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *user;
+       if (!PyArg_ParseTuple(args, "Os", &obj, &user)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->DisableUser(user);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
 static PyObject *wrapper_setUserDescription_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *dn, *descr;
@@ -964,6 +986,7 @@ static PyMethodDef adclient_methods[] = {
        { "DeleteDN_adclient", wrapper_DeleteDN_adclient, 1 },
        { "CreateOU_adclient", wrapper_CreateOU_adclient, 1 },
        { "EnableUser_adclient", wrapper_EnableUser_adclient, 1 },
+       { "DisableUser_adclient", wrapper_DisableUser_adclient, 1 },
        { "setUserDescription_adclient", wrapper_setUserDescription_adclient, 1 },
        { "setUserPassword_adclient", wrapper_setUserPassword_adclient, 1 },
        { "checkUserPassword_adclient", wrapper_checkUserPassword_adclient, 1 },

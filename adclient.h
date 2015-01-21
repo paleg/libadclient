@@ -78,6 +78,7 @@ public:
       void DeleteDN(string dn);
       void CreateOU(string ou);
       void EnableUser(string user);
+      void DisableUser(string user);
       void UnLockUser(string user);
 
       void setUserPassword(string user, string password);

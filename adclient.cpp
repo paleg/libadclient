@@ -1124,6 +1124,21 @@ void adclient::EnableUser(string user) {
     }
 }
 
+void adclient::DisableUser(string user) {
+/*
+  It disables given user.
+*/
+    vector <string> flags = getObjectAttribute(user, "userAccountControl");
+
+    int iflags = atoi(flags[0].c_str());
+    int oldflags = iflags&2;
+
+    if (not oldflags) {
+        int newflags = iflags^2;
+        mod_replace(user, "userAccountControl", itos(newflags));
+    }
+}
+
 void adclient::UnLockUser(string user) {
     mod_replace(user, "lockoutTime", "0");
 }

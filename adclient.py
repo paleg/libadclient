@@ -173,6 +173,11 @@ class ADClient:
           """
           _adclient.EnableUser_adclient(self.obj, short_name)
 
+      def DisableUser(self, short_name):
+          """ It disables given user.
+          """
+          _adclient.DisableUser_adclient(self.obj, short_name)
+
       def setUserDescription(self, dn, descr):
           _adclient.setUserDescription_adclient(self.obj, dn, descr)
 
