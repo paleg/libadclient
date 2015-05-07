@@ -4,6 +4,7 @@
 */
 
 #include <ldap.h>
+#include <sasl/sasl.h>
 
 #if defined( OPENLDAP )
 	#define LDAPOPTSUCCESS LDAP_OPT_SUCCESS
@@ -41,6 +42,11 @@ using std::map;
 using std::string;
 using std::cout;
 using std::endl;
+
+struct sasl_defaults {
+    string username;
+    string password;
+};
 
 class ADException {
 public:

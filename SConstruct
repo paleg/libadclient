@@ -72,7 +72,7 @@ if not IGNORE:
           print "Failed."
           Exit(1)
 
-   check_c_headers = ['ldap.h']
+   check_c_headers = ['ldap.h', 'sasl/sasl.h']
    for file in check_c_headers:
        if not conf.CheckCHeader(file):
           print "Failed."
@@ -84,8 +84,8 @@ if not IGNORE:
           print "Failed."
           Exit(1)
 
-   env.Append(LIBS=["ldap", "stdc++"])
-   check_libs = ['ldap', 'stdc++']
+   env.Append(LIBS=["ldap", "sasl2", "stdc++"])
+   check_libs = ['ldap', 'sasl2', 'stdc++']
    for lib in check_libs:
        if not conf.CheckLib(lib):
           print "Failed."
