@@ -227,6 +227,9 @@ class ADClient:
       def setUserPhone(self, user, phone):
           _adclient.setUserPhone_adclient(self.obj, user, phone)
 
+      def setUserSN(self, user, phone):
+          _adclient.setUserSN_adclient(self.obj, user, phone)
+
       def UnLockUser(self, user):
           """ It unlocks given user.
           """
