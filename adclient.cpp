@@ -157,11 +157,9 @@ bool adclient::checkUserPassword(string user, string password) {
 */
     LDAP *ld;
 
-    string dn = getObjectDN(user);
-
     bool result = true;
     try {
-        login(uri, dn, password, search_base, &ld);
+        login(uri, user, password, search_base, &ld);
     }
     catch (ADBindException& ex) {
         result = false;
