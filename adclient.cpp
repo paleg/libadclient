@@ -23,6 +23,10 @@ adclient::~adclient() {
 /*
   Destructor, to automaticaly free initial values allocated at login().
 */
+    logout();
+}
+
+void adclient::logout() {
     if (ds != NULL)
         ldap_unbind_ext(ds, NULL, NULL);
 }
@@ -96,6 +100,9 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
   It set private pointer to LDAP connection identifier - ds.
   It returns nothing if operation was successfull, throws ADBindException otherwise.
 */
+    if ((*ds) != NULL) {
+        logout();
+    }
     int result, version, bindresult;
 
     string error_msg;
