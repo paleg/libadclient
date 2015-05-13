@@ -78,6 +78,8 @@ public:
       void login(string uri, string binddn, string bindpw, string _search_base);
       void login(vector <string> uries, string binddn, string bindpw, string _search_base);
 
+      string binded_uri() { return uri; }
+
       void groupAddUser(string group, string user);
       void groupRemoveUser(string group, string user);
       void CreateUser(string cn, string container, string user_short);
