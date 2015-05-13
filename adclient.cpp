@@ -23,12 +23,13 @@ adclient::~adclient() {
 /*
   Destructor, to automaticaly free initial values allocated at login().
 */
-    logout();
+    logout(ds);
 }
 
-void adclient::logout() {
-    if (ds != NULL)
+void adclient::logout(LDAP *ds) {
+    if (ds != NULL) {
         ldap_unbind_ext(ds, NULL, NULL);
+    }
 }
 
 void adclient::login(vector <string> uries, string binddn, string bindpw, string _search_base) {
@@ -100,9 +101,8 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
   It set private pointer to LDAP connection identifier - ds.
   It returns nothing if operation was successfull, throws ADBindException otherwise.
 */
-    if ((*ds) != NULL) {
-        logout();
-    }
+    logout(*ds);
+
     int result, version, bindresult;
 
     string error_msg;
@@ -162,7 +162,7 @@ bool adclient::checkUserPassword(string user, string password) {
 /*
   It returns true of false depends on user credentials correctness.
 */
-    LDAP *ld;
+    LDAP *ld = NULL;
 
     bool result = true;
     try {
@@ -171,9 +171,7 @@ bool adclient::checkUserPassword(string user, string password) {
     catch (ADBindException& ex) {
         result = false;
     }
-    if (ld != NULL) {
-        ldap_unbind_ext(ld, NULL, NULL);
-    }
+    logout(ld);
     return result;
 }
 
