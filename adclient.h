@@ -148,7 +148,7 @@ private:
       int scope;
 
       void login(string uri, string binddn, string bindpw, string _search_base, LDAP **ds);
-      void logout();
+      void logout(LDAP *ds);
 
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);
