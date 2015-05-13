@@ -17,6 +17,8 @@ adclient::adclient() {
 */
     ds = NULL;
     scope = LDAP_SCOPE_SUBTREE;
+    nettimeout = -1;
+    timelimit  = -1;
 }
 
 adclient::~adclient() {
@@ -122,6 +124,35 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
+    if (nettimeout != -1) {
+        struct timeval optTimeout;
+        optTimeout.tv_usec = 0;
+        optTimeout.tv_sec = nettimeout;
+
+        result = ldap_set_option(*ds, LDAP_OPT_TIMEOUT, &optTimeout);
+        if (result != LDAP_OPT_SUCCESS) {
+            error_msg = "Error in ldap_set_option (general timeout): ";
+            error_msg.append(ldap_err2string(result));
+            throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
+        }
+
+        result = ldap_set_option(*ds, LDAP_OPT_NETWORK_TIMEOUT, &optTimeout);
+        if (result != LDAP_OPT_SUCCESS) {
+            error_msg = "Error in ldap_set_option (network timeout): ";
+            error_msg.append(ldap_err2string(result));
+            throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
+        }
+    }
+
+    if (timelimit != -1) {
+        result = ldap_set_option(*ds, LDAP_OPT_TIMELIMIT, &timelimit);
+        if (result != LDAP_OPT_SUCCESS) {
+            error_msg = "Error in ldap_set_option (time limit): ";
+            error_msg.append(ldap_err2string(result));
+            throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
+        }
+    }
+  
     version = LDAP_VERSION3;
     result = ldap_set_option(*ds, LDAP_OPT_PROTOCOL_VERSION, &version);
     if (result != LDAP_OPT_SUCCESS) {

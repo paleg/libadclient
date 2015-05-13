@@ -141,6 +141,11 @@ public:
 
       map <string, vector <string> > getObjectAttributes(string object);
       map <string, vector <string> > getObjectAttributes(string object, const vector<string> &attributes);
+
+      // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
+      int nettimeout;
+      // LDAP_OPT_TIMELIMIT
+      int timelimit;
 private:
       string uri;
       string search_base;
