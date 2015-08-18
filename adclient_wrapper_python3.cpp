@@ -75,6 +75,15 @@ static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
     return Py_None;
 }
 
+static PyObject *wrapper_binded_uri_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+
+       if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
+
+       adclient *ad = convert_ad(obj);
+       return Py_BuildValue("s", ad->binded_uri().c_str());
+}
+
 static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *ou, *filter;
@@ -1010,6 +1019,7 @@ static PyMethodDef adclient_methods[] = {
     { "setUserPhone_adclient",           (PyCFunction)wrapper_setUserPhone_adclient,             METH_VARARGS,   NULL },
     { "UnLockUser_adclient",             (PyCFunction)wrapper_UnLockUser_adclient,               METH_VARARGS,   NULL },
     { "ifDNExists_adclient",             (PyCFunction)wrapper_ifDNExists_adclient,               METH_VARARGS,   NULL },
+    { "binded_uri_adclient",             (PyCFunction)wrapper_binded_uri_adclient,               METH_VARARGS,   NULL },
     { "get_error_num",                   (PyCFunction)wrapper_get_error_num,                     METH_VARARGS,   NULL },
     { NULL, NULL }
 };

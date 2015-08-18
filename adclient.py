@@ -39,6 +39,9 @@ class ADClient:
              uries = [uries]
           _adclient.login_adclient(self.obj, uries, binddn, bindpw, search_base, secured)
 
+      def binded_uri(self):
+          return _adclient.binded_uri_adclient(self.obj)
+
       def searchDN(self, filter):
           """ It returns list with DNs found with 'filter'
           """
