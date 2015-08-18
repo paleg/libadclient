@@ -22,6 +22,7 @@
 #include <stdexcept>    // std::out_of_range
 #include <ctime>
 #include <limits>
+#include <resolv.h>
 
 #define AD_SUCCESS                      1
 #define AD_LDAP_CONNECTION_ERROR        2
@@ -30,6 +31,7 @@
 #define AD_OBJECT_NOT_FOUND             8
 #define AD_ATTRIBUTE_ENTRY_NOT_FOUND    10
 #define AD_OU_SYNTAX_ERROR              12
+#define AD_LDAP_RESOLV_ERROR            14
 
 #define MAX_PASSWORD_LENGTH 22
 
@@ -153,6 +155,7 @@ private:
       string search_base;
       LDAP *ds;
       int scope;
+      string ldap_prefix;
 
       void login(LDAP **ds, string uri, string binddn, string bindpw, string _search_base, bool secured);
       void logout(LDAP *ds);
@@ -164,6 +167,7 @@ private:
       string itos(int num);
       string dn2domain(string dn);
       vector <string> DNsToShortNames(vector <string> &v);
+      vector<string> get_ldap_servers(string domain);
 };
 
 string vector2string(const vector<string> &v) {

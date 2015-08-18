@@ -19,6 +19,7 @@ adclient::adclient() {
     scope = LDAP_SCOPE_SUBTREE;
     nettimeout = -1;
     timelimit  = -1;
+    ldap_prefix = "ldap://";
 }
 
 adclient::~adclient() {
@@ -63,7 +64,12 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
 /*
   Wrapper around login to fill LDAP* structure
 */
-    login(&ds, _uri, binddn, bindpw, _search_base, secured);
+    if (_uri.compare(0, ldap_prefix.size(), ldap_prefix) == 0) {
+        login(&ds, _uri, binddn, bindpw, _search_base, secured);
+    } else {
+        vector<string> servers = get_ldap_servers(_uri);
+        login(servers, binddn, bindpw, _search_base, secured);
+    }
 }
 
 int sasl_interact(LDAP *ds, unsigned flags, void *indefaults, void *in) {
@@ -1422,3 +1428,78 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
 
     return value;
 }
+
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+// this magic was copy pasted and adopted from
+// https://www.ccnx.org/releases/latest/doc/ccode/html/ccndc-srv_8c_source.html
+vector<string> adclient::get_ldap_servers(string domain) {
+    union dns_ans {
+             HEADER header;
+             unsigned char buf[NS_MAXMSG];
+          } ans;
+    size_t ans_size;
+
+    domain = "_ldap._tcp." + domain;
+    char *srv_name = strdup(domain.c_str());
+    ans_size = res_search(srv_name, ns_c_in, ns_t_srv, ans.buf, sizeof(ans.buf));
+
+    int qdcount, ancount;
+    qdcount = ntohs(ans.header.qdcount);
+    ancount = ntohs(ans.header.ancount);
+
+    unsigned char *msg, *msgend;
+    msg = ans.buf + sizeof(ans.header);
+    msgend = ans.buf + ans_size;
+
+    int size = 0, i;
+    for (i = qdcount; i > 0; --i) {
+        if ((size = dn_skipname(msg, msgend)) < 0) {
+            free(srv_name);
+            throw ADBindException("Error while resolving ldap server for " + domain + ": dn_skipname < 0", AD_LDAP_RESOLV_ERROR);
+        }
+        msg = msg + size + QFIXEDSZ;
+    }
+
+    int type = 0, priority = 0, weight = 0, port = 0, recclass = 0, ttl = 0;
+    unsigned char *end;
+    char host[NS_MAXDNAME];
+
+    vector<string> ret;
+    for (i = ancount; i > 0; --i) {
+        size = dn_expand(ans.buf, msgend, msg, srv_name, strlen(srv_name)+1);
+        if (size < 0) {
+            free(srv_name);
+            throw ADBindException("Error while resolving ldap server for " + domain + ": dn_expand(srv_name) < 0", AD_LDAP_RESOLV_ERROR);
+        }
+        msg = msg + size;
+
+        GETSHORT(type, msg);
+        GETSHORT(recclass, msg);
+        GETLONG(ttl, msg);
+        GETSHORT(size, msg);
+        if ((end = msg + size) > msgend) {
+            free(srv_name);
+            throw ADBindException("Error while resolving ldap server for " + domain + ": (msg + size) > msgend", AD_LDAP_RESOLV_ERROR);
+        }
+
+        if (type != ns_t_srv) {
+            msg = end;
+            continue;
+        }
+
+        GETSHORT(priority, msg);
+        GETSHORT(weight, msg);
+        GETSHORT(port, msg);
+        size = dn_expand(ans.buf, msgend, msg, host, sizeof(host));
+        if (size < 0) {
+            free(srv_name);
+            throw ADBindException("Error while resolving ldap server for " + domain + ": dn_expand(host) < 0", AD_LDAP_RESOLV_ERROR);
+        }
+        //std::cout << priority << " " << weight << " " << ttl << " " << host << ":" << port << std::endl;
+        ret.push_back(string("ldap://") + string(host));
+        msg = end;
+    }
+    free(srv_name);
+    return ret;
+}
+#pragma GCC diagnostic pop
