@@ -39,7 +39,7 @@ int main() {
     uries.push_back("ldap://Server2");
     uries.push_back("ldap://Server3");
     try {
-        ad.login(uries, "user@domain.com", "password", "dc=xx,dc=xx,dc=xx,dc=xx");
+        ad.login(uries, "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx");
     }
     catch(ADBindException& ex) {
          cout << "ADBindLogin: " << ex.msg << endl;
@@ -73,7 +73,7 @@ USAGE SAMPLE (python):
 import adclient
 ad = adclient.ADClient()
 try:
-  ad.login(["ldap://Server1", "ldap://Server2", "ldap://Server3"], "user@domain.com", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
+  ad.login(["ldap://Server1", "ldap://Server2", "ldap://Server3"], "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
 except ADBindError, ex:
   print("failed to connect to Active Directory: %s"%(ex))
   exit(1)
