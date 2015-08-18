@@ -34,14 +34,14 @@ void adclient::logout(LDAP *ds) {
     }
 }
 
-void adclient::login(vector <string> uries, string binddn, string bindpw, string _search_base) {
+void adclient::login(vector <string> uries, string binddn, string bindpw, string _search_base, bool secured) {
 /*
   Wrapper around login to support list of uries
 */
     vector <string>::iterator it;
     for (it = uries.begin(); it != uries.end(); ++it) {
         try {
-            login(*it, binddn, bindpw, _search_base, &ds);
+            login(*it, binddn, bindpw, _search_base, secured);
             return;
         }
         catch (ADBindException&) {
@@ -59,16 +59,16 @@ void adclient::login(vector <string> uries, string binddn, string bindpw, string
     }
 }
 
-void adclient::login(string _uri, string binddn, string bindpw, string _search_base) {
+void adclient::login(string _uri, string binddn, string bindpw, string _search_base, bool secured) {
 /*
   Wrapper around login to fill LDAP* structure
 */
-    login(_uri, binddn, bindpw, _search_base, &ds);
+    login(&ds, _uri, binddn, bindpw, _search_base, secured);
 }
 
 int sasl_interact(LDAP *ds, unsigned flags, void *indefaults, void *in) {
     sasl_defaults *defaults = static_cast<sasl_defaults *>(indefaults);
-    sasl_interact_t *interact = (sasl_interact_t *)in;
+    sasl_interact_t *interact = static_cast<sasl_interact_t *>(in);
     if (ds == NULL) {
         return LDAP_PARAM_ERROR;
     }
@@ -97,7 +97,7 @@ int sasl_interact(LDAP *ds, unsigned flags, void *indefaults, void *in) {
     return LDAP_SUCCESS;
 }
 
-void adclient::login(string _uri, string binddn, string bindpw, string _search_base, LDAP **ds) {
+void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, string _search_base, bool secured) {
 /*
   To set various LDAP options and bind to LDAP server.
   It set private pointer to LDAP connection identifier - ds.
@@ -168,17 +168,30 @@ void adclient::login(string _uri, string binddn, string bindpw, string _search_b
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
-    string sasl_mech = "DIGEST-MD5";
-    unsigned sasl_flags = LDAP_SASL_QUIET;
+    if (secured) {
+        string sasl_mech = "DIGEST-MD5";
+        unsigned sasl_flags = LDAP_SASL_QUIET;
 
-    sasl_defaults defaults;
-    defaults.username = binddn;
-    defaults.password = bindpw;
+        sasl_defaults defaults;
+        defaults.username = binddn;
+        defaults.password = bindpw;
 
-    bindresult = ldap_sasl_interactive_bind_s(*ds, NULL,
-                                              sasl_mech.c_str(),
-                                              NULL, NULL,
-                                              sasl_flags, sasl_interact, &defaults);
+        bindresult = ldap_sasl_interactive_bind_s(*ds, NULL,
+                                                  sasl_mech.c_str(),
+                                                  NULL, NULL,
+                                                  sasl_flags, sasl_interact, &defaults);
+    } else {
+        struct berval cred;
+        struct berval *servcred;
+
+        cred.bv_val = strdup(bindpw.c_str());
+        cred.bv_len = bindpw.size();
+
+        bindresult = ldap_sasl_bind_s(*ds, binddn.c_str(), NULL, &cred, NULL, NULL, &servcred);
+
+        memset(cred.bv_val, 0, cred.bv_len);
+        free(cred.bv_val);
+    }
 
     if (bindresult != LDAP_SUCCESS) {
         error_msg = "Error while ldap binding to " + _uri + " with " + binddn + " " + bindpw + ": ";
@@ -197,7 +210,7 @@ bool adclient::checkUserPassword(string user, string password) {
 
     bool result = true;
     try {
-        login(uri, user, password, search_base, &ld);
+        login(&ld, uri, user, password, search_base, true);
     }
     catch (ADBindException& ex) {
         result = false;

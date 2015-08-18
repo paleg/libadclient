@@ -47,10 +47,11 @@ static PyObject *wrapper_new_adclient(PyObject *self, PyObject *args) {
 static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *binddn, *bindpw, *search_base;
+    int secured;
     PyObject * listObj;
     unsigned int numLines;
 
-    if (!PyArg_ParseTuple(args, "OO!sss", &obj, &PyList_Type, &listObj, &binddn, &bindpw, &search_base)) return NULL;
+    if (!PyArg_ParseTuple(args, "OO!sssi", &obj, &PyList_Type, &listObj, &binddn, &bindpw, &search_base, &secured)) return NULL;
 
     if ((numLines = PyList_Size(listObj)) < 0) return NULL; /* Not a list */
 
@@ -63,7 +64,7 @@ static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
 
     adclient *ad = convert_ad(obj);
     try {
-       ad->login(uries, binddn, bindpw, search_base);
+       ad->login(uries, binddn, bindpw, search_base, secured == 1);
     }
     catch(ADBindException& ex) {
          error_num = ex.code;

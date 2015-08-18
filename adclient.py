@@ -23,7 +23,7 @@ class ADClient:
       def __init__(self):
           self.obj = _adclient.new_adclient()
 
-      def login(self, uries, binddn, bindpw, search_base):
+      def login(self, uries, binddn, bindpw, search_base, secured = True):
           """ It binds to Active Directory uries (e.g. "ldap://example.org") 
                    as binddn (e.g. "administrator@example.org") identified by 
                    bindpw (e.g. "password"). Search Base for every ldap search 
@@ -37,7 +37,7 @@ class ADClient:
              string_type = basestring
           if isinstance(uries, string_type):
              uries = [uries]
-          _adclient.login_adclient(self.obj, uries, binddn, bindpw, search_base)
+          _adclient.login_adclient(self.obj, uries, binddn, bindpw, search_base, secured)
 
       def searchDN(self, filter):
           """ It returns list with DNs found with 'filter'

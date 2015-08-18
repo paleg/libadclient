@@ -75,8 +75,8 @@ public:
       adclient();
       ~adclient();
 
-      void login(string uri, string binddn, string bindpw, string _search_base);
-      void login(vector <string> uries, string binddn, string bindpw, string _search_base);
+      void login(string uri, string binddn, string bindpw, string _search_base, bool secured = true);
+      void login(vector <string> uries, string binddn, string bindpw, string _search_base, bool secured = true);
 
       string binded_uri() { return uri; }
 
@@ -154,7 +154,7 @@ private:
       LDAP *ds;
       int scope;
 
-      void login(string uri, string binddn, string bindpw, string _search_base, LDAP **ds);
+      void login(LDAP **ds, string uri, string binddn, string bindpw, string _search_base, bool secured);
       void logout(LDAP *ds);
 
       void mod_add(string object, string attribute, string value);
