@@ -1009,7 +1009,8 @@ static PyMethodDef adclient_methods[] = {
        { NULL, NULL }
 };
 
-extern "C" void init_adclient() {
+PyMODINIT_FUNC
+init_adclient(void) {
        PyObject *m;
        m = Py_InitModule("_adclient", adclient_methods);
 #pragma GCC diagnostic push

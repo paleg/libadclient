@@ -1025,7 +1025,8 @@ static struct PyModuleDef moduledef = {
     NULL
 };
 
-extern "C" PyObject *PyInit__adclient() {
+PyMODINIT_FUNC
+PyInit__adclient() {
     PyObject *module = PyModule_Create(&moduledef);
 
 #pragma GCC diagnostic push
