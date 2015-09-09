@@ -3,6 +3,9 @@
    Based on adtool by Mike Dawson (http://gp2x.org/adtool/).
 */
 
+#ifndef _ADCLIENT_H_
+#define _ADCLIENT_H_
+
 #include <ldap.h>
 #include <sasl/sasl.h>
 
@@ -207,3 +210,5 @@ void replace(std::string& subject, const std::string& search,
          pos += replace.length();
     }
 }
+
+#endif // _ADCLIENT_H_
