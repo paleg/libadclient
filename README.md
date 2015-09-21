@@ -39,7 +39,12 @@ int main() {
     uries.push_back("ldap://Server2");
     uries.push_back("ldap://Server3");
     try {
+        // with a list of ldap uries
         ad.login(uries, "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx");
+        // with a single ldap server uri
+        //ad.login("ldap://Server1", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx");
+        // with a domain name (ldap servers will be detected via DNS SRV records - _ldap._tcp.xx.xx.xx.xx)
+        //ad.login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
     }
     catch(ADBindException& ex) {
          cout << "ADBindLogin: " << ex.msg << endl;
@@ -73,7 +78,12 @@ USAGE SAMPLE (python):
 import adclient
 ad = adclient.ADClient()
 try:
+  # with a list of ldap uries
   ad.login(["ldap://Server1", "ldap://Server2", "ldap://Server3"], "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
+  # with a single ldap server uri
+  #ad.login("ldap://Server1", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
+  # with a domain name (ldap servers will be detected via DNS SRV records - _ldap._tcp.xx.xx.xx.xx)
+  #ad.login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
 except ADBindError, ex:
   print("failed to connect to Active Directory: %s"%(ex))
   exit(1)
