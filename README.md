@@ -24,9 +24,10 @@ Full list of supported methods can be found in [adclient.h](https://github.com/p
 USAGE NOTES:
 
 login: 
-  - login can be performed with SASL DIGEST-MD5 auth (default) or simple auth (clear text username and password). The last boolean argument `secured` in login function chooses login mode.
+  - Login can be performed with SASL DIGEST-MD5 auth (default) or simple auth (clear text username and password). The last boolean argument `secured` in login function chooses login mode.
   - SASL DIGEST-MD5 auth requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details). 
   - Simple auth does not require all this things, but with simple auth AD will refuse to do some actions (e.g. change passwords).
+  - Login can be performed with a vector (list) of ldap uries, single ldap uri or domain DNS name. Ldap uries must be prefixed with `ldap://`. Single values without ldap prefix are treated as a domain name and ldap uries are detected via DNS SRV query (_ldap._tcp.xx.xx.xx.xx).
 
 USAGE SAMPLE (c++):
 ```cpp
@@ -50,7 +51,7 @@ int main() {
         ad.login(uries, "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx");
         // simple auth with a single ldap server uri
         //ad.login("ldap://Server1", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", false);
-        // secured SASL login with a domain name (ldap servers will be detected via DNS SRV records - _ldap._tcp.xx.xx.xx.xx)
+        // secured SASL login with a domain name
         //ad.login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", true)
     }
     catch(ADBindException& ex) {
@@ -89,7 +90,7 @@ try:
   ad.login(["ldap://Server1", "ldap://Server2", "ldap://Server3"], "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
   # simple auth with a single ldap server uri
   #ad.login("ldap://Server1", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", False)
-  # secured SASL login with a domain name (ldap servers will be detected via DNS SRV records - _ldap._tcp.xx.xx.xx.xx)
+  # secured SASL login with a domain name
   #ad.login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", True)
 except ADBindError, ex:
   print("failed to connect to Active Directory: %s"%(ex))
