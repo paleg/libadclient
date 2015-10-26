@@ -122,7 +122,7 @@ void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, strin
 #elif defined SUNLDAP
     result = ldapssl_init(_uri.c_str(), LDAPS_PORT, 1);
 #else
-    result = 255;
+#error LDAP library required
 #endif
     if (result != LDAP_SUCCESS) {
         error_msg = "Error in ldap_initialize to " + _uri + ": ";

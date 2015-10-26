@@ -1,0 +1,27 @@
+%module adclient
+
+%{
+#include "adclient.h"
+%}
+
+%include <typemaps.i>
+%include "std_string.i"
+%include "std_vector.i"
+
+namespace std {
+    %template(StringVector) vector<string>;
+}
+
+%exception {
+    try {
+        $action;
+    } catch (ADException &e) {
+        std::stringstream ss;
+        ss << e.code << ":" << e.msg;
+        _swig_gopanic(ss.str().c_str());
+    } catch (std::exception &e) {
+        _swig_gopanic(e.what());
+    }
+}
+
+%include "adclient.h"

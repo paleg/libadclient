@@ -1,3 +1,5 @@
+// +build ignore
+
 /*
   Python wrapper around C++ class.
 */

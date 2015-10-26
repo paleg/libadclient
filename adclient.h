@@ -87,7 +87,7 @@ public:
       ~adclient();
 
       void login(string uri, string binddn, string bindpw, string _search_base, bool secured = true);
-      void login(vector <string> uries, string binddn, string bindpw, string _search_base, bool secured = true);
+      void login(std::vector <string> uries, string binddn, string bindpw, string _search_base, bool secured = true);
 
       string binded_uri() { return uri; }
 
@@ -136,25 +136,25 @@ public:
       bool            ifDNExists(string object, string objectclass);
       bool            ifDNExists(string object);
 
-      vector <string> getGroups();
-      vector <string> getUsers();
-      vector <string> getAllOUs();
-      vector <string> getDialinUsers();
+      std::vector <string> getGroups();
+      std::vector <string> getUsers();
+      std::vector <string> getAllOUs();
+      std::vector <string> getDialinUsers();
 
-      vector <string> getUserGroups(string user);
-      vector <string> getUsersInGroup(string group);
-      vector <string> getOUsInOU(string OU);
-      vector <string> getUsersInOU(string OU);
-      vector <string> getUsersInOU_SubTree(string OU);
+      std::vector <string> getUserGroups(string user);
+      std::vector <string> getUsersInGroup(string group);
+      std::vector <string> getOUsInOU(string OU);
+      std::vector <string> getUsersInOU(string OU);
+      std::vector <string> getUsersInOU_SubTree(string OU);
 
       struct berval getBinaryObjectAttribute(string object, string attribute);
-      vector <string> getObjectAttribute(string object, string attribute);
+      std::vector <string> getObjectAttribute(string object, string attribute);
 
-      vector <string> searchDN(string filter);
-      map < string, map < string, vector<string> > > search(string OU, int scope, string filter, const vector <string> &attributes);
+      std::vector <string> searchDN(string filter);
+      map < string, map < string, std::vector<string> > > search(string OU, int scope, string filter, const std::vector <string> &attributes);
 
-      map <string, vector <string> > getObjectAttributes(string object);
-      map <string, vector <string> > getObjectAttributes(string object, const vector<string> &attributes);
+      map <string, std::vector <string> > getObjectAttributes(string object);
+      map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
 
       // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
       int nettimeout;
@@ -173,14 +173,14 @@ private:
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);
       void mod_replace(string object, string attribute, string value);
-      map < string, vector<string> > _getvalues(LDAPMessage *entry);
+      map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string itos(int num);
       string dn2domain(string dn);
-      vector <string> DNsToShortNames(vector <string> &v);
-      vector<string> get_ldap_servers(string domain);
+      std::vector <string> DNsToShortNames(std::vector <string> &v);
+      std::vector<string> get_ldap_servers(string domain);
 };
 
-string vector2string(const vector<string> &v) {
+inline string vector2string(const std::vector<string> &v) {
     std::stringstream ss;
     for(size_t i = 0; i < v.size(); ++i) {
         if (i != 0) ss << ",";
@@ -190,7 +190,7 @@ string vector2string(const vector<string> &v) {
 }
 
 // ft is the number of 100-nanosecond intervals since January 1, 1601 (UTC)
-time_t FileTimeToPOSIX(long long ft) {
+inline time_t FileTimeToPOSIX(long long ft) {
     // never expired
     if (ft == 0) {
         ft = 9223372036854775807;
@@ -209,7 +209,7 @@ time_t FileTimeToPOSIX(long long ft) {
     }
 }
 
-void replace(std::string& subject, const std::string& search,
+inline void replace(std::string& subject, const std::string& search,
                                    const std::string& replace) {
     size_t pos = 0;
     while((pos = subject.find(search, pos)) != std::string::npos) {
