@@ -40,6 +40,9 @@ func catch(err *error) {
 
 var ad Adclient
 
+var Nettimeout int = -1
+var Timelimit int = -1
+
 func New() {
 	ad = NewAdclient()
 }
@@ -50,6 +53,12 @@ func Delete() {
 
 func Login(uri interface{}, user string, passwd string, sb string) (err error) {
 	defer catch(&err)
+	if Nettimeout != -1 {
+		ad.SetNettimeout(Nettimeout)
+	}
+	if Timelimit != -1 {
+		ad.SetTimelimit(Timelimit)
+	}
 	switch uri.(type) {
 	case string:
 		ad.Login(uri.(string), user, passwd, sb)
