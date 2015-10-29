@@ -320,15 +320,18 @@ func IfDialinUser(user string) (result bool, err error) {
 	return
 }
 
-func IfDNExists(object string, objectclass string) (result bool, err error) {
+func IfDNExists(args ...string) (result bool, err error) {
 	defer catch(&err)
-	result = ad.IfDNExists(object, objectclass)
+	switch len(args) {
+	case 1:
+		result = ad.IfDNExists(args[0])
+	case 2:
+		result = ad.IfDNExists(args[0], args[1])
+	default:
+		panic("wrong number of args for IfDNExists")
+	}
 	return
 }
-
-/*
-   bool            IfDNExists(string object);
-*/
 
 func GetGroups() ([]string, error) {
 	return commonEmptyToSlice(ad.GetGroups)
