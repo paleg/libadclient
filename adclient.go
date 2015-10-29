@@ -253,9 +253,18 @@ func SetUserDescription(user string, descr string) (err error) {
 	return
 }
 
-/*
-   map <string, bool>    getUserControls(string user);
-*/
+func GetUserControls(user string) (result map[string]bool, err error) {
+	result = make(map[string]bool)
+	defer catch(&err)
+	cmap := ad.GetUserControls(user)
+	defer DeleteStringBoolMap(cmap)
+	keys := cmap.Keys()
+	for i := 0; i < int(keys.Size()); i++ {
+		key := keys.Get(i)
+		result[key] = cmap.Get(key)
+	}
+	return
+}
 
 func GetUserControl(user string, control string) (result bool, err error) {
 	defer catch(&err)

@@ -118,7 +118,7 @@ public:
       void setUserPhone(string user, string phone);
       void setUserDescription(string user, string descr);
 
-      map <string, bool>    getUserControls(string user);
+      std::map <string, bool>    getUserControls(string user);
 
       bool                  getUserControl(string user, string control);
 
@@ -151,10 +151,10 @@ public:
       std::vector <string> getObjectAttribute(string object, string attribute);
 
       std::vector <string> searchDN(string filter);
-      map < string, map < string, std::vector<string> > > search(string OU, int scope, string filter, const std::vector <string> &attributes);
+      std::map < string, std::map < string, std::vector<string> > > search(string OU, int scope, string filter, const std::vector <string> &attributes);
 
-      map <string, std::vector <string> > getObjectAttributes(string object);
-      map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
+      std::map <string, std::vector <string> > getObjectAttributes(string object);
+      std::map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
 
       // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
       int nettimeout;
@@ -173,7 +173,7 @@ private:
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);
       void mod_replace(string object, string attribute, string value);
-      map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
+      std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string itos(int num);
       string dn2domain(string dn);
       std::vector <string> DNsToShortNames(std::vector <string> &v);
