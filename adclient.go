@@ -383,7 +383,32 @@ func SearchDN(filter string) (result []string, err error) {
 
 /*
    map < string, map < string, std::vector<string> > > search(string OU, int scope, string filter, const std::vector <string> &attributes);
+*/
 
-   map <string, std::vector <string> > getObjectAttributes(string object);
-   map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
+func GetObjectAttributes(object string, attrs ...string) (result map[string][]string, err error) {
+	cattrs := NewStringVector()
+	defer DeleteStringVector(cattrs)
+	if len(attrs) == 0 {
+		cattrs.Add("*")
+	} else {
+		for _, attr := range attrs {
+			cattrs.Add(attr)
+		}
+	}
+
+	result = make(map[string][]string)
+	defer catch(&err)
+	cmap := ad.GetObjectAttributes(object, cattrs)
+	defer DeleteString_VectorString_Map(cmap)
+	keys := cmap.Keys()
+	for i := 0; i < int(keys.Size()); i++ {
+		key := keys.Get(i)
+		value := cmap.Get(key)
+		result[key] = vector2slice(value)
+	}
+	return
+}
+
+/*
+   map <string, std::vector <string> > GetObjectAttributes(string object, const std::vector<string> &attributes);
 */

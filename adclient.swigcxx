@@ -12,6 +12,7 @@
 namespace std {
     %template(StringVector) vector<string>;
     %template(StringBoolMap) map<string, bool>;
+    %template(String_VectorString_Map) map<string, vector<string> >;
 
     %extend map<string, bool> {
         std::vector<string> keys(void) {
@@ -22,6 +23,16 @@ namespace std {
             return k;
          }
     }
+    %extend map<string, vector<string> > {
+        std::vector<string> keys(void) {
+            std::vector<string> k = std::vector<string>();
+            for (std::map<string, vector<string> >::iterator iter = self->begin(); iter != self->end(); iter++) {
+                k.push_back(iter->first);
+            }
+            return k;
+         }
+    }
+
 }
 
 %exception {
