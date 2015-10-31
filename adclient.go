@@ -127,6 +127,12 @@ func CreateUser(cn string, container string, user_short string) (err error) {
 	return
 }
 
+func CreateGroup(cn string, container string, group_short string) (err error) {
+	defer catch(&err)
+	ad.CreateGroup(cn, container, group_short)
+	return
+}
+
 func DeleteDN(dn string) (err error) {
 	defer catch(&err)
 	ad.DeleteDN(dn)
