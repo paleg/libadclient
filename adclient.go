@@ -109,6 +109,10 @@ func Login(uri interface{}, user string, passwd string, sb string) (err error) {
 	return
 }
 
+func BindedUri() (result string) {
+	return ad.Binded_uri()
+}
+
 func GroupAddUser(group string, user string) (err error) {
 	defer catch(&err)
 	ad.GroupAddUser(group, user)
