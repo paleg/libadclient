@@ -514,6 +514,28 @@ static PyObject *wrapper_CreateUser_adclient(PyObject *self, PyObject *args) {
        return Py_None;
 }
 
+static PyObject *wrapper_CreateGroup_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *cn, *short_name, *container;
+       if (!PyArg_ParseTuple(args, "Osss", &obj, &cn, &container, &short_name)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->CreateGroup(cn, container, short_name);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
 static PyObject *wrapper_DeleteDN_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *dn;
@@ -993,6 +1015,7 @@ static PyMethodDef adclient_methods[] = {
        { "getObjectAttribute_adclient", wrapper_getObjectAttribute_adclient, 1 },
        { "getObjectAttributes_adclient", wrapper_getObjectAttributes_adclient, 1 },
        { "CreateUser_adclient", wrapper_CreateUser_adclient, 1 },
+       { "CreateGroup_adclient", wrapper_CreateGroup_adclient, 1 },
        { "DeleteDN_adclient", wrapper_DeleteDN_adclient, 1 },
        { "CreateOU_adclient", wrapper_CreateOU_adclient, 1 },
        { "EnableUser_adclient", wrapper_EnableUser_adclient, 1 },

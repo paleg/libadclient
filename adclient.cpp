@@ -719,6 +719,7 @@ string adclient::dn2domain(string dn) {
 void adclient::CreateUser(string cn, string container, string user_short) {
 /*
   It creates user with given common name and short name in given container.
+  It will create container if not exists.
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
     LDAPMod *attrs[5];
@@ -778,6 +779,67 @@ void adclient::CreateUser(string cn, string container, string user_short) {
         throw ADOperationalException(error_msg, result);
     }
 }
+
+void adclient::CreateGroup(string cn, string container, string group_short) {
+/*
+  It creates new global security group with
+    samaccountname=group_short and distinguishedName="CN=cn,container"
+  It will create container if not exists.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+ */
+    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
+
+    LDAPMod *attrs[4];
+    LDAPMod attr1, attr2, attr3;
+
+    if (!ifDNExists(container)) CreateOU(container);
+
+    string dn = "CN=" + cn + "," + container;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+    char *objectClass_values[] = {"group", NULL};
+    char *name_values[2];
+    char *sAMAccountName_values[2];
+
+    //char *accountControl_values[] = {"66050", NULL};
+    //char *upn_values[2];
+    //string upn;
+    //string domain;
+
+    attr1.mod_op = LDAP_MOD_ADD;
+    attr1.mod_type = "objectClass";
+    attr1.mod_values = objectClass_values;
+
+    name_values[0] = strdup(group_short.c_str());
+    name_values[1] = NULL;
+    attr2.mod_op = LDAP_MOD_ADD;
+    attr2.mod_type = "name";
+    attr2.mod_values = name_values;
+
+    sAMAccountName_values[0] = strdup(group_short.c_str());
+    sAMAccountName_values[1] = NULL;
+    attr3.mod_op = LDAP_MOD_ADD;
+    attr3.mod_type = "sAMAccountName";
+    attr3.mod_values = sAMAccountName_values;
+#pragma GCC diagnostic pop
+
+    attrs[0] = &attr1;
+    attrs[1] = &attr2;
+    attrs[2] = &attr3;
+    attrs[3] = NULL;
+
+    int result;
+    result = ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
+    free(name_values[0]);
+    free(sAMAccountName_values[0]);
+    if(result != LDAP_SUCCESS) {
+        string error_msg = "Error in CreateGroup, ldap_add_ext_s: ";
+        error_msg.append(ldap_err2string(result));
+        throw ADOperationalException(error_msg, result);
+    }
+}
+
 
 void adclient::setUserPassword(string user, string password) {
 /*

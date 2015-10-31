@@ -88,8 +88,9 @@ public:
       void groupAddUser(string group, string user);
       void groupRemoveUser(string group, string user);
       void CreateUser(string cn, string container, string user_short);
-      void DeleteDN(string dn);
+      void CreateGroup(string cn, string container, string group_short);
       void CreateOU(string ou);
+      void DeleteDN(string dn);
       void EnableUser(string user);
       void DisableUser(string user);
       void UnLockUser(string user);
