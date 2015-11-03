@@ -10,7 +10,7 @@ DESCRIPTION:
 
 INSTALL (*nix):
 
-Note: you must have scons installed
+Note: you must have [scons](http://www.scons.org/) installed
 
   1. $ git clone https://github.com/paleg/libadclient.git
   2. $ cd libadclient
@@ -18,6 +18,19 @@ Note: you must have scons installed
   4. $ python setup.py install (to build/install python library)
 
 Note: step 4 depends on step 3. So if your want to upgrade python module, you should upgrade c++ library first. 
+
+OS X 10.11 INSTALL NOTE:
+
+If you are getting errors in python while importing module:
+```
+ImportError: dlopen(/Library/Python/2.7/site-packages/_adclient.so, 2): Library not loaded: libadclient.dylib
+  Referenced from: /Library/Python/2.7/site-packages/_adclient.so
+  Reason: unsafe use of relative rpath libadclient.dylib in /Library/Python/2.7/site-packages/_adclient.so with restricted binary
+```
+that is because [System Integrity Protection](https://support.apple.com/en-us/HT204899). You can fix it with:
+```
+$ sudo install_name_tool -change libadclient.dylib /usr/local/lib/libadclient.dylib /Library/Python/2.7/site-packages/_adclient.so
+```
 
 Full list of supported methods can be found in [adclient.h](https://github.com/paleg/libadclient/blob/master/adclient.h) (for c++) and [adclient.py](https://github.com/paleg/libadclient/blob/master/adclient.py) (for python)
 
