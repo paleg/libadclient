@@ -27,6 +27,12 @@
 #include <limits>
 #include <resolv.h>
 
+// for OS X
+#ifndef NS_MAXMSG
+#define NS_MAXMSG 65535
+#include <arpa/nameser_compat.h>
+#endif
+
 #define AD_SUCCESS                      1
 #define AD_LDAP_CONNECTION_ERROR        2
 #define AD_PARAMS_ERROR                 4

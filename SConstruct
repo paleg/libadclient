@@ -84,8 +84,8 @@ if not IGNORE:
           print "Failed."
           Exit(1)
 
-   env.Append(LIBS=["ldap", "sasl2", "stdc++"])
-   check_libs = ['ldap', 'sasl2', 'stdc++']
+   env.Append(LIBS=["ldap", "sasl2", "resolv", "stdc++"])
+   check_libs = ['ldap', 'sasl2', 'resolv', 'stdc++']
    for lib in check_libs:
        if not conf.CheckLib(lib):
           print "Failed."
