@@ -1,14 +1,14 @@
 # libadclient
-Active Directory client for c++ and python
+Active Directory client for c++, Python and Golang
 
 Requirements: openldap or SunLDAP
 
 DESCRIPTION:
-  This simple C++/Python classes can be used to manipulate Active Directory from c++ or Python programs.
+  This simple C++/Python/Golang classes can be used to manipulate Active Directory from c++, Python and Golang programs.
   
   This module reuses some code from adtool by Mike Dawson.
 
-INSTALL (*nix):
+INSTALL (c++ and Python):
 
 Note: you must have [scons](http://www.scons.org/) installed
 
@@ -31,6 +31,16 @@ that is because [System Integrity Protection](https://support.apple.com/en-us/HT
 ```
 $ sudo install_name_tool -change libadclient.dylib /usr/local/lib/libadclient.dylib /Library/Python/2.7/site-packages/_adclient.so
 ```
+
+INSTALL (Golang):
+```
+ $ go get github.com/paleg/libadclient
+```
+You must have swig >= 3.0.6 and Golang >= 1.4 to compile library. However, Golang >= 1.5.1 is recommended.
+When building Golang library only openldap >= 2.2 are supported.
+
+Note: this library is not safe for concurrent use. If you need to use library from concurrently executing goroutines, the calls must be mediated by some kind of synchronization mechanism (channels or mutexes).
+
 
 Full list of supported methods can be found in [adclient.h](https://github.com/paleg/libadclient/blob/master/adclient.h) (for c++) and [adclient.py](https://github.com/paleg/libadclient/blob/master/adclient.py) (for python)
 
@@ -119,4 +129,39 @@ except adclient.ADSearchError, ex:
     print("unknown search error")
 except ADOperationalError:
   print("unknown operational error")
+```
+
+USAGE SAMPLE (Golang):
+```go
+package main
+
+import (
+  "github.com/paleg/libadclient"
+  "fmt"
+)
+
+func main() {
+  adclient.New()
+  defer adclient.Delete()
+  
+  adclient.Timelimit = 60
+  adclient.Nettimeout = 60
+  // secured SASL login with a list of ldap uries
+  // if err : =ad.login(["ldap://Server1", "ldap://Server2", "ldap://Server3"], "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx"), err != nil {
+  // secured SASL login with a domain name
+  if err := adclient.Login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx"); err != nil {
+    fmt.Printf("Failed to AD login: %v\n", err)
+    return
+  }
+  
+  group := "Domain Admins"
+  if users, err := adclient.GetUsersInGroup(group); err != nil {
+    fmt.Printf("Failed to get users in '%v': %v\n", group, err)
+  } else {
+    fmt.Printf("Users in '%v':\n", group)
+    for _, user := range users {
+      fmt.Printf("\t%v\n", user)
+    }
+  }
+}
 ```
