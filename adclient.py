@@ -94,6 +94,11 @@ class ADClient:
           """
           return _adclient.getDialinUsers_adclient(self.obj)
 
+      def getDisabledUsers(self):
+          """ It returns list of all users with ADS_UF_ACCOUNTDISABLE in userAccountControl.
+          """
+          return _adclient.getDisabledUsers_adclient(self.obj)
+
       def getObjectDN(self, user):
           """ It returns user DN by short name.
           """

@@ -140,6 +140,7 @@ public:
       std::vector <string> getUsers();
       std::vector <string> getAllOUs();
       std::vector <string> getDialinUsers();
+      std::vector <string> getDisabledUsers();
 
       std::vector <string> getUserGroups(string user);
       std::vector <string> getUsersInGroup(string group);

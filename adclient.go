@@ -359,6 +359,10 @@ func GetDialinUsers() ([]string, error) {
 	return commonEmptyToSlice(ad.GetDialinUsers)
 }
 
+func GetDisabledUsers() ([]string, error) {
+	return commonEmptyToSlice(ad.GetDisabledUsers)
+}
+
 func GetUserGroups(user string) ([]string, error) {
 	return commonStringToSlice(ad.GetUserGroups, user)
 }

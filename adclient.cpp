@@ -1030,6 +1030,18 @@ vector <string> adclient::getDialinUsers() {
     return DNsToShortNames(users_dn);
 }
 
+vector <string> adclient::getDisabledUsers() {
+/*
+  It returns vector of strings with all users with ADS_UF_ACCOUNTDISABLE in userAccountControl.
+*/
+    vector <string> users_dn;
+
+    users_dn = searchDN("(&(objectClass=user)(objectCategory=person)(userAccountControl:1.2.840.113556.1.4.803:=2))");
+
+    return DNsToShortNames(users_dn);
+}
+
+
 string adclient::getUserDisplayName(string user) {
 /*
   It returns string with DisplayName of user.

@@ -276,6 +276,22 @@ static PyObject *wrapper_getDialinUsers_adclient(PyObject *self, PyObject *args)
        return vector2list(result);
 }
 
+static PyObject *wrapper_getDisabledUsers_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       vector <string> result;
+       if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          result = ad->getDisabledUsers();
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       return vector2list(result);
+}
+
 static PyObject *wrapper_getObjectDN_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *user;
@@ -1005,6 +1021,7 @@ static PyMethodDef adclient_methods[] = {
        { "groupRemoveUser_adclient", wrapper_groupRemoveUser_adclient, 1 },
        { "ifDialinUser_adclient", wrapper_ifDialinUser_adclient, 1 },
        { "getDialinUsers_adclient", wrapper_getDialinUsers_adclient, 1 },
+       { "getDisabledUsers_adclient", wrapper_getDisabledUsers_adclient, 1 },
        { "getObjectDN_adclient", wrapper_getObjectDN_adclient, 1 },
        { "ifUserDisabled_adclient", wrapper_ifUserDisabled_adclient, 1 },
        { "getAllOUs_adclient", wrapper_getAllOUs_adclient, 1 },
