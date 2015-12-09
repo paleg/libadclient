@@ -136,6 +136,7 @@ public:
 
       string          getObjectDN(string object);
       string          getUserDisplayName(string user);
+      string          getUserIpAddress(string user);
 
       bool            ifDialinUser(string user);
 
@@ -290,6 +291,30 @@ int ip2int(string ip) {
         ipdec = ipdec - 4294967296;
     }
     return ipdec;
+}
+
+string int2ip(string value) {
+    long long intip = stol(value);
+    if (intip < 0) {
+        intip += 4294967296L;
+    }
+    string binip = DecToBin(intip);
+    if (binip.size() > 32) {
+        throw std::invalid_argument("wrong value: " + binip);
+    } else if (binip.size() < 32) {
+        while (binip.size() != 32) {
+            binip = "0" + binip;
+        }
+    }
+    string firstOctet = binip.substr(0, 8);
+    string secondOctet = binip.substr(8, 8);
+    string thirdOctet = binip.substr(16, 8);
+    string fourthOctet = binip.substr(24, 8);
+    string ip = itos(BinToDec(firstOctet)) + ".";
+    ip += itos(BinToDec(secondOctet)) + ".";
+    ip += itos(BinToDec(thirdOctet)) + ".";
+    ip += itos(BinToDec(fourthOctet));
+    return ip;
 }
 
 #endif // _ADCLIENT_H_

@@ -1059,6 +1059,27 @@ string adclient::getUserDisplayName(string user) {
     return name[0];
 }
 
+string adclient::getUserIpAddress(string user) {
+    vector <string> tmp;
+    try {
+        tmp = getObjectAttribute(user, "msRADIUSFramedIPAddress");
+    }
+    catch (ADSearchException& ex) {
+        if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+            return "";
+        }
+        throw;
+    }
+    try {
+        if (!tmp[0].empty()) {
+            return int2ip(tmp[0]);
+        }
+    } catch (std::invalid_argument ex) {
+        throw ADOperationalException(ex.what(), AD_PARAMS_ERROR);
+    }
+    return "";
+}
+
 /*
 Pwd-Last-Set attribute - http://msdn.microsoft.com/en-us/library/windows/desktop/ms679430%28v=vs.85%29.aspx
 Account-Expires attribute - http://msdn.microsoft.com/en-us/library/windows/desktop/ms675098%28v=vs.85%29.aspx

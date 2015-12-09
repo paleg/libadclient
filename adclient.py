@@ -151,6 +151,11 @@ class ADClient:
           """
           return _adclient.getUserDisplayName_adclient(self.obj, user)
 
+      def getUserIpAddress(self, user):
+          """ It returns string with user msRADIUSFramedIPAddress property.
+          """
+          return _adclient.getUserIpAddress_adclient(self.obj, user)
+
       def getObjectAttribute(self, object, attribute):
           """ It returns list with values of object attribute.
           """

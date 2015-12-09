@@ -465,6 +465,23 @@ static PyObject *wrapper_getUserDisplayName_adclient(PyObject *self, PyObject *a
     return Py_BuildValue("s", result.c_str());
 }
 
+static PyObject *wrapper_getUserIpAddress_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *user_short;
+    string result;
+    if (!PyArg_ParseTuple(args, "Os", &obj, &user_short)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        result = ad->getUserIpAddress(user_short);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    return Py_BuildValue("s", result.c_str());
+}
+
 static PyObject *wrapper_getObjectAttribute_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *user_short, *attribute;
@@ -1079,6 +1096,7 @@ static PyMethodDef adclient_methods[] = {
     { "getGroups_adclient",              (PyCFunction)wrapper_getGroups_adclient,                METH_VARARGS,   NULL },
     { "getUsers_adclient",               (PyCFunction)wrapper_getUsers_adclient,                 METH_VARARGS,   NULL },
     { "getUserDisplayName_adclient",     (PyCFunction)wrapper_getUserDisplayName_adclient,       METH_VARARGS,   NULL },
+    { "getUserIpAddress_adclient",       (PyCFunction)wrapper_getUserIpAddress_adclient,         METH_VARARGS,   NULL },
     { "getObjectAttribute_adclient",     (PyCFunction)wrapper_getObjectAttribute_adclient,       METH_VARARGS,   NULL },
     { "getObjectAttributes_adclient",    (PyCFunction)wrapper_getObjectAttributes_adclient,      METH_VARARGS,   NULL },
     { "CreateUser_adclient",             (PyCFunction)wrapper_CreateUser_adclient,               METH_VARARGS,   NULL },
