@@ -27,6 +27,7 @@
 #include <limits>
 #include <climits>
 #include <cerrno>
+#include <cstdlib>
 #include <resolv.h>
 
 // for OS X
@@ -229,12 +230,12 @@ string itos(int num) {
     return(ss.str());
 }
 
-int stol(string s) {
+long long stol(string s) {
    errno = 0;
    char *endptr;
    int base = 10;
-   int val = strtol(s.c_str(), &endptr, base);
-   if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+   long long val = strtoll(s.c_str(), &endptr, base);
+   if ((errno == ERANGE && (val == LLONG_MAX || val == LLONG_MIN))
       || (errno != 0 && val == 0)) {
       throw std::invalid_argument("unacceptable input: " + s);
    }
@@ -245,7 +246,7 @@ int stol(string s) {
    return val;
 }
 
-string DecToBin(int number) {
+string DecToBin(long long number) {
     if ( number == 0 ) return "0";
     if ( number == 1 ) return "1";
 
@@ -255,8 +256,8 @@ string DecToBin(int number) {
         return DecToBin(number / 2) + "1";
 }
 
-int BinToDec(string number) {
-    int result = 0, pow = 1;
+long long BinToDec(string number) {
+    long long result = 0, pow = 1;
     for ( int i = number.length() - 1; i >= 0; --i, pow <<= 1 )
         result += (number[i] - '0') * pow;
 
@@ -284,7 +285,7 @@ int ip2int(string ip) {
     if (iters != 4) {
         throw std::invalid_argument("wrong ipv4 address: " + ip);
     }
-    int ipdec = BinToDec(ipbin);
+    long long ipdec = BinToDec(ipbin);
     if (ipdec > 2147483647) {
         ipdec = ipdec - 4294967296;
     }
