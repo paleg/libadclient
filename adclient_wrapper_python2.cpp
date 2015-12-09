@@ -987,6 +987,50 @@ static PyObject *wrapper_setUserPhone_adclient(PyObject *self, PyObject *args) {
        return Py_None;
 }
 
+static PyObject *wrapper_setUserIpAddress_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *user, *ip;
+       if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &ip)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->setUserIpAddress(user, ip);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
+static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *user, *attr, *value;
+       if (!PyArg_ParseTuple(args, "Osss", &obj, &user, &attr, &value)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->setObjectAttribute(user, attr, value);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
 static PyObject * wrapper_UnLockUser_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *user;
@@ -1055,6 +1099,8 @@ static PyMethodDef adclient_methods[] = {
        { "setUserDepartment_adclient", wrapper_setUserDepartment_adclient, 1 },
        { "setUserCompany_adclient", wrapper_setUserCompany_adclient, 1 },
        { "setUserPhone_adclient", wrapper_setUserPhone_adclient, 1 },
+       { "setUserIpAddress_adclient", wrapper_setUserIpAddress_adclient, 1 },
+       { "setObjectAttribute_adclient", wrapper_setObjectAttribute_adclient, 1 },
        { "UnLockUser_adclient", wrapper_UnLockUser_adclient, 1 },
        { "ifDNExists_adclient", wrapper_ifDNExists_adclient, 1 },
        { "binded_uri_adclient", wrapper_binded_uri_adclient, 1},

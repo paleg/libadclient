@@ -25,6 +25,8 @@
 #include <stdexcept>    // std::out_of_range
 #include <ctime>
 #include <limits>
+#include <climits>
+#include <cerrno>
 #include <resolv.h>
 
 // for OS X
@@ -117,6 +119,9 @@ public:
       void setUserCompany(string user, string company);
       void setUserPhone(string user, string phone);
       void setUserDescription(string user, string descr);
+      void setUserIpAddress(string user, string ip);
+
+      void setObjectAttribute(string user, string attr, string ip);
 
       std::map <string, bool>    getUserControls(string user);
 
@@ -175,7 +180,6 @@ private:
       void mod_delete(string object, string attribute, string value);
       void mod_replace(string object, string attribute, string value);
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
-      string itos(int num);
       string dn2domain(string dn);
       std::vector <string> DNsToShortNames(std::vector <string> &v);
       std::vector<string> get_ldap_servers(string domain);
@@ -217,6 +221,74 @@ inline void replace(std::string& subject, const std::string& search,
          subject.replace(pos, search.length(), replace);
          pos += replace.length();
     }
+}
+
+string itos(int num) {
+    std::stringstream ss;
+    ss << num;
+    return(ss.str());
+}
+
+int stol(string s) {
+   errno = 0;
+   char *endptr;
+   int base = 10;
+   int val = strtol(s.c_str(), &endptr, base);
+   if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+      || (errno != 0 && val == 0)) {
+      throw std::invalid_argument("unacceptable input: " + s);
+   }
+   string end = string(endptr);
+   if (end.size() != 0) {
+      throw std::invalid_argument("invalid input: " + end);
+   }
+   return val;
+}
+
+string DecToBin(int number) {
+    if ( number == 0 ) return "0";
+    if ( number == 1 ) return "1";
+
+    if ( number % 2 == 0 )
+        return DecToBin(number / 2) + "0";
+    else
+        return DecToBin(number / 2) + "1";
+}
+
+int BinToDec(string number) {
+    int result = 0, pow = 1;
+    for ( int i = number.length() - 1; i >= 0; --i, pow <<= 1 )
+        result += (number[i] - '0') * pow;
+
+    return result;
+}
+
+int ip2int(string ip) {
+    string ipbin = "";
+    std::istringstream iss(ip);
+    string s;
+    int iters = 0;
+    while (getline(iss, s, '.')) {
+        string bin = DecToBin(stol(s));
+        if (bin.size() > 8) {
+            throw std::invalid_argument("wrong ipv4 address: " + ip);
+            break;
+        } else if (bin.size() < 8) {
+            while (bin.size() != 8) {
+                bin = "0" + bin;
+            }
+        }
+        ipbin = ipbin + bin;
+        iters++;
+    }
+    if (iters != 4) {
+        throw std::invalid_argument("wrong ipv4 address: " + ip);
+    }
+    int ipdec = BinToDec(ipbin);
+    if (ipdec > 2147483647) {
+        ipdec = ipdec - 4294967296;
+    }
+    return ipdec;
 }
 
 #endif // _ADCLIENT_H_

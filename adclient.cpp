@@ -1360,6 +1360,19 @@ void adclient::setUserCompany(string user, string company) {
     mod_replace(user, "company", company);
 }
 
+void adclient::setUserIpAddress(string user, string ip) {
+    try {
+        int ipdec = ip2int(ip);
+        mod_replace(user, "msRADIUSFramedIPAddress", itos(ipdec));
+    } catch (std::invalid_argument ex) {
+        throw ADOperationalException(ex.what(), AD_PARAMS_ERROR);
+    }
+}
+
+void adclient::setObjectAttribute(string object, string attr, string ip) {
+    mod_replace(object, attr, ip);
+}
+
 /*
 AD can set following limit (http://support.microsoft.com/kb/315071/en-us):
  MaxValRange - This value controls the number of values that are returned
@@ -1440,12 +1453,6 @@ vector <string> adclient::DNsToShortNames(vector <string> &v) {
         result.push_back(short_v[0]);
     }
     return result;
-}
-
-string adclient::itos(int num) {
-    std::stringstream ss;
-    ss << num;
-    return(ss.str());
 }
 
 struct berval adclient::getBinaryObjectAttribute(string object, string attribute) {
