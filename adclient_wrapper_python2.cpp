@@ -31,6 +31,13 @@ static PyObject *wrapper_get_error_num(PyObject *self, PyObject *args) {
        return Py_BuildValue("i", error_num);
 }
 
+static PyObject *wrapper_int2ip(PyObject *self, PyObject *args) {
+       char *ipstr;
+       if (!PyArg_ParseTuple(args, "s", &ipstr)) return NULL;
+       string result = int2ip(ipstr);
+       return Py_BuildValue("s", result.c_str());
+}
+
 static PyObject *wrapper_new_adclient(PyObject *self, PyObject *args) {
        error_num = 0;
        adclient *obj = new adclient();
@@ -1123,6 +1130,7 @@ static PyMethodDef adclient_methods[] = {
        { "ifDNExists_adclient", wrapper_ifDNExists_adclient, 1 },
        { "binded_uri_adclient", wrapper_binded_uri_adclient, 1},
        { "get_error_num", wrapper_get_error_num, 1 },
+       { "int2ip", wrapper_int2ip, 1 },
        { NULL, NULL }
 };
 

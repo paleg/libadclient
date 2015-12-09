@@ -258,3 +258,6 @@ class ADClient:
           """ It returns int of last error occured
           """
           return _adclient.get_error_num()
+
+      def int2ip(self, ipstr):
+          return _adclient.int2ip(ipstr)

@@ -35,6 +35,13 @@ static PyObject *wrapper_get_error_num(PyObject *self, PyObject *args) {
     return Py_BuildValue("i", error_num);
 }
 
+static PyObject *wrapper_int2ip(PyObject *self, PyObject *args) {
+    char *ipstr;
+    if (!PyArg_ParseTuple(args, "s", &ipstr)) return NULL;
+    string result = int2ip(ipstr);
+    return Py_BuildValue("s", result.c_str());
+}
+
 void delete_adclient(PyObject *capsule) {
     adclient *ad = convert_ad(capsule);
     delete ad;
@@ -1127,6 +1134,7 @@ static PyMethodDef adclient_methods[] = {
     { "ifDNExists_adclient",             (PyCFunction)wrapper_ifDNExists_adclient,               METH_VARARGS,   NULL },
     { "binded_uri_adclient",             (PyCFunction)wrapper_binded_uri_adclient,               METH_VARARGS,   NULL },
     { "get_error_num",                   (PyCFunction)wrapper_get_error_num,                     METH_VARARGS,   NULL },
+    { "int2ip",                          (PyCFunction)wrapper_int2ip,                            METH_VARARGS,   NULL },
     { NULL, NULL }
 };
 
