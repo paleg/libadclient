@@ -225,13 +225,13 @@ inline void replace(std::string& subject, const std::string& search,
     }
 }
 
-string itos(int num) {
+inline string itos(int num) {
     std::stringstream ss;
     ss << num;
     return(ss.str());
 }
 
-long long stol(string s) {
+inline long long stol(string s) {
    errno = 0;
    char *endptr;
    int base = 10;
@@ -247,7 +247,7 @@ long long stol(string s) {
    return val;
 }
 
-string DecToBin(long long number) {
+inline string DecToBin(long long number) {
     if ( number == 0 ) return "0";
     if ( number == 1 ) return "1";
 
@@ -257,7 +257,7 @@ string DecToBin(long long number) {
         return DecToBin(number / 2) + "1";
 }
 
-long long BinToDec(string number) {
+inline long long BinToDec(string number) {
     long long result = 0, pow = 1;
     for ( int i = number.length() - 1; i >= 0; --i, pow <<= 1 )
         result += (number[i] - '0') * pow;
@@ -265,7 +265,7 @@ long long BinToDec(string number) {
     return result;
 }
 
-int ip2int(string ip) {
+inline int ip2int(string ip) {
     string ipbin = "";
     std::istringstream iss(ip);
     string s;
@@ -293,7 +293,7 @@ int ip2int(string ip) {
     return ipdec;
 }
 
-string int2ip(string value) {
+inline string int2ip(string value) {
     long long intip = stol(value);
     if (intip < 0) {
         intip += 4294967296L;
