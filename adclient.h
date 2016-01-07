@@ -231,7 +231,7 @@ inline string itos(int num) {
     return(ss.str());
 }
 
-inline long long stol(string s) {
+inline long long _stoll(string s) {
    errno = 0;
    char *endptr;
    int base = 10;
@@ -271,7 +271,7 @@ inline int ip2int(string ip) {
     string s;
     int iters = 0;
     while (getline(iss, s, '.')) {
-        string bin = DecToBin(stol(s));
+        string bin = DecToBin(_stoll(s));
         if (bin.size() > 8) {
             throw std::invalid_argument("wrong ipv4 address: " + ip);
             break;
@@ -294,7 +294,7 @@ inline int ip2int(string ip) {
 }
 
 inline string int2ip(string value) {
-    long long intip = stol(value);
+    long long intip = _stoll(value);
     if (intip < 0) {
         intip += 4294967296L;
     }
