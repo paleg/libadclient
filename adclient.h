@@ -23,6 +23,7 @@
 #include <iostream>
 #include <iterator>     // std::distance
 #include <stdexcept>    // std::out_of_range
+#include <algorithm>
 #include <ctime>
 #include <limits>
 #include <climits>
@@ -98,6 +99,7 @@ public:
       void groupRemoveUser(string group, string user);
       void CreateUser(string cn, string container, string user_short);
       void CreateGroup(string cn, string container, string group_short);
+      void CreateComputer(string name, string container);
       void CreateOU(string ou);
       void DeleteDN(string dn);
       void EnableUser(string user);

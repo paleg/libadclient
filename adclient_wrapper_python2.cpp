@@ -534,6 +534,28 @@ static PyObject *wrapper_getObjectAttributes_adclient(PyObject *self, PyObject *
        return fin_list;
 }
 
+static PyObject *wrapper_CreateComputer_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *name, *container;
+       if (!PyArg_ParseTuple(args, "Oss", &obj, &name, &container)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->CreateComputer(name, container);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
 static PyObject *wrapper_CreateUser_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *cn, *short_name, *container;
@@ -1103,6 +1125,7 @@ static PyMethodDef adclient_methods[] = {
        { "getObjectAttribute_adclient", wrapper_getObjectAttribute_adclient, 1 },
        { "getObjectAttributes_adclient", wrapper_getObjectAttributes_adclient, 1 },
        { "CreateUser_adclient", wrapper_CreateUser_adclient, 1 },
+       { "CreateComputer_adclient", wrapper_CreateComputer_adclient, 1 },
        { "CreateGroup_adclient", wrapper_CreateGroup_adclient, 1 },
        { "DeleteDN_adclient", wrapper_DeleteDN_adclient, 1 },
        { "CreateOU_adclient", wrapper_CreateOU_adclient, 1 },

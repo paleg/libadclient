@@ -569,7 +569,7 @@ void adclient::CreateOU(string ou) {
         la_value = (**rez[i]).la_value;
 #endif
         ous.insert(ous.begin(), string(la_attr.bv_val)+"="+string(la_value.bv_val));
-	}
+    }
     ldap_memfree(rez);
     string name = ous[ous.size()-1].substr(3);
     // Remove last OU
@@ -715,6 +715,63 @@ string adclient::dn2domain(string dn) {
     throw ADOperationalException("Don't know how to do dn2domain", 255);
 }
 #endif
+
+void adclient::CreateComputer(string name, string container) {
+/*
+  It creates computer with given name in given container.
+  It will create container if not exists.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
+    LDAPMod *attrs[4];
+    LDAPMod attr1, attr2, attr3;
+
+    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
+
+    if (!ifDNExists(container)) CreateOU(container);
+
+    string dn = "CN=" + name + "," + container;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+    char *objectClass_values[] = {"top", "person", "organizationalPerson",
+        "user", "computer", NULL};
+    char *name_values[2];
+    char *accountControl_values[] = {"4128", NULL};
+    string upn;
+    string domain;
+
+    attr1.mod_op = LDAP_MOD_ADD;
+    attr1.mod_type = "objectClass";
+    attr1.mod_values = objectClass_values;
+
+    std::transform(name.begin(), name.end(), name.begin(), ::toupper);
+    name += "$";
+
+    name_values[0] = strdup(name.c_str());
+    name_values[1] = NULL;
+    attr2.mod_op = LDAP_MOD_ADD;
+    attr2.mod_type = "sAMAccountName";
+    attr2.mod_values = name_values;
+
+    attr3.mod_op = LDAP_MOD_ADD;
+    attr3.mod_type = "userAccountControl";
+    attr3.mod_values = accountControl_values;
+#pragma GCC diagnostic pop
+
+    attrs[0] = &attr1;
+    attrs[1] = &attr2;
+    attrs[2] = &attr3;
+    attrs[3] = NULL;
+
+    int result;
+    result=ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
+    free(name_values[0]);
+    if(result!=LDAP_SUCCESS) {
+        string error_msg = "Error in CreateUser, ldap_add_ext_s: ";
+        error_msg.append(ldap_err2string(result));
+        throw ADOperationalException(error_msg, result);
+    }
+}
 
 void adclient::CreateUser(string cn, string container, string user_short) {
 /*
@@ -1390,8 +1447,8 @@ void adclient::setUserIpAddress(string user, string ip) {
     }
 }
 
-void adclient::setObjectAttribute(string object, string attr, string ip) {
-    mod_replace(object, attr, ip);
+void adclient::setObjectAttribute(string object, string attr, string value) {
+    mod_replace(object, attr, value);
 }
 
 /*

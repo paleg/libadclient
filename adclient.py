@@ -166,6 +166,11 @@ class ADClient:
           """
           return _adclient.getObjectAttributes_adclient(self.obj, object)
 
+      def CreateComputer(self, name, container):
+          """ It creates computer with given name in given container.
+          """
+          _adclient.CreateComputer_adclient(self.obj, name, container)
+
       def CreateUser(self, cn, container, short_name):
           """ It creates user with given common name and short name in given container.
           """

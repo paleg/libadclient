@@ -538,6 +538,28 @@ static PyObject *wrapper_getObjectAttributes_adclient(PyObject *self, PyObject *
     return fin_list;
 }
 
+static PyObject *wrapper_CreateComputer_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *name, *container;
+    if (!PyArg_ParseTuple(args, "Oss", &obj, &name, &container)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        ad->CreateComputer(name, container);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    catch(ADOperationalException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyObject *wrapper_CreateUser_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *cn, *short_name, *container;
@@ -1107,6 +1129,7 @@ static PyMethodDef adclient_methods[] = {
     { "getObjectAttribute_adclient",     (PyCFunction)wrapper_getObjectAttribute_adclient,       METH_VARARGS,   NULL },
     { "getObjectAttributes_adclient",    (PyCFunction)wrapper_getObjectAttributes_adclient,      METH_VARARGS,   NULL },
     { "CreateUser_adclient",             (PyCFunction)wrapper_CreateUser_adclient,               METH_VARARGS,   NULL },
+    { "CreateComputer_adclient",         (PyCFunction)wrapper_CreateComputer_adclient,           METH_VARARGS,   NULL },
     { "CreateGroup_adclient",            (PyCFunction)wrapper_CreateGroup_adclient,              METH_VARARGS,   NULL },
     { "DeleteDN_adclient",               (PyCFunction)wrapper_DeleteDN_adclient,                 METH_VARARGS,   NULL },
     { "CreateOU_adclient",               (PyCFunction)wrapper_CreateOU_adclient,                 METH_VARARGS,   NULL },
