@@ -125,6 +125,12 @@ func GroupRemoveUser(group string, user string) (err error) {
 	return
 }
 
+func CreateComputer(name string, container string) (err error) {
+	defer catch(&err)
+	ad.CreateComputer(name, container)
+	return
+}
+
 func CreateUser(cn string, container string, user_short string) (err error) {
 	defer catch(&err)
 	ad.CreateUser(cn, container, user_short)
