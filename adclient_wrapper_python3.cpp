@@ -1062,7 +1062,7 @@ static PyObject *wrapper_setUserIpAddress_adclient(PyObject *self, PyObject *arg
 static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *user, *attr, *value;
-    if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &attr, &value)) return NULL;
+    if (!PyArg_ParseTuple(args, "Osss", &obj, &user, &attr, &value)) return NULL;
     adclient *ad = convert_ad(obj);
     try {
         ad->setObjectAttribute(user, attr, value);
