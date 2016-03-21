@@ -110,7 +110,7 @@ static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
 
     for (unsigned int i=0; i<numLines; i++) {
         PyObject *strObj = PyList_GetItem(listObj, i);
-        string item = PyBytes_AS_STRING(strObj);
+        string item = unicode2string(strObj);
         attrs.push_back(item);
     }
 

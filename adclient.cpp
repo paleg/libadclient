@@ -767,7 +767,7 @@ void adclient::CreateComputer(string name, string container) {
     result=ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
     free(name_values[0]);
     if(result!=LDAP_SUCCESS) {
-        string error_msg = "Error in CreateUser, ldap_add_ext_s: ";
+        string error_msg = "Error in CreateComputer, ldap_add_ext_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
     }
