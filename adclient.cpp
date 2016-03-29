@@ -486,7 +486,11 @@ void adclient::mod_delete(string object, string attribute, string value) {
     int result;
     string error_msg;
 
-    values[0] = strdup(value.c_str());
+    if (value.empty()) {
+        values[0] = NULL;
+    } else {
+        values[0] = strdup(value.c_str());
+    }
     values[1] = NULL;
 
     attr.mod_op = LDAP_MOD_DELETE;
@@ -497,7 +501,9 @@ void adclient::mod_delete(string object, string attribute, string value) {
     attrs[1] = NULL;
 
     result = ldap_modify_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
-    free(values[0]);
+    if (!value.empty()) {
+        free(values[0]);
+    }
     free(attr.mod_type);
     if (result != LDAP_SUCCESS) {
         error_msg = "Error in mod_delete, ldap_modify_ext_s: ";
@@ -1445,6 +1451,10 @@ void adclient::setUserIpAddress(string user, string ip) {
     } catch (std::invalid_argument ex) {
         throw ADOperationalException(ex.what(), AD_PARAMS_ERROR);
     }
+}
+
+void adclient::clearObjectAttribute(string object, string attr) {
+    mod_delete(object, attr, "");
 }
 
 void adclient::setObjectAttribute(string object, string attr, string value) {

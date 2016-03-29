@@ -124,7 +124,8 @@ public:
       void setUserDescription(string user, string descr);
       void setUserIpAddress(string user, string ip);
 
-      void setObjectAttribute(string user, string attr, string ip);
+      void setObjectAttribute(string object, string attr, string ip);
+      void clearObjectAttribute(string object, string attr);
 
       std::map <string, bool>    getUserControls(string user);
 

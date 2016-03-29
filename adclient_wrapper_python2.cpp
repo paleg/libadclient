@@ -1057,11 +1057,33 @@ static PyObject *wrapper_setUserIpAddress_adclient(PyObject *self, PyObject *arg
 
 static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
-       char *user, *attr, *value;
-       if (!PyArg_ParseTuple(args, "Osss", &obj, &user, &attr, &value)) return NULL;
+       char *object, *attr, *value;
+       if (!PyArg_ParseTuple(args, "Osss", &obj, &object, &attr, &value)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          ad->setObjectAttribute(user, attr, value);
+          ad->setObjectAttribute(object, attr, value);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
+static PyObject *wrapper_clearObjectAttribute_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *object, *attr;
+       if (!PyArg_ParseTuple(args, "Oss", &obj, &object, &attr)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->clearObjectAttribute(object, attr);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -1148,6 +1170,7 @@ static PyMethodDef adclient_methods[] = {
        { "setUserCompany_adclient", wrapper_setUserCompany_adclient, 1 },
        { "setUserPhone_adclient", wrapper_setUserPhone_adclient, 1 },
        { "setUserIpAddress_adclient", wrapper_setUserIpAddress_adclient, 1 },
+       { "clearObjectAttribute_adclient", wrapper_clearObjectAttribute_adclient, 1 },
        { "setObjectAttribute_adclient", wrapper_setObjectAttribute_adclient, 1 },
        { "UnLockUser_adclient", wrapper_UnLockUser_adclient, 1 },
        { "ifDNExists_adclient", wrapper_ifDNExists_adclient, 1 },

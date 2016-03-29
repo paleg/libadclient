@@ -251,8 +251,11 @@ class ADClient:
       def setUserIpAddress(self, user, ip):
           _adclient.setUserIpAddress_adclient(self.obj, user, ip)
 
-      def setObjectAttribute(self, user, attr, value):
-          _adclient.setObjectAttribute_adclient(self.obj, user, attr, value)
+      def clearObjectAttribute(self, obj, attr):
+          _adclient.clearObjectAttribute_adclient(self.obj, obj, attr)
+
+      def setObjectAttribute(self, obj, attr, value):
+          _adclient.setObjectAttribute_adclient(self.obj, obj, attr, value)
 
       def UnLockUser(self, user):
           """ It unlocks given user.

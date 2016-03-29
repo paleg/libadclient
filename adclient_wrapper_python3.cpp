@@ -1059,13 +1059,35 @@ static PyObject *wrapper_setUserIpAddress_adclient(PyObject *self, PyObject *arg
     return Py_None;
 }
 
-static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
+static PyObject *wrapper_clearObjectAttribute_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
-    char *user, *attr, *value;
-    if (!PyArg_ParseTuple(args, "Osss", &obj, &user, &attr, &value)) return NULL;
+    char *object, *attr;
+    if (!PyArg_ParseTuple(args, "Oss", &obj, &object, &attr)) return NULL;
     adclient *ad = convert_ad(obj);
     try {
-        ad->setObjectAttribute(user, attr, value);
+        ad->clearObjectAttribute(object, attr);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    catch(ADOperationalException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *object, *attr, *value;
+    if (!PyArg_ParseTuple(args, "Osss", &obj, &object, &attr, &value)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        ad->setObjectAttribute(object, attr, value);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -1152,6 +1174,7 @@ static PyMethodDef adclient_methods[] = {
     { "setUserCompany_adclient",         (PyCFunction)wrapper_setUserCompany_adclient,           METH_VARARGS,   NULL },
     { "setUserPhone_adclient",           (PyCFunction)wrapper_setUserPhone_adclient,             METH_VARARGS,   NULL },
     { "setUserIpAddress_adclient",       (PyCFunction)wrapper_setUserIpAddress_adclient,         METH_VARARGS,   NULL },
+    { "clearObjectAttribute_adclient",   (PyCFunction)wrapper_clearObjectAttribute_adclient,     METH_VARARGS,   NULL },
     { "setObjectAttribute_adclient",     (PyCFunction)wrapper_setObjectAttribute_adclient,       METH_VARARGS,   NULL },
     { "UnLockUser_adclient",             (PyCFunction)wrapper_UnLockUser_adclient,               METH_VARARGS,   NULL },
     { "ifDNExists_adclient",             (PyCFunction)wrapper_ifDNExists_adclient,               METH_VARARGS,   NULL },
