@@ -357,8 +357,8 @@ func GetUsers() ([]string, error) {
 	return commonEmptyToSlice(ad.GetUsers)
 }
 
-func GetAllOUs() ([]string, error) {
-	return commonEmptyToSlice(ad.GetAllOUs)
+func GetOUs() ([]string, error) {
+	return commonEmptyToSlice(ad.GetOUs)
 }
 
 func GetDialinUsers() ([]string, error) {
@@ -377,16 +377,20 @@ func GetUsersInGroup(group string) (result []string, err error) {
 	return commonStringToSlice(ad.GetUsersInGroup, group)
 }
 
-func GetOUsInOU(OU string) (result []string, err error) {
-	return commonStringToSlice(ad.GetOUsInOU, OU)
+func GetGroupsInOU(OU string, scope int) (result []string, err error) {
+	return commonStringToSlice(ad.GetGroupsInOU, OU, scope)
 }
 
-func GetUsersInOU(OU string) (result []string, err error) {
-	return commonStringToSlice(ad.GetUsersInOU, OU)
+func GetComputersInOU(OU string, scope int) (result []string, err error) {
+	return commonStringToSlice(ad.getComputersInOU, OU, scope)
 }
 
-func GetUsersInOU_SubTree(OU string) (result []string, err error) {
-	return commonStringToSlice(ad.GetUsersInOU_SubTree, OU)
+func GetOUsInOU(OU string, scope int) (result []string, err error) {
+	return commonStringToSlice(ad.GetOUsInOU, OU, scope)
+}
+
+func GetUsersInOU(OU string, scope int) (result []string, err error) {
+	return commonStringToSlice(ad.GetUsersInOU, OU, scope)
 }
 
 /*
@@ -397,8 +401,8 @@ func GetObjectAttribute(object string, attribute string) (result []string, err e
 	return common2StringsToSlice(ad.GetObjectAttribute, object, attribute)
 }
 
-func SearchDN(filter string) (result []string, err error) {
-	return commonStringToSlice(ad.SearchDN, filter)
+func SearchDN(search_base string, filter string, scope int) (result []string, err error) {
+	return commonStringToSlice(ad.SearchDN, search_base, filter, scope)
 }
 
 /*

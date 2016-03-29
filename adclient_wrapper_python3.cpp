@@ -144,12 +144,14 @@ static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
 
 static PyObject *wrapper_searchDN_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
-    char *filter;
+    char *search_base, *filter;
+    int scope;
+
     vector <string> result;
-    if (!PyArg_ParseTuple(args, "Os", &obj, &filter)) return NULL;
+    if (!PyArg_ParseTuple(args, "Ossi", &obj, &search_base, &filter, &scope)) return NULL;
     adclient *ad = convert_ad(obj);
     try {
-        result = ad->searchDN(filter);
+        result = ad->searchDN(search_base, filter, scope);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -356,13 +358,13 @@ static PyObject *wrapper_ifDNExists_adclient(PyObject *self, PyObject *args) {
     }
 }
 
-static PyObject *wrapper_getAllOUs_adclient(PyObject *self, PyObject *args) {
+static PyObject *wrapper_getOUs_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     vector <string> result;
     if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
     adclient *ad = convert_ad(obj);
     try {
-        result = ad->getAllOUs();
+        result = ad->getOUs();
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -375,11 +377,14 @@ static PyObject *wrapper_getAllOUs_adclient(PyObject *self, PyObject *args) {
 static PyObject *wrapper_getOUsInOU_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *OU;
+    int scope;
+
     vector <string> result;
-    if (!PyArg_ParseTuple(args, "Os", &obj, &OU)) return NULL;
+
+    if (!PyArg_ParseTuple(args, "Osi", &obj, &OU, &scope)) return NULL;
     adclient *ad = convert_ad(obj);
     try {
-        result = ad->getOUsInOU(OU);
+        result = ad->getOUsInOU(OU, scope);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -392,11 +397,14 @@ static PyObject *wrapper_getOUsInOU_adclient(PyObject *self, PyObject *args) {
 static PyObject *wrapper_getUsersInOU_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *OU;
+    int scope;
+
     vector <string> result;
-    if (!PyArg_ParseTuple(args, "Os", &obj, &OU)) return NULL;
+
+    if (!PyArg_ParseTuple(args, "Osi", &obj, &OU, &scope)) return NULL;
     adclient *ad = convert_ad(obj);
     try {
-        result = ad->getUsersInOU(OU);
+        result = ad->getUsersInOU(OU, scope);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -406,14 +414,37 @@ static PyObject *wrapper_getUsersInOU_adclient(PyObject *self, PyObject *args) {
     return vector2list(result);
 }
 
-static PyObject *wrapper_getUsersInOU_SubTree_adclient(PyObject *self, PyObject *args) {
+static PyObject *wrapper_getComputersInOU_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
     char *OU;
+    int scope;
+
     vector <string> result;
-    if (!PyArg_ParseTuple(args, "Os", &obj, &OU)) return NULL;
+
+    if (!PyArg_ParseTuple(args, "Osi", &obj, &OU, &scope)) return NULL;
     adclient *ad = convert_ad(obj);
     try {
-        result = ad->getUsersInOU_SubTree(OU);
+        result = ad->getComputersInOU(OU, scope);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    return vector2list(result);
+}
+
+static PyObject *wrapper_getGroupsInOU_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *OU;
+    int scope;
+
+    vector <string> result;
+
+    if (!PyArg_ParseTuple(args, "Osi", &obj, &OU, &scope)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        result = ad->getGroupsInOU(OU, scope);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -1140,10 +1171,11 @@ static PyMethodDef adclient_methods[] = {
     { "getDisabledUsers_adclient",       (PyCFunction)wrapper_getDisabledUsers_adclient,         METH_VARARGS,   NULL },
     { "getObjectDN_adclient",            (PyCFunction)wrapper_getObjectDN_adclient,              METH_VARARGS,   NULL },
     { "ifUserDisabled_adclient",         (PyCFunction)wrapper_ifUserDisabled_adclient,           METH_VARARGS,   NULL },
-    { "getAllOUs_adclient",              (PyCFunction)wrapper_getAllOUs_adclient,                METH_VARARGS,   NULL },
+    { "getOUs_adclient",                 (PyCFunction)wrapper_getOUs_adclient,                   METH_VARARGS,   NULL },
     { "getOUsInOU_adclient",             (PyCFunction)wrapper_getOUsInOU_adclient,               METH_VARARGS,   NULL },
     { "getUsersInOU_adclient",           (PyCFunction)wrapper_getUsersInOU_adclient,             METH_VARARGS,   NULL },
-    { "getUsersInOU_SubTree_adclient",   (PyCFunction)wrapper_getUsersInOU_SubTree_adclient,     METH_VARARGS,   NULL },
+    { "getGroupsInOU_adclient",          (PyCFunction)wrapper_getGroupsInOU_adclient,            METH_VARARGS,   NULL },
+    { "getComputersInOU_adclient",       (PyCFunction)wrapper_getComputersInOU_adclient,         METH_VARARGS,   NULL },
     { "getGroups_adclient",              (PyCFunction)wrapper_getGroups_adclient,                METH_VARARGS,   NULL },
     { "getUsers_adclient",               (PyCFunction)wrapper_getUsers_adclient,                 METH_VARARGS,   NULL },
     { "getUserDisplayName_adclient",     (PyCFunction)wrapper_getUserDisplayName_adclient,       METH_VARARGS,   NULL },

@@ -90,8 +90,8 @@ public:
       adclient();
       ~adclient();
 
-      void login(string uri, string binddn, string bindpw, string _search_base, bool secured = true);
-      void login(std::vector <string> uries, string binddn, string bindpw, string _search_base, bool secured = true);
+      void login(string uri, string binddn, string bindpw, string search_base, bool secured = true);
+      void login(std::vector <string> uries, string binddn, string bindpw, string search_base, bool secured = true);
 
       string binded_uri() { return uri; }
 
@@ -148,20 +148,25 @@ public:
 
       std::vector <string> getGroups();
       std::vector <string> getUsers();
-      std::vector <string> getAllOUs();
+      std::vector <string> getOUs();
+
       std::vector <string> getDialinUsers();
       std::vector <string> getDisabledUsers();
 
       std::vector <string> getUserGroups(string user);
       std::vector <string> getUsersInGroup(string group);
-      std::vector <string> getOUsInOU(string OU);
-      std::vector <string> getUsersInOU(string OU);
-      std::vector <string> getUsersInOU_SubTree(string OU);
+
+      std::vector <string> getObjectsInOU(string OU, string filter, int scope);
+
+      std::vector <string> getOUsInOU(string OU, int scope);
+      std::vector <string> getUsersInOU(string OU, int scope);
+      std::vector <string> getGroupsInOU(string OU, int scope);
+      std::vector <string> getComputersInOU(string OU, int scope);
 
       struct berval getBinaryObjectAttribute(string object, string attribute);
       std::vector <string> getObjectAttribute(string object, string attribute);
 
-      std::vector <string> searchDN(string filter);
+      std::vector <string> searchDN(string search_base, string filter, int scope);
       std::map < string, std::map < string, std::vector<string> > > search(string OU, int scope, string filter, const std::vector <string> &attributes);
 
       std::map <string, std::vector <string> > getObjectAttributes(string object);
@@ -173,12 +178,11 @@ public:
       int timelimit;
 private:
       string uri;
-      string search_base;
+      string default_search_base;
       LDAP *ds;
-      int scope;
       string ldap_prefix;
 
-      void login(LDAP **ds, string uri, string binddn, string bindpw, string _search_base, bool secured);
+      void login(LDAP **ds, string uri, string binddn, string bindpw, string search_base, bool secured);
       void logout(LDAP *ds);
 
       void mod_add(string object, string attribute, string value);

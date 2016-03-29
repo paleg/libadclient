@@ -16,7 +16,6 @@ adclient::adclient() {
   Constructor, to initialize default values of global variables.
 */
     ds = NULL;
-    scope = LDAP_SCOPE_SUBTREE;
     nettimeout = -1;
     timelimit  = -1;
     ldap_prefix = "ldap://";
@@ -35,14 +34,14 @@ void adclient::logout(LDAP *ds) {
     }
 }
 
-void adclient::login(vector <string> uries, string binddn, string bindpw, string _search_base, bool secured) {
+void adclient::login(vector <string> uries, string binddn, string bindpw, string search_base, bool secured) {
 /*
   Wrapper around login to support list of uries
 */
     vector <string>::iterator it;
     for (it = uries.begin(); it != uries.end(); ++it) {
         try {
-            login(*it, binddn, bindpw, _search_base, secured);
+            login(*it, binddn, bindpw, search_base, secured);
             return;
         }
         catch (ADBindException&) {
@@ -60,15 +59,15 @@ void adclient::login(vector <string> uries, string binddn, string bindpw, string
     }
 }
 
-void adclient::login(string _uri, string binddn, string bindpw, string _search_base, bool secured) {
+void adclient::login(string _uri, string binddn, string bindpw, string search_base, bool secured) {
 /*
   Wrapper around login to fill LDAP* structure
 */
     if (_uri.compare(0, ldap_prefix.size(), ldap_prefix) == 0) {
-        login(&ds, _uri, binddn, bindpw, _search_base, secured);
+        login(&ds, _uri, binddn, bindpw, search_base, secured);
     } else {
         vector<string> servers = get_ldap_servers(_uri);
-        login(servers, binddn, bindpw, _search_base, secured);
+        login(servers, binddn, bindpw, search_base, secured);
     }
 }
 
@@ -103,7 +102,7 @@ int sasl_interact(LDAP *ds, unsigned flags, void *indefaults, void *in) {
     return LDAP_SUCCESS;
 }
 
-void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, string _search_base, bool secured) {
+void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, string search_base, bool secured) {
 /*
   To set various LDAP options and bind to LDAP server.
   It set private pointer to LDAP connection identifier - ds.
@@ -115,7 +114,7 @@ void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, strin
 
     string error_msg;
 
-    search_base = _search_base;
+    default_search_base = search_base;
 
 #if defined OPENLDAP
     result = ldap_initialize(ds, _uri.c_str());
@@ -216,7 +215,7 @@ bool adclient::checkUserPassword(string user, string password) {
 
     bool result = true;
     try {
-        login(&ld, uri, user, password, search_base, true);
+        login(&ld, uri, user, password, default_search_base, true);
     }
     catch (ADBindException& ex) {
         result = false;
@@ -392,13 +391,13 @@ bool adclient::ifDNExists(string dn, string objectclass) {
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
     string filter = "(objectclass=" + objectclass + ")";
-    result = ldap_search_ext_s(ds, dn.c_str(), scope, filter.c_str(), attrs, attrsonly, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
+    result = ldap_search_ext_s(ds, dn.c_str(), LDAP_SCOPE_SUBTREE, filter.c_str(), attrs, attrsonly, NULL, NULL, NULL, LDAP_NO_LIMIT, &res);
     ldap_msgfree(res);
 
     return (result == LDAP_SUCCESS);
 }
 
-vector <string> adclient::searchDN(string filter) {
+vector <string> adclient::searchDN(string search_base, string filter, int scope) {
 /*
   It returns vector with DNs found with 'filter'.
 */
@@ -429,7 +428,7 @@ string adclient::getObjectDN(string object) {
     } else {
         replace(object, "(", "\\(");
         replace(object, ")", "\\)");
-        vector <string> dn = searchDN( "(sAMAccountName=" + object + ")" );
+        vector <string> dn = searchDN( default_search_base, "(sAMAccountName=" + object + ")", LDAP_SCOPE_SUBTREE );
         return dn[0];
     }
 }
@@ -1088,7 +1087,7 @@ vector <string> adclient::getDialinUsers() {
 */
     vector <string> users_dn;
  
-    users_dn = searchDN("(msNPAllowDialin=TRUE)");
+    users_dn = searchDN(default_search_base, "(msNPAllowDialin=TRUE)", LDAP_SCOPE_SUBTREE);
 
     return DNsToShortNames(users_dn);
 }
@@ -1099,7 +1098,7 @@ vector <string> adclient::getDisabledUsers() {
 */
     vector <string> users_dn;
 
-    users_dn = searchDN("(&(objectClass=user)(objectCategory=person)(userAccountControl:1.2.840.113556.1.4.803:=2))");
+    users_dn = searchDN(default_search_base, "(&(objectClass=user)(objectCategory=person)(userAccountControl:1.2.840.113556.1.4.803:=2))", LDAP_SCOPE_SUBTREE);
 
     return DNsToShortNames(users_dn);
 }
@@ -1227,131 +1226,74 @@ bool adclient::ifUserDontExpirePassword(string user) {
     return getUserControl(user, "dontExpirePassword");
 }
 
-vector <string> adclient::getAllOUs() {
+vector <string> adclient::getOUs() {
 /*
-  It returns vector of strings with all organizationalUnit in scope.
+  It returns vector of strings with all organizationalUnit in Active Directory.
 */
-    vector <string> ou_dns;
-    vector <string> OUs;
-
-    ou_dns = searchDN("(objectclass=organizationalUnit)");
-
-    for (unsigned int i = 0; i < ou_dns.size(); ++i) {
-        OUs.push_back(ou_dns[i]);
-    }
-    return OUs;
-}
-
-vector <string> adclient::getOUsInOU(string OU) {
-/*
-  It returns vector of strings with OU's in OU.
-*/
-    vector <string> ous_dns;
-    vector <string> OUs;
-    string _search_base;
-    int _scope;
-
-    _search_base = search_base;
-    search_base = OU;
-
-    _scope = scope;
-    scope = LDAP_SCOPE_ONELEVEL;
-
-    ous_dns = searchDN("(objectclass=organizationalUnit)");
-
-    search_base = _search_base;
-    scope = _scope;
-
-    for (unsigned int i = 0; i < ous_dns.size(); ++i) {
-        OUs.push_back(ous_dns[i]);
-    }
-    return OUs;
-}
-
-vector <string> adclient::getUsersInOU(string OU) {
-/*
-  It returns vector of strings with all users in OU.
-*/
-    vector <string> users_dn;
-    string _search_base;
-    int _scope;
-
-    _search_base = search_base;
-    search_base = OU;
-
-    _scope = scope;
-    scope = LDAP_SCOPE_ONELEVEL;
-    try {
-        users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
-    }
-    catch(ADSearchException) {
-        /* restore original conditions and then throw exception to upper level */
-        search_base = _search_base;
-        scope = _scope;
-        throw;
-    }
-
-    search_base = _search_base;
-    scope = _scope;
-
-    return DNsToShortNames(users_dn);
-}
-
-// TODO: check if it is works
-vector <string> adclient::getUsersInOU_SubTree(string OU) {
-/*
-  It returns vector of strings with all users in OU and subOUs.
-*/
-    vector <string> users_dn;
-    string _search_base;
-
-    _search_base = search_base;
-    search_base = OU;
-
-    try {
-        users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
-    }
-    catch(ADSearchException) {
-        /* restore original conditions and then throw exception to upper level */
-        search_base = _search_base;
-        throw;
-    }
-
-    search_base = _search_base;
-
-    return DNsToShortNames(users_dn);
+    return getOUsInOU(default_search_base, LDAP_SCOPE_SUBTREE);
 }
 
 vector <string> adclient::getGroups() {
 /*
   It returns vector of strings with all groups in Active Directory.
 */
-    vector <string> groups_dn;
-
-    try {
-        groups_dn = searchDN("(objectClass=group)");
-    }
-    catch(ADSearchException) {
-         throw;
-    }
-
-    return DNsToShortNames(groups_dn);
+    vector<string> dns = getGroupsInOU(default_search_base, LDAP_SCOPE_SUBTREE);
+    return DNsToShortNames( dns );
 }
 
 vector <string> adclient::getUsers() {
 /*
   It returns vector of strings with all users in Active Directory.
 */
-    vector <string> users_dn;
+    vector<string> dns = getUsersInOU(default_search_base, LDAP_SCOPE_SUBTREE);
+    return DNsToShortNames( dns );
+}
 
-    try {
-        users_dn = searchDN("(&(objectClass=user)(objectCategory=person))");
-    }
-    catch(ADSearchException) {
-        throw;
-    }
+vector <string> adclient::getGroupsInOU(string OU, int scope) {
+/*
+  It returns vector of DNs with OU's in OU.
+  scope defines how deep to search within the search base.
+*/
+    return getObjectsInOU(OU, "(objectclass=group)", scope);
+}
 
-    return DNsToShortNames(users_dn);
+vector <string> adclient::getComputersInOU(string OU, int scope) {
+/*
+  It returns vector of DNs with OU's in OU.
+  scope defines how deep to search within the search base.
+*/
+    return getObjectsInOU(OU, "(objectclass=computer)", scope);
+}
+
+vector <string> adclient::getOUsInOU(string OU, int scope) {
+/*
+  It returns vector of DNs with OU's in OU.
+  scope defines how deep to search within the search base.
+*/
+    return getObjectsInOU(OU, "(objectclass=organizationalUnit)", scope);
+}
+
+vector <string> adclient::getUsersInOU(string OU, int scope) {
+/*
+  It returns vector of DNs with OU's in OU,
+  scope defines how deep to search within the search base.
+*/
+    return getObjectsInOU(OU, "(&(objectClass=user)(objectCategory=person))", scope);
+}
+
+vector <string> adclient::getObjectsInOU(string OU, string filter, int scope) {
+/*
+  It returns vector of objects DNs in OU,
+  filter allows certain entries and excludes others,
+  scope defines how deep to search within the search base.
+*/
+    vector <string> dns = searchDN(OU, filter, scope);
+
+    vector <string> OUs;
+    for (unsigned int i = 0; i < dns.size(); ++i) {
+        OUs.push_back(dns[i]);
+    }
+    return OUs;
 }
 
 void adclient::EnableUser(string user) {
