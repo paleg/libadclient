@@ -548,20 +548,16 @@ static PyObject *wrapper_getObjectAttributes_adclient(PyObject *self, PyObject *
        string attr;
        vector <string> values;
 
-       PyObject *fin_list = PyList_New(result.size());
+       PyObject *res_dict = PyDict_New();
 
        map<string, vector<string> >::iterator it;
        for (it = result.begin(); it != result.end(); ++it) {
            attr = it->first;
            values = it->second;
-           PyObject *temp_list = PyList_New(values.size());
-           for (unsigned int j = 0; j < values.size(); ++j) {
-               PyList_SET_ITEM(temp_list, j, PyString_FromString(values[j].c_str()));
-           }
-           PyObject *tuple = Py_BuildValue("(s,N)", attr.c_str(), temp_list);
-           PyList_SET_ITEM(fin_list, std::distance(result.begin(), it), tuple);
+           PyObject *temp_list = vector2list(values);
+           PyDict_SetItemString(res_dict, attr.c_str(), temp_list);
        }
-       return fin_list;
+       return res_dict;
 }
 
 static PyObject *wrapper_CreateComputer_adclient(PyObject *self, PyObject *args) {

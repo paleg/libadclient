@@ -560,18 +560,15 @@ static PyObject *wrapper_getObjectAttributes_adclient(PyObject *self, PyObject *
     string attr;
     vector <string> values;
 
-    PyObject *fin_list = PyList_New(result.size());
+    PyObject *res_dict = PyDict_New();
 
     map<string, vector<string> >::iterator it;
     for (it = result.begin(); it != result.end(); ++it) {
         attr = it->first;
         values = it->second;
-        // TODO: some attrs can't be directly converted to unicode (use bytes?)
-        PyObject *temp_list = vector2list(values);
-        PyObject *tuple = Py_BuildValue("(s,N)", attr.c_str(), temp_list);
-        PyList_SET_ITEM(fin_list, std::distance(result.begin(), it), tuple);
+        PyDict_SetItem(res_dict, PyUnicode_FromString(attr.c_str()), vector2list(values));
     }
-    return fin_list;
+    return res_dict;
 }
 
 static PyObject *wrapper_CreateComputer_adclient(PyObject *self, PyObject *args) {
