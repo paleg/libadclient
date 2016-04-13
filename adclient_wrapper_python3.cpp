@@ -17,11 +17,16 @@ string unicode2string(PyObject *pobj) {
 
 PyObject *vector2list(vector <string> vec) {
     string st;
-    PyObject *list = PyList_New(vec.size());;
+    PyObject *list = PyList_New(0);
 
-    for (unsigned int j=0; (j < vec.size()); j++) {
-        if (PyList_SET_ITEM(list, j, PyUnicode_FromString(vec[j].c_str())) < 0)
-            return NULL;
+    for (unsigned int j=0; j < vec.size(); j++) {
+        PyObject *unicodeString = PyUnicode_FromString(vec[j].c_str());
+        if (unicodeString != NULL) {
+            PyList_Append(list, unicodeString);
+        } else {
+            // just ignore unconvertable fields
+            PyErr_Clear();
+        }
     }
     return list;
 }
