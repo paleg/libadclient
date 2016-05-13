@@ -16,10 +16,6 @@ class ADClient:
           numeric code can be obtained from 'get_error_num' function
       """
 
-      AD_SCOPE_BASE = 0
-      AD_SCOPE_ONELEVEL = 1
-      AD_SCOPE_SUBTREE = 2
-
       def __init__(self):
           self.obj = _adclient.new_adclient()
 
@@ -42,10 +38,10 @@ class ADClient:
       def binded_uri(self):
           return _adclient.binded_uri_adclient(self.obj)
 
-      def searchDN(self, filter):
+      def searchDN(self, search_base, filter, scope):
           """ It returns list with DNs found with 'filter'
           """
-          return _adclient.searchDN_adclient(self.obj, filter)
+          return _adclient.searchDN_adclient(self.obj, search_base, filter, scope)
 
       def search(self, ou, scope, filter, attributes):
           """ General search function.
@@ -116,20 +112,25 @@ class ADClient:
           """
           return _adclient.ifDNExists_adclient(self.obj, dn, objectclass)
 
-      def getAllOUs(self):
-          """ It returns list of all organizationalUnits in search_base.
+      def getOUs(self):
+          """ It returns list of all organizationalUnits in Active Directory.
           """
-          return _adclient.getAllOUs_adclient(self.obj)
+          return _adclient.getOUs_adclient(self.obj)
 
-      def getUsersInOU(self, OU):
+      def getUsersInOU(self, OU, scope):
           """ It returns list of all users in OU.
           """
-          return _adclient.getUsersInOU_adclient(self.obj, OU)
+          return _adclient.getUsersInOU_adclient(self.obj, OU, scope)
 
-      def getUsersInOU_SubTree(self, OU):
-          """ It returns list of all users in OU and subOUs.
+      def getComputersInOU(self, OU, scope):
+          """ It returns list of all users in OU.
           """
-          return _adclient.getUsersInOU_SubTree_adclient(self.obj, OU)
+          return _adclient.getComputersInOU_adclient(self.obj, OU, scope)
+
+      def getGroupsInOU(self, OU, scope):
+          """ It returns list of all users in OU.
+          """
+          return _adclient.getGroupsInOU_adclient(self.obj, OU, scope)
 
       def getGroups(self):
           """ It returns list of all groups in Active Directory.
@@ -141,10 +142,10 @@ class ADClient:
           """
           return _adclient.getUsers_adclient(self.obj)
 
-      def getOUsInOU(self, OU):
+      def getOUsInOU(self, OU, scope):
           """ It returns list of all OUs in OU.
           """
-          return _adclient.getOUsInOU_adclient(self.obj, OU)
+          return _adclient.getOUsInOU_adclient(self.obj, OU, scope)
 
       def getUserDisplayName(self, user):
           """ It returns string with user DisplayName property.
@@ -251,8 +252,11 @@ class ADClient:
       def setUserIpAddress(self, user, ip):
           _adclient.setUserIpAddress_adclient(self.obj, user, ip)
 
-      def setObjectAttribute(self, user, attr, value):
-          _adclient.setObjectAttribute_adclient(self.obj, user, attr, value)
+      def clearObjectAttribute(self, obj, attr):
+          _adclient.clearObjectAttribute_adclient(self.obj, obj, attr)
+
+      def setObjectAttribute(self, obj, attr, value):
+          _adclient.setObjectAttribute_adclient(self.obj, obj, attr, value)
 
       def UnLockUser(self, user):
           """ It unlocks given user.
