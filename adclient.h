@@ -189,10 +189,10 @@ private:
       std::vector<string> get_ldap_servers(string domain);
 };
 
-inline string vector2string(const std::vector<string> &v) {
+inline string vector2string(const std::vector<string> &v, std::string separator = ", ") {
     std::stringstream ss;
     for(size_t i = 0; i < v.size(); ++i) {
-        if (i != 0) ss << ",";
+        if (i != 0) ss << separator;
         ss << v[i];
     }
     return ss.str();
