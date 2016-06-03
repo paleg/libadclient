@@ -90,7 +90,7 @@ public:
       adclient();
       ~adclient();
 
-      std::vector<string> get_ldap_servers(string domain, string site = "");
+      static std::vector<string> get_ldap_servers(string domain, string site = "");
 
       void login(string uri, string binddn, string bindpw, string search_base, bool secured = true);
       void login(std::vector <string> uries, string binddn, string bindpw, string search_base, bool secured = true);
@@ -193,7 +193,8 @@ private:
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string dn2domain(string dn);
       std::vector <string> DNsToShortNames(std::vector <string> &v);
-      std::vector<string> perform_srv_query(string srv_rec);
+
+      static std::vector<string> perform_srv_query(string srv_rec);
 };
 
 inline string vector2string(const std::vector<string> &v, std::string separator = ", ") {
