@@ -200,6 +200,9 @@ class ADClient:
       def setUserDescription(self, dn, descr):
           _adclient.setUserDescription_adclient(self.obj, dn, descr)
 
+      def changeUserPassword(self, dn, old_password, new_password):
+          _adclient.changeUserPassword_adclient(self.obj, dn, old_password, new_password)
+
       def setUserPassword(self, dn, password):
           _adclient.setUserPassword_adclient(self.obj, dn, password)
 

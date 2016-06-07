@@ -902,6 +902,80 @@ void adclient::CreateGroup(string cn, string container, string group_short) {
     }
 }
 
+struct berval adclient::password2berval(string password) {
+/*
+  Convert string password to unicode quoted bervalue.
+  Caller must explicitly free bv_val field with delete[].
+*/
+    struct berval pw;
+
+    string quoted_password = "\"" + password + "\"";
+
+    pw.bv_len = quoted_password.size()*2;
+
+    pw.bv_val = new char[pw.bv_len]();
+    memset(pw.bv_val, 0, pw.bv_len);
+
+    for (unsigned int i = 0; i < quoted_password.size(); ++i) {
+        pw.bv_val[i*2] = quoted_password[i];
+    }
+
+    return pw;
+}
+
+void adclient::changeUserPassword(string user, string old_password, string new_password) {
+/*
+  It changes user password (does not require administrative rights, only old password required).
+  According to https://msdn.microsoft.com/en-us/library/cc223248.aspx
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
+    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
+
+    string dn = getObjectDN(user);
+
+    LDAPMod *attrs[3];
+    LDAPMod attr1, attr2;
+    struct berval *old_bervalues[2], *new_bervalues[2];
+
+    struct berval old_pw = adclient::password2berval(old_password);
+    old_bervalues[0] = &old_pw;
+    old_bervalues[1] = NULL;
+
+    struct berval new_pw = adclient::password2berval(new_password);
+    new_bervalues[0] = &new_pw;
+    new_bervalues[1] = NULL;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+    attr1.mod_type="unicodePwd";
+#pragma GCC diagnostic pop
+    attr1.mod_op = LDAP_MOD_DELETE|LDAP_MOD_BVALUES;
+    attr1.mod_bvalues = old_bervalues;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+    attr2.mod_type="unicodePwd";
+#pragma GCC diagnostic pop
+    attr2.mod_op = LDAP_MOD_ADD|LDAP_MOD_BVALUES;
+    attr2.mod_bvalues = new_bervalues;
+
+    attrs[0] = &attr1;
+    attrs[1] = &attr2;
+    attrs[2] = NULL;
+
+    int result;
+
+    result = ldap_modify_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
+
+    delete[] old_pw.bv_val;
+    delete[] new_pw.bv_val;
+
+    if (result != LDAP_SUCCESS) {
+       string error_msg = "Error in changeUserPassord, ldap_modify_ext_s: ";
+       error_msg.append(ldap_err2string(result));
+       throw ADOperationalException(error_msg, result);
+    }
+}
 
 void adclient::setUserPassword(string user, string password) {
 /*
@@ -912,21 +986,10 @@ void adclient::setUserPassword(string user, string password) {
 
     string dn = getObjectDN(user);
 
-    string quoted_password = "\"" + password + "\"";
-
-    char unicode_password[(MAX_PASSWORD_LENGTH+2)*2];
-    memset(unicode_password, 0, sizeof(unicode_password));
-    for (unsigned int i = 0; i < quoted_password.size(); ++i) {
-        unicode_password[i*2] = quoted_password[i];
-    }
-
     LDAPMod *attrs[2];
     LDAPMod attr1;
     struct berval *bervalues[2];
-    struct berval pw;
-
-    pw.bv_val = unicode_password;
-    pw.bv_len = quoted_password.size()*2;
+    struct berval pw = adclient::password2berval(password);
 
     bervalues[0] = &pw;
     bervalues[1] = NULL;
@@ -944,7 +1007,10 @@ void adclient::setUserPassword(string user, string password) {
     int result;
 
     result = ldap_modify_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
-    if (result!=LDAP_SUCCESS) {
+
+    delete[] pw.bv_val;
+
+    if (result != LDAP_SUCCESS) {
        string error_msg = "Error in setUserPassord, ldap_add_ext_s: ";
        error_msg.append(ldap_err2string(result));
        throw ADOperationalException(error_msg, result);

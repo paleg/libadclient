@@ -110,6 +110,7 @@ public:
       void UnLockUser(string user);
 
       void setUserPassword(string user, string password);
+      void changeUserPassword(string user, string old_password, string new_password);
       bool checkUserPassword(string user, string password);
       void setUserDialinAllowed(string user);
       void setUserDialinDisabled(string user);
@@ -196,6 +197,7 @@ private:
       std::vector <string> DNsToShortNames(std::vector <string> &v);
 
       static std::vector<string> perform_srv_query(string srv_rec);
+      static struct berval password2berval(string password);
 };
 
 inline string vector2string(const std::vector<string> &v, std::string separator = ", ") {
