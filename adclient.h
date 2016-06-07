@@ -91,6 +91,7 @@ public:
       ~adclient();
 
       static std::vector<string> get_ldap_servers(string domain, string site = "");
+      static string domain2dn(string domain);
 
       void login(string uri, string binddn, string bindpw, string search_base, bool secured = true);
       void login(std::vector <string> uries, string binddn, string bindpw, string search_base, bool secured = true);

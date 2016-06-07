@@ -1540,6 +1540,11 @@ struct berval adclient::getBinaryObjectAttribute(string object, string attribute
     return value;
 }
 
+string adclient::domain2dn(string domain) {
+    replace(domain, ".", ",DC=");
+    return "DC=" + domain;
+}
+
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 vector<string> adclient::get_ldap_servers(string domain, string site) {
     if (not site.empty()) {

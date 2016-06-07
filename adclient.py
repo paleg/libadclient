@@ -270,3 +270,9 @@ class ADClient:
 
       def int2ip(self, ipstr):
           return _adclient.int2ip(ipstr)
+
+      def domain2dn(self, domain):
+          return _adclient.domain2dn(domain)
+
+      def get_ldap_servers(self, domain, site = ""):
+          return _adclient.get_ldap_servers(domain, site)
