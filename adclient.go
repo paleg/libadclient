@@ -369,8 +369,8 @@ func GetDisabledUsers() ([]string, error) {
 	return commonEmptyToSlice(ad.GetDisabledUsers)
 }
 
-func GetUserGroups(user string) ([]string, error) {
-	return commonStringToSlice(ad.GetUserGroups, user)
+func GetUserGroups(user string, nested bool) ([]string, error) {
+	return commonStringToSlice(ad.GetUserGroups, user, nested)
 }
 
 func GetUsersInGroup(group string) (result []string, err error) {

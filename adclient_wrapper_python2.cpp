@@ -169,11 +169,12 @@ static PyObject *wrapper_searchDN_adclient(PyObject *self, PyObject *args) {
 static PyObject *wrapper_getUserGroups_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *user;
+       int nested;
        vector <string> result;
-       if (!PyArg_ParseTuple(args, "Os", &obj, &user)) return NULL;
+       if (!PyArg_ParseTuple(args, "Osi", &obj, &user, &nested)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          result = ad->getUserGroups(user);
+          result = ad->getUserGroups(user, nested);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;

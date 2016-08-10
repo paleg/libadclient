@@ -49,10 +49,10 @@ class ADClient:
           """
           return _adclient.search_adclient(self.obj, ou, scope, filter, attributes)
 
-      def getUserGroups(self, user):
+      def getUserGroups(self, user, nested = False):
           """ It returns list with "user" groups if operation was successfull.
           """
-          return _adclient.getUserGroups_adclient(self.obj, user)
+          return _adclient.getUserGroups_adclient(self.obj, user, nested)
 
       def getUsersInGroup(self, group):
           """ It returns list with members of Active Directory "group" if operation was successfull.

@@ -157,7 +157,7 @@ public:
       std::vector <string> getDialinUsers();
       std::vector <string> getDisabledUsers();
 
-      std::vector <string> getUserGroups(string user);
+      std::vector <string> getUserGroups(string user, bool nested = false);
       std::vector <string> getUsersInGroup(string group);
 
       std::vector <string> getObjectsInOU(string OU, string filter, int scope);

@@ -1086,20 +1086,31 @@ void adclient::groupRemoveUser(string group, string user) {
 }
 
 
-vector <string> adclient::getUserGroups(string user) {
+vector <string> adclient::getUserGroups(string user, bool nested) {
 /*
   It return vector of strings with user groups.
 */
     vector <string> groups;
 
-    try {
-        groups = getObjectAttribute(user, "memberOf");
-    }
-    catch (ADSearchException& ex) {
-        if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
-            return vector<string>();
+    if (nested) {
+        string dn = getObjectDN(user);
+        try {
+            groups = searchDN(default_search_base, "(&(objectclass=group)(member:1.2.840.113556.1.4.1941:=" + dn + "))", LDAP_SCOPE_SUBTREE);
+        } catch (ADSearchException& ex) {
+            if (ex.code == AD_OBJECT_NOT_FOUND) {
+                return vector<string>();
+            }
+            throw;
         }
-        throw;
+    } else {
+        try {
+            groups = getObjectAttribute(user, "memberOf");
+        } catch (ADSearchException& ex) {
+            if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+                return vector<string>();
+            }
+            throw;
+        }
     }
 
     return DNsToShortNames(groups);
