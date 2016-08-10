@@ -1116,22 +1116,34 @@ vector <string> adclient::getUserGroups(string user, bool nested) {
     return DNsToShortNames(groups);
 }
 
-vector <string> adclient::getUsersInGroup(string group) {
+vector <string> adclient::getUsersInGroup(string group, bool nested) {
 /*
   It return vector of strings with members of Active Directory "group".
 */
     vector <string> users;
 
-    try {
-        users = getObjectAttribute(group, "member");
-    }
-    catch (ADSearchException& ex) {
-        if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
-            return vector <string>();
+    if (nested) {
+        string dn = getObjectDN(group);
+        try {
+            // this will return only users in group
+            users = searchDN(default_search_base, "(&(objectClass=user)(objectCategory=person)(memberOf:1.2.840.113556.1.4.1941:=" + dn + "))", LDAP_SCOPE_SUBTREE);
+        } catch (ADSearchException& ex) {
+            if (ex.code == AD_OBJECT_NOT_FOUND) {
+                return vector<string>();
+            }
+            throw;
         }
-        throw;
+    } else {
+        try {
+            // this will return not only users in group but groups in group too
+            users = getObjectAttribute(group, "member");
+        } catch (ADSearchException& ex) {
+            if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+                return vector <string>();
+            }
+            throw;
+        }
     }
-
     return DNsToShortNames(users);
 }
 

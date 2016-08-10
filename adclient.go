@@ -373,8 +373,8 @@ func GetUserGroups(user string, nested bool) ([]string, error) {
 	return commonStringToSlice(ad.GetUserGroups, user, nested)
 }
 
-func GetUsersInGroup(group string) (result []string, err error) {
-	return commonStringToSlice(ad.GetUsersInGroup, group)
+func GetUsersInGroup(group string, nested bool) (result []string, err error) {
+	return commonStringToSlice(ad.GetUsersInGroup, group, nested)
 }
 
 func GetGroupsInOU(OU string, scope int) (result []string, err error) {

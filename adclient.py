@@ -54,10 +54,10 @@ class ADClient:
           """
           return _adclient.getUserGroups_adclient(self.obj, user, nested)
 
-      def getUsersInGroup(self, group):
+      def getUsersInGroup(self, group, nested = False):
           """ It returns list with members of Active Directory "group" if operation was successfull.
           """
-          return _adclient.getUsersInGroup_adclient(self.obj, group)
+          return _adclient.getUsersInGroup_adclient(self.obj, group, nested)
 
       def getUserControls(self, user):
           """ It returns map with "user" controls ('disabled', 'locked', 'dontExpirePassword', 'mustChangePassword', 'expired').

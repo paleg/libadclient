@@ -187,11 +187,12 @@ static PyObject *wrapper_getUserGroups_adclient(PyObject *self, PyObject *args) 
 static PyObject *wrapper_getUsersInGroup_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *group;
+       int nested;
        vector <string> result;
-       if (!PyArg_ParseTuple(args, "Os", &obj, &group)) return NULL;
+       if (!PyArg_ParseTuple(args, "Osi", &obj, &group, &nested)) return NULL;
        adclient *ad = convert_ad(obj);
        try {
-          result = ad->getUsersInGroup(group);
+          result = ad->getUsersInGroup(group, nested);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
