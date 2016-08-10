@@ -177,6 +177,11 @@ class ADClient:
           """
           _adclient.CreateUser_adclient(self.obj, cn, container, short_name)
 
+      def CreateGroup(self, cn, container, short_name):
+          """ It creates user with given common name and short name in given container.
+          """
+          _adclient.CreateGroup_adclient(self.obj, cn, container, short_name)
+
       def DeleteDN(self, dn):
           """ It deletes given DN.
           """
