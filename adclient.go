@@ -38,13 +38,6 @@ func catch(err *error) {
 	}
 }
 
-func btoi(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
 func vector2slice(vector StringVector) []string {
 	result := make([]string, vector.Size())
 	for i := 0; i < int(vector.Size()); i++ {
@@ -387,7 +380,7 @@ func GetDisabledUsers() ([]string, error) {
 
 func GetUserGroups(user string, nested bool) (result []string, err error) {
 	defer catch(&err)
-	vector := ad.GetUserGroups(user, btoi(nested))
+	vector := ad.GetUserGroups(user, nested)
 	defer DeleteStringVector(vector)
 	result = vector2slice(vector)
 	return
@@ -395,7 +388,7 @@ func GetUserGroups(user string, nested bool) (result []string, err error) {
 
 func GetUsersInGroup(group string, nested bool) (result []string, err error) {
 	defer catch(&err)
-	vector := ad.GetUsersInGroup(group, btoi(nested))
+	vector := ad.GetUsersInGroup(group, nested)
 	defer DeleteStringVector(vector)
 	result = vector2slice(vector)
 	return
