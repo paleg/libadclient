@@ -38,6 +38,13 @@ func catch(err *error) {
 	}
 }
 
+func btoi(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 func vector2slice(vector StringVector) []string {
 	result := make([]string, vector.Size())
 	for i := 0; i < int(vector.Size()); i++ {
@@ -61,6 +68,15 @@ func common2StringsToSlice(f func(string, string) StringVector, thing1 string, t
 	result = vector2slice(vector)
 	return
 }
+
+func commonStringsIntToSlice(f func(string, int) StringVector, thing1 string, thing2 int) (result []string, err error) {
+	defer catch(&err)
+	vector := f(thing1, thing2)
+	defer DeleteStringVector(vector)
+	result = vector2slice(vector)
+	return
+}
+
 func commonEmptyToSlice(f func() StringVector) (result []string, err error) {
 	defer catch(&err)
 	vector := f()
@@ -369,28 +385,36 @@ func GetDisabledUsers() ([]string, error) {
 	return commonEmptyToSlice(ad.GetDisabledUsers)
 }
 
-func GetUserGroups(user string, nested bool) ([]string, error) {
-	return commonStringToSlice(ad.GetUserGroups, user, nested)
+func GetUserGroups(user string, nested bool) (result []string, err error) {
+	defer catch(&err)
+	vector := ad.GetUserGroups(user, btoi(nested))
+	defer DeleteStringVector(vector)
+	result = vector2slice(vector)
+	return
 }
 
 func GetUsersInGroup(group string, nested bool) (result []string, err error) {
-	return commonStringToSlice(ad.GetUsersInGroup, group, nested)
+	defer catch(&err)
+	vector := ad.GetUsersInGroup(group, btoi(nested))
+	defer DeleteStringVector(vector)
+	result = vector2slice(vector)
+	return
 }
 
 func GetGroupsInOU(OU string, scope int) (result []string, err error) {
-	return commonStringToSlice(ad.GetGroupsInOU, OU, scope)
+	return commonStringsIntToSlice(ad.GetGroupsInOU, OU, scope)
 }
 
 func GetComputersInOU(OU string, scope int) (result []string, err error) {
-	return commonStringToSlice(ad.getComputersInOU, OU, scope)
+	return commonStringsIntToSlice(ad.GetComputersInOU, OU, scope)
 }
 
 func GetOUsInOU(OU string, scope int) (result []string, err error) {
-	return commonStringToSlice(ad.GetOUsInOU, OU, scope)
+	return commonStringsIntToSlice(ad.GetOUsInOU, OU, scope)
 }
 
 func GetUsersInOU(OU string, scope int) (result []string, err error) {
-	return commonStringToSlice(ad.GetUsersInOU, OU, scope)
+	return commonStringsIntToSlice(ad.GetUsersInOU, OU, scope)
 }
 
 /*
@@ -402,7 +426,11 @@ func GetObjectAttribute(object string, attribute string) (result []string, err e
 }
 
 func SearchDN(search_base string, filter string, scope int) (result []string, err error) {
-	return commonStringToSlice(ad.SearchDN, search_base, filter, scope)
+	defer catch(&err)
+	vector := ad.SearchDN(search_base, filter, scope)
+	defer DeleteStringVector(vector)
+	result = vector2slice(vector)
+	return
 }
 
 /*
