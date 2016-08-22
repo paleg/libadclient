@@ -580,7 +580,7 @@ void adclient::CreateOU(string ou) {
 #endif
         ous.insert(ous.begin(), string(la_attr.bv_val)+"="+string(la_value.bv_val));
     }
-    ldap_memfree(rez);
+    ldap_dnfree(rez);
     string name = ous[ous.size()-1].substr(3);
     // Remove last OU
     ous.pop_back();
@@ -694,7 +694,7 @@ string adclient::dn2domain(string dn) {
             domain += ".";
         }
     }
-    ldap_memfree(exp_dn);
+    ldap_dnfree(exp_dn);
     domain.erase(domain.size()-1, 1);
     return domain;
 }
