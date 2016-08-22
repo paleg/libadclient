@@ -552,6 +552,7 @@ void adclient::CreateOU(string ou) {
   It creates given OU (with subOUs if needed).
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
+    int result;
     vector <string> ous;
     string sub_ou = "";
     // Split OU to vector
@@ -563,7 +564,11 @@ void adclient::CreateOU(string ou) {
     struct berval la_attr;
     struct berval la_value;
 
-    ldap_str2dn(ou.c_str(), &rez, LDAP_DN_FORMAT_LDAPV3);
+    result = ldap_str2dn(ou.c_str(), &rez, LDAP_DN_FORMAT_LDAPV3);
+
+    if (result != LDAP_SUCCESS || rez == NULL) {
+        throw ADOperationalException("Wrong OU syntax", AD_OU_SYNTAX_ERROR);
+    }
 
     for (int i=0; rez[i]!=NULL; ++i) {
 #ifdef LDAP21
@@ -631,7 +636,6 @@ void adclient::CreateOU(string ou) {
     attrs[1] = &attr2;
     attrs[2] = NULL;
 
-    int result;
     result=ldap_add_ext_s(ds, ou.c_str(), attrs, NULL, NULL);
 
     free(name_values[0]);
@@ -671,7 +675,11 @@ string adclient::dn2domain(string dn) {
     struct berval la_value;
     string domain="";
 
-    ldap_str2dn(dn.c_str(), &exp_dn, LDAP_DN_FORMAT_LDAPV3);
+    int result = ldap_str2dn(dn.c_str(), &exp_dn, LDAP_DN_FORMAT_LDAPV3);
+
+    if (result != LDAP_SUCCESS || exp_dn == NULL) {
+        throw ADOperationalException("Wrong OU syntax", AD_OU_SYNTAX_ERROR);
+    }
 
     for (i=0; exp_dn[i]!=NULL; ++i) {
 #ifdef LDAP21
