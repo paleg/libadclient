@@ -91,7 +91,7 @@ func Delete() {
 	DeleteAdclient(ad)
 }
 
-func Login(uri interface{}, user string, passwd string, sb string) (err error) {
+func Login(uri interface{}, user string, passwd string, sb string, secured bool) (err error) {
 	defer catch(&err)
 	if Nettimeout != -1 {
 		ad.SetNettimeout(Nettimeout)
@@ -101,14 +101,14 @@ func Login(uri interface{}, user string, passwd string, sb string) (err error) {
 	}
 	switch uri.(type) {
 	case string:
-		ad.Login(uri.(string), user, passwd, sb)
+		ad.Login(uri.(string), user, passwd, sb, secured)
 	case []string:
 		uries := NewStringVector()
 		defer DeleteStringVector(uries)
 		for _, suri := range uri.([]string) {
 			uries.Add(suri)
 		}
-		ad.Login(uries, user, passwd, sb)
+		ad.Login(uries, user, passwd, sb, secured)
 	default:
 		err = ADError{
 			fmt.Sprintf("unknown uri type - %#v", uri),
