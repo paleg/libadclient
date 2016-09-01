@@ -50,7 +50,7 @@ var TestGroup2 = Group{"GBGroup2", TestOU, "GBGroup2"}
 func TestMain(m *testing.M) {
 	ret := 1
 	New()
-	err := Login(LDAPServer, LDAPUser, LDAPPasswd, LDAPSearchBase)
+	err := Login(LDAPServer, LDAPUser, LDAPPasswd, LDAPSearchBase, true)
 	if err != nil {
 		fmt.Println(err)
 	} else {
