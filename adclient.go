@@ -13,6 +13,25 @@ type ADError struct {
 	code int
 }
 
+type ConnArgs struct {
+	Domain      string
+	Site        string
+	Uries       []string
+	Binddn      string
+	Bindpw      string
+	Search_base string
+	Secured     bool
+	Nettimeout  int
+	Timelimit   int
+}
+
+func DefaultConnArgs() (args ConnArgs) {
+	args.Nettimeout = -1
+	args.Timelimit = -1
+	args.Secured = true
+	return
+}
+
 func (err ADError) Error() string {
 	return fmt.Sprintf("%v: %v", err.code, err.msg)
 }
@@ -80,9 +99,6 @@ func commonEmptyToSlice(f func() StringVector) (result []string, err error) {
 
 var ad Adclient
 
-var Nettimeout int = -1
-var Timelimit int = -1
-
 func New() {
 	ad = NewAdclient()
 }
@@ -91,35 +107,62 @@ func Delete() {
 	DeleteAdclient(ad)
 }
 
-func Login(uri interface{}, user string, passwd string, sb string, secured bool) (err error) {
+func Login(inargs ConnArgs) (err error) {
 	defer catch(&err)
-	if Nettimeout != -1 {
-		ad.SetNettimeout(Nettimeout)
+
+	args := NewADConnArgs()
+	defer DeleteADConnArgs(args)
+
+	args.SetDomain(inargs.Domain)
+	args.SetSite(inargs.Site)
+	args.SetBinddn(inargs.Binddn)
+	args.SetBindpw(inargs.Bindpw)
+	args.SetSearch_base(inargs.Search_base)
+	args.SetSecured(inargs.Secured)
+	args.SetNettimeout(inargs.Nettimeout)
+	args.SetTimelimit(inargs.Timelimit)
+
+	uries := NewStringVector()
+	defer DeleteStringVector(uries)
+	for _, uri := range inargs.Uries {
+		uries.Add(uri)
 	}
-	if Timelimit != -1 {
-		ad.SetTimelimit(Timelimit)
-	}
+	args.SetUries(uries)
+
+	ad.Login(args)
+	return
+}
+
+func LoginOld(uri interface{}, user string, passwd string, sb string, secured bool) (err error) {
+	defer catch(&err)
+
+	args := DefaultConnArgs()
+	args.Binddn = user
+	args.Bindpw = passwd
+	args.Search_base = sb
+	args.Secured = secured
+
 	switch uri.(type) {
 	case string:
-		ad.Login(uri.(string), user, passwd, sb, secured)
+		args.Domain = uri.(string)
 	case []string:
-		uries := NewStringVector()
-		defer DeleteStringVector(uries)
-		for _, suri := range uri.([]string) {
-			uries.Add(suri)
-		}
-		ad.Login(uries, user, passwd, sb, secured)
+		args.Uries = uri.([]string)
 	default:
 		err = ADError{
 			fmt.Sprintf("unknown uri type - %#v", uri),
 			-1,
 		}
 	}
+	Login(args)
 	return
 }
 
 func BindedUri() (result string) {
 	return ad.Binded_uri()
+}
+
+func SearchBase() (result string) {
+	return ad.Search_base()
 }
 
 func GroupAddUser(group string, user string) (err error) {
