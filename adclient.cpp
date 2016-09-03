@@ -16,8 +16,6 @@ adclient::adclient() {
   Constructor, to initialize default values of global variables.
 */
     ds = NULL;
-    nettimeout = -1;
-    timelimit  = -1;
     ldap_prefix = "ldap://";
 }
 
@@ -34,41 +32,69 @@ void adclient::logout(LDAP *ds) {
     }
 }
 
+void adclient::login(ADConnArgs args) {
+    if (!args.uries.empty()) {
+        for (vector <string>::iterator it = args.uries.begin(); it != args.uries.end(); ++it) {
+            if (it->compare(0, ldap_prefix.size(), ldap_prefix) != 0) {
+                continue;
+            }
+            args.uri = *it;
+            try {
+                login(&ds, args);
+                return;
+            }
+            catch (ADBindException&) {
+                if (ds != NULL) {
+                    ldap_unbind_ext(ds, NULL, NULL);
+                    ds = NULL;
+                }
+
+                if (it != (args.uries.end() - 1)) {
+                    continue;
+                } else {
+                    throw;
+                }
+            }
+        }
+    } else if (!args.domain.empty()) {
+        if (args.search_base.empty()) {
+            args.search_base = domain2dn(args.domain);
+        }
+        args.uries = get_ldap_servers(args.domain, args.site);
+        login(args);
+    } else {
+        // throw
+    }
+}
+
 void adclient::login(vector <string> uries, string binddn, string bindpw, string search_base, bool secured) {
 /*
   Wrapper around login to support list of uries
 */
-    vector <string>::iterator it;
-    for (it = uries.begin(); it != uries.end(); ++it) {
-        try {
-            login(*it, binddn, bindpw, search_base, secured);
-            return;
-        }
-        catch (ADBindException&) {
-            if (ds != NULL) {
-                ldap_unbind_ext(ds, NULL, NULL);
-                ds = NULL;
-            }
-
-            if (it != (uries.end() - 1)) {
-                continue;
-            } else {
-                throw;
-            }
-        }
-    }
+    ADConnArgs args;
+    args.uries = uries;
+    args.binddn = binddn;
+    args.bindpw = bindpw;
+    args.search_base = search_base;
+    args.secured = secured;
+    login(args);
 }
 
 void adclient::login(string _uri, string binddn, string bindpw, string search_base, bool secured) {
 /*
   Wrapper around login to fill LDAP* structure
 */
+    ADConnArgs args;
     if (_uri.compare(0, ldap_prefix.size(), ldap_prefix) == 0) {
-        login(&ds, _uri, binddn, bindpw, search_base, secured);
+        args.uries.push_back(_uri);
     } else {
-        vector<string> servers = get_ldap_servers(_uri);
-        login(servers, binddn, bindpw, search_base, secured);
+        args.domain = _uri;
     }
+    args.binddn = binddn;
+    args.bindpw = bindpw;
+    args.search_base = search_base;
+    args.secured = secured;
+    login(args);
 }
 
 int sasl_interact(LDAP *ds, unsigned flags, void *indefaults, void *in) {
@@ -102,7 +128,7 @@ int sasl_interact(LDAP *ds, unsigned flags, void *indefaults, void *in) {
     return LDAP_SUCCESS;
 }
 
-void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, string search_base, bool secured) {
+void adclient::login(LDAP **ds, ADConnArgs& args) {
 /*
   To set various LDAP options and bind to LDAP server.
   It set private pointer to LDAP connection identifier - ds.
@@ -114,25 +140,23 @@ void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, strin
 
     string error_msg;
 
-    default_search_base = search_base;
-
 #if defined OPENLDAP
-    result = ldap_initialize(ds, _uri.c_str());
+    result = ldap_initialize(ds, args.uri.c_str());
 #elif defined SUNLDAP
-    result = ldapssl_init(_uri.c_str(), LDAPS_PORT, 1);
+    result = ldapssl_init(args.uri.c_str(), LDAPS_PORT, 1);
 #else
 #error LDAP library required
 #endif
     if (result != LDAP_SUCCESS) {
-        error_msg = "Error in ldap_initialize to " + _uri + ": ";
+        error_msg = "Error in ldap_initialize to " + args.uri + ": ";
         error_msg.append(ldap_err2string(result));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
-    if (nettimeout != -1) {
+    if (args.nettimeout != -1) {
         struct timeval optTimeout;
         optTimeout.tv_usec = 0;
-        optTimeout.tv_sec = nettimeout;
+        optTimeout.tv_sec = args.nettimeout;
 
         result = ldap_set_option(*ds, LDAP_OPT_TIMEOUT, &optTimeout);
         if (result != LDAP_OPT_SUCCESS) {
@@ -149,8 +173,8 @@ void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, strin
         }
     }
 
-    if (timelimit != -1) {
-        result = ldap_set_option(*ds, LDAP_OPT_TIMELIMIT, &timelimit);
+    if (args.timelimit != -1) {
+        result = ldap_set_option(*ds, LDAP_OPT_TIMELIMIT, &args.timelimit);
         if (result != LDAP_OPT_SUCCESS) {
             error_msg = "Error in ldap_set_option (time limit): ";
             error_msg.append(ldap_err2string(result));
@@ -173,13 +197,13 @@ void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, strin
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
-    if (secured) {
+    if (args.secured) {
         string sasl_mech = "DIGEST-MD5";
         unsigned sasl_flags = LDAP_SASL_QUIET;
 
         sasl_defaults defaults;
-        defaults.username = binddn;
-        defaults.password = bindpw;
+        defaults.username = args.binddn;
+        defaults.password = args.bindpw;
 
         bindresult = ldap_sasl_interactive_bind_s(*ds, NULL,
                                                   sasl_mech.c_str(),
@@ -189,22 +213,22 @@ void adclient::login(LDAP **ds, string _uri, string binddn, string bindpw, strin
         struct berval cred;
         struct berval *servcred;
 
-        cred.bv_val = strdup(bindpw.c_str());
-        cred.bv_len = bindpw.size();
+        cred.bv_val = strdup(args.bindpw.c_str());
+        cred.bv_len = args.bindpw.size();
 
-        bindresult = ldap_sasl_bind_s(*ds, binddn.c_str(), NULL, &cred, NULL, NULL, &servcred);
+        bindresult = ldap_sasl_bind_s(*ds, args.binddn.c_str(), NULL, &cred, NULL, NULL, &servcred);
 
         memset(cred.bv_val, 0, cred.bv_len);
         free(cred.bv_val);
     }
 
     if (bindresult != LDAP_SUCCESS) {
-        error_msg = "Error while ldap binding to " + _uri + " with " + binddn + " " + bindpw + ": ";
+        error_msg = "Error while ldap binding to " + args.uri + " with " + args.binddn + " " + args.bindpw + ": ";
         error_msg.append(ldap_err2string(bindresult));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
-    uri = _uri;
+    conn_args = args;
 }
 
 bool adclient::checkUserPassword(string user, string password) {
@@ -215,7 +239,13 @@ bool adclient::checkUserPassword(string user, string password) {
 
     bool result = true;
     try {
-        login(&ld, uri, user, password, default_search_base, true);
+        ADConnArgs args;
+        args.uries.push_back(conn_args.uri);
+        args.binddn = user;
+        args.bindpw = password;
+        args.search_base = conn_args.search_base;
+        args.secured = true; // ???
+        login(&ld, args);
     }
     catch (ADBindException& ex) {
         result = false;
@@ -428,7 +458,7 @@ string adclient::getObjectDN(string object) {
     } else {
         replace(object, "(", "\\(");
         replace(object, ")", "\\)");
-        vector <string> dn = searchDN( default_search_base, "(sAMAccountName=" + object + ")", LDAP_SCOPE_SUBTREE );
+        vector <string> dn = searchDN( conn_args.search_base, "(sAMAccountName=" + object + ")", LDAP_SCOPE_SUBTREE );
         return dn[0];
     }
 }
@@ -1103,7 +1133,7 @@ vector <string> adclient::getUserGroups(string user, bool nested) {
     if (nested) {
         string dn = getObjectDN(user);
         try {
-            groups = searchDN(default_search_base, "(&(objectclass=group)(member:1.2.840.113556.1.4.1941:=" + dn + "))", LDAP_SCOPE_SUBTREE);
+            groups = searchDN(conn_args.search_base, "(&(objectclass=group)(member:1.2.840.113556.1.4.1941:=" + dn + "))", LDAP_SCOPE_SUBTREE);
         } catch (ADSearchException& ex) {
             if (ex.code == AD_OBJECT_NOT_FOUND) {
                 return vector<string>();
@@ -1134,7 +1164,7 @@ vector <string> adclient::getUsersInGroup(string group, bool nested) {
         string dn = getObjectDN(group);
         try {
             // this will return only users in group
-            users = searchDN(default_search_base, "(&(objectClass=user)(objectCategory=person)(memberOf:1.2.840.113556.1.4.1941:=" + dn + "))", LDAP_SCOPE_SUBTREE);
+            users = searchDN(conn_args.search_base, "(&(objectClass=user)(objectCategory=person)(memberOf:1.2.840.113556.1.4.1941:=" + dn + "))", LDAP_SCOPE_SUBTREE);
         } catch (ADSearchException& ex) {
             if (ex.code == AD_OBJECT_NOT_FOUND) {
                 return vector<string>();
@@ -1184,7 +1214,7 @@ vector <string> adclient::getDialinUsers() {
 */
     vector <string> users_dn;
  
-    users_dn = searchDN(default_search_base, "(msNPAllowDialin=TRUE)", LDAP_SCOPE_SUBTREE);
+    users_dn = searchDN(conn_args.search_base, "(msNPAllowDialin=TRUE)", LDAP_SCOPE_SUBTREE);
 
     return DNsToShortNames(users_dn);
 }
@@ -1195,7 +1225,7 @@ vector <string> adclient::getDisabledUsers() {
 */
     vector <string> users_dn;
 
-    users_dn = searchDN(default_search_base, "(&(objectClass=user)(objectCategory=person)(userAccountControl:1.2.840.113556.1.4.803:=2))", LDAP_SCOPE_SUBTREE);
+    users_dn = searchDN(conn_args.search_base, "(&(objectClass=user)(objectCategory=person)(userAccountControl:1.2.840.113556.1.4.803:=2))", LDAP_SCOPE_SUBTREE);
 
     return DNsToShortNames(users_dn);
 }
@@ -1327,14 +1357,14 @@ vector <string> adclient::getOUs() {
 /*
   It returns vector of strings with all organizationalUnit in Active Directory.
 */
-    return getOUsInOU(default_search_base, LDAP_SCOPE_SUBTREE);
+    return getOUsInOU(conn_args.search_base, LDAP_SCOPE_SUBTREE);
 }
 
 vector <string> adclient::getGroups() {
 /*
   It returns vector of strings with all groups in Active Directory.
 */
-    vector<string> dns = getGroupsInOU(default_search_base, LDAP_SCOPE_SUBTREE);
+    vector<string> dns = getGroupsInOU(conn_args.search_base, LDAP_SCOPE_SUBTREE);
     return DNsToShortNames( dns );
 }
 
@@ -1342,7 +1372,7 @@ vector <string> adclient::getUsers() {
 /*
   It returns vector of strings with all users in Active Directory.
 */
-    vector<string> dns = getUsersInOU(default_search_base, LDAP_SCOPE_SUBTREE);
+    vector<string> dns = getUsersInOU(conn_args.search_base, LDAP_SCOPE_SUBTREE);
     return DNsToShortNames( dns );
 }
 
@@ -1720,6 +1750,7 @@ vector<string> adclient::perform_srv_query(string srv_rec) {
             throw ADBindException("Error while resolving ldap server for " + srv_rec + ": dn_expand(host) < 0", AD_LDAP_RESOLV_ERROR);
         }
         //std::cout << priority << " " << weight << " " << ttl << " " << host << ":" << port << std::endl;
+        // TODO: use ldap_prefix
         ret.push_back(string("ldap://") + string(host));
         msg = end;
     }

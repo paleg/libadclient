@@ -85,6 +85,34 @@ public:
       ADOperationalException(string _msg, int _code): ADException(_msg, _code) {}
 };
 
+struct ADConnArgs {
+    public:
+        string domain;
+        string site;
+        vector<string> uries;
+        string binddn;
+        string bindpw;
+        string search_base;
+        bool secured;
+
+        // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
+        int nettimeout;
+        // LDAP_OPT_TIMELIMIT
+        int timelimit;
+
+        ADConnArgs() :
+            secured(true),
+            // by default do not touch timeouts
+            nettimeout(-1), timelimit(-1)
+        {};
+
+        friend class adclient;
+
+    private:
+        string uri;
+};
+
+
 class adclient {
 public:
       adclient();
@@ -93,10 +121,12 @@ public:
       static std::vector<string> get_ldap_servers(string domain, string site = "");
       static string domain2dn(string domain);
 
+      void login(ADConnArgs args);
       void login(string uri, string binddn, string bindpw, string search_base, bool secured = true);
       void login(std::vector <string> uries, string binddn, string bindpw, string search_base, bool secured = true);
 
-      string binded_uri() { return uri; }
+      string binded_uri() { return conn_args.uri; }
+      string search_base() { return conn_args.search_base; }
 
       void groupAddUser(string group, string user);
       void groupRemoveUser(string group, string user);
@@ -175,18 +205,13 @@ public:
 
       std::map <string, std::vector <string> > getObjectAttributes(string object);
       std::map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
-
-      // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
-      int nettimeout;
-      // LDAP_OPT_TIMELIMIT
-      int timelimit;
 private:
-      string uri;
-      string default_search_base;
+      ADConnArgs conn_args;
+
       LDAP *ds;
       string ldap_prefix;
 
-      void login(LDAP **ds, string uri, string binddn, string bindpw, string search_base, bool secured);
+      void login(LDAP **ds, ADConnArgs& args);
       void logout(LDAP *ds);
 
       void mod_add(string object, string attribute, string value);
