@@ -154,18 +154,15 @@ static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *ou, *filter;
        PyObject * listObj;
-       unsigned int numLines;
        int scope;
 
        map < string, map < string, vector<string> > > res;
 
        if (!PyArg_ParseTuple(args, "OsisO!", &obj, &ou, &scope, &filter, &PyList_Type, &listObj)) return NULL;
 
-       if ((numLines = PyList_Size(listObj)) < 0) return NULL; /* Not a list */
-
        vector <string> attrs;
 
-       for (unsigned int i=0; i<numLines; i++) {
+       for (unsigned int i = 0; i < PyList_Size(listObj); ++i) {
           PyObject *strObj = PyList_GetItem(listObj, i);
           string item = PyString_AsString(strObj);
           attrs.push_back(item);
