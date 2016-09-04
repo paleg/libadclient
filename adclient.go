@@ -32,6 +32,10 @@ func DefaultADConnParams() (params ADConnParams) {
 	return
 }
 
+func LdapPrefix() string {
+	return GetAdclientLdap_prefix()
+}
+
 func (err ADError) Error() string {
 	return fmt.Sprintf("%v: %v", err.code, err.msg)
 }
