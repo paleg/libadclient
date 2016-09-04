@@ -52,6 +52,9 @@ class ADClient:
       def binded_uri(self):
           return _adclient.binded_uri_adclient(self.obj)
 
+      def search_base(self):
+          return _adclient.search_base_adclient(self.obj)
+
       def searchDN(self, search_base, filter, scope):
           """ It returns list with DNs found with 'filter'
           """
