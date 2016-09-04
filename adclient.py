@@ -7,6 +7,18 @@ import sys
 import _adclient
 from _adclient import *
 
+class ADConnParams:
+    def __init__(self):
+        self.domain = ""
+        self.site = ""
+        self.binddn = ""
+        self.bindpw = ""
+        self.search_base = ""
+        self.secured = True
+        self.nettimeout = -1
+        self.timelimit = -1
+        self.uries = []
+
 class ADClient:
       """
         ADClient.login can throw ADBindError on errors.
@@ -19,21 +31,23 @@ class ADClient:
       def __init__(self):
           self.obj = _adclient.new_adclient()
 
-      def login(self, uries, binddn, bindpw, search_base, secured = True):
-          """ It binds to Active Directory uries (e.g. "ldap://example.org") 
-                   as binddn (e.g. "administrator@example.org") identified by 
-                   bindpw (e.g. "password"). Search Base for every ldap search 
-                   would be search_base (e.g. "dc=example,dc=org").
-                   It returns nothing if operation was successfull.
-                uries can be single string or list of strings
-          """
-          if sys.version_info[0] == 3:
-             string_type = str
-          else:
-             string_type = basestring
-          if isinstance(uries, string_type):
-             uries = [uries]
-          _adclient.login_adclient(self.obj, uries, binddn, bindpw, search_base, secured)
+      def login(self, params, binddn = "", bindpw = "", search_base = "", secured = True):
+          if not isinstance(params, ADConnParams):
+              uries = params
+              params = ADConnParams()
+              if sys.version_info[0] == 3:
+                 string_type = str
+              else:
+                 string_type = basestring
+              if isinstance(uries, string_type):
+                 params.domain = uries
+              elif isinstance(uries, list):
+                 params.uries = uries
+              params.binddn = binddn
+              params.bindpw = bindpw
+              params.search_base = search_base
+              params.secured = secured
+          _adclient.login_adclient(self.obj, params.__dict__)
 
       def binded_uri(self):
           return _adclient.binded_uri_adclient(self.obj)
