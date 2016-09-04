@@ -13,7 +13,7 @@ type ADError struct {
 	code int
 }
 
-type ConnArgs struct {
+type ADConnParams struct {
 	Domain      string
 	Site        string
 	Uries       []string
@@ -25,10 +25,10 @@ type ConnArgs struct {
 	Timelimit   int
 }
 
-func DefaultConnArgs() (args ConnArgs) {
-	args.Nettimeout = -1
-	args.Timelimit = -1
-	args.Secured = true
+func DefaultADConnParams() (params ADConnParams) {
+	params.Nettimeout = -1
+	params.Timelimit = -1
+	params.Secured = true
 	return
 }
 
@@ -107,36 +107,36 @@ func Delete() {
 	DeleteAdclient(ad)
 }
 
-func Login(inargs ConnArgs) (err error) {
+func Login(_params ADConnParams) (err error) {
 	defer catch(&err)
 
-	args := NewADConnArgs()
-	defer DeleteADConnArgs(args)
+	params := NewAdConnParams()
+	defer DeleteAdConnParams(params)
 
-	args.SetDomain(inargs.Domain)
-	args.SetSite(inargs.Site)
-	args.SetBinddn(inargs.Binddn)
-	args.SetBindpw(inargs.Bindpw)
-	args.SetSearch_base(inargs.Search_base)
-	args.SetSecured(inargs.Secured)
-	args.SetNettimeout(inargs.Nettimeout)
-	args.SetTimelimit(inargs.Timelimit)
+	params.SetDomain(_params.Domain)
+	params.SetSite(_params.Site)
+	params.SetBinddn(_params.Binddn)
+	params.SetBindpw(_params.Bindpw)
+	params.SetSearch_base(_params.Search_base)
+	params.SetSecured(_params.Secured)
+	params.SetNettimeout(_params.Nettimeout)
+	params.SetTimelimit(_params.Timelimit)
 
 	uries := NewStringVector()
 	defer DeleteStringVector(uries)
-	for _, uri := range inargs.Uries {
+	for _, uri := range _params.Uries {
 		uries.Add(uri)
 	}
-	args.SetUries(uries)
+	params.SetUries(uries)
 
-	ad.Login(args)
+	ad.Login(params)
 	return
 }
 
 func LoginOld(uri interface{}, user string, passwd string, sb string, secured bool) (err error) {
 	defer catch(&err)
 
-	args := DefaultConnArgs()
+	args := DefaultADConnParams()
 	args.Binddn = user
 	args.Bindpw = passwd
 	args.Search_base = sb

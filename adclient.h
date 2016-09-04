@@ -85,7 +85,7 @@ public:
       ADOperationalException(string _msg, int _code): ADException(_msg, _code) {}
 };
 
-struct ADConnArgs {
+struct adConnParams {
     public:
         string domain;
         string site;
@@ -100,7 +100,7 @@ struct ADConnArgs {
         // LDAP_OPT_TIMELIMIT
         int timelimit;
 
-        ADConnArgs() :
+        adConnParams() :
             secured(true),
             // by default do not touch timeouts
             nettimeout(-1), timelimit(-1)
@@ -121,12 +121,12 @@ public:
       static std::vector<string> get_ldap_servers(string domain, string site = "");
       static string domain2dn(string domain);
 
-      void login(ADConnArgs args);
+      void login(adConnParams _params);
       void login(string uri, string binddn, string bindpw, string search_base, bool secured = true);
       void login(std::vector <string> uries, string binddn, string bindpw, string search_base, bool secured = true);
 
-      string binded_uri() { return conn_args.uri; }
-      string search_base() { return conn_args.search_base; }
+      string binded_uri() { return params.uri; }
+      string search_base() { return params.search_base; }
 
       void groupAddUser(string group, string user);
       void groupRemoveUser(string group, string user);
@@ -206,12 +206,12 @@ public:
       std::map <string, std::vector <string> > getObjectAttributes(string object);
       std::map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
 private:
-      ADConnArgs conn_args;
+      adConnParams params;
 
       LDAP *ds;
       string ldap_prefix;
 
-      void login(LDAP **ds, ADConnArgs& args);
+      void login(LDAP **ds, adConnParams& _params);
       void logout(LDAP *ds);
 
       void mod_add(string object, string attribute, string value);
