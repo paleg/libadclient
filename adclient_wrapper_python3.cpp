@@ -1347,6 +1347,8 @@ PyInit__adclient() {
     PyModule_AddObject(module, "ADSearchError", ADSearchError);
     PyModule_AddObject(module, "ADOperationalError", ADOperationalError);
 
+    PyModule_AddStringConstant(module, "LdapPrefix", adclient::ldap_prefix.c_str());
+
     PyModule_AddIntMacro(module, AD_SUCCESS);
     PyModule_AddIntMacro(module, AD_LDAP_CONNECTION_ERROR);
     PyModule_AddIntMacro(module, AD_PARAMS_ERROR);

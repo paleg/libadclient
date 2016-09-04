@@ -121,7 +121,7 @@ params = adclient.ADConnParams()
 params.domain = "DOMAIN.LOCAL"
 params.site = "SITE"
 # or login with a list of ldap uries
-# params.uries = ["ldap://Server1", "ldap://Server2"]
+# params.uries = [adclient.LdapPrefix+"Server1", adclient.LdapPrefix+"Server2"]
 # params.search_base = "dc=DOMAIN,dc=LOCAL";
 params.binddn = "user";
 params.bindpw = "password";
