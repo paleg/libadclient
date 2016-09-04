@@ -1674,7 +1674,6 @@ string adclient::domain2dn(string domain) {
     return "DC=" + domain;
 }
 
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 vector<string> adclient::get_ldap_servers(string domain, string site) {
     if (not site.empty()) {
         string srv_site = "_ldap._tcp." + site + "._sites." + domain;
@@ -1687,6 +1686,9 @@ vector<string> adclient::get_ldap_servers(string domain, string site) {
     return perform_srv_query(srv_domain);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 // this magic was copy pasted and adopted from
 // https://www.ccnx.org/releases/latest/doc/ccode/html/ccndc-srv_8c_source.html
 vector<string> adclient::perform_srv_query(string srv_rec) {
