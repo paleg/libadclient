@@ -47,10 +47,14 @@ Full list of supported methods can be found in [adclient.h](https://github.com/p
 USAGE NOTES:
 
 login: 
-  - Login can be performed with SASL DIGEST-MD5 auth (default) or simple auth (clear text username and password). The last boolean argument `secured` in login function chooses login mode.
-  - SASL DIGEST-MD5 auth requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details). 
-  - Simple auth does not require all this things, but with simple auth AD will refuse to do some actions (e.g. change passwords).
-  - Login can be performed with a vector (list) of ldap uries, single ldap uri or domain DNS name. Ldap uries must be prefixed with `ldap://`. Single values without ldap prefix are treated as a domain name and ldap uries are detected via DNS SRV query (_ldap._tcp.xx.xx.xx.xx).
+  - Login can be performed with (boolean `adConnParams.secured` chooses login mode):
+    * SASL DIGEST-MD5 auth (default). It requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details). 
+    * simple auth (clear text username and password). It does not require proper DNS and SPN setup, but with simple auth AD will refuse to do some actions (e.g. change passwords).
+  - Login can be performed with:
+    * domain DNS name (`adConnParams.domain`) with optional AD site name (`adConnParams.site`). ldap uries for `domain` will be detected via DNS SRV query (_ldap._tcp.SITE._sites.DOMAIN.LOCAL / _ldap._tcp.DOMAIN.LOCAL). If `adConnParams.search_base` is empty - it will be constructed automatically from domain name (DC=DOMAIN,DC=LOCAL).
+    * vector of ldap uries (`adConnParams.uries`). Ldap uries must be prefixed with `adclient::ldap_prefix`. `adConnParams.search_base` must be set explicitly.
+  - LDAP_OPT_NETWORK_TIMEOUT and LDAP_OPT_TIMEOUT can be set with `adConnParams.nettimeout`.
+  - LDAP_OPT_TIMELIMIT can be set with `adConnParams.timelimit`.
 
 USAGE SAMPLE (c++):
 ```cpp
@@ -63,19 +67,23 @@ USAGE SAMPLE (c++):
 using namespace std;
 
 int main() {
+    adConnParams params;
+    // login with a domain name, choose DC from SITE
+    params.domain = "DOMAIN.LOCAL";
+    params.site = "SITE";
+    // or login with a list of ldap uries
+    // params.uries.push_back(adclient::ldap_prefix + "Server1");
+    // params.uries.push_back(adclient::ldap_prefix + "Server2");
+    // params.search_base = "dc=DOMAIN,dc=LOCAL";
+    params.binddn = "user";
+    params.bindpw = "password";
+    
+    // simple auth mode
+    // params.secured = false;
+    
     adclient ad;
-
-    vector <string> uries;
-    uries.push_back("ldap://Server1");
-    uries.push_back("ldap://Server2");
-    uries.push_back("ldap://Server3");
     try {
-        // secured SASL login with a list of ldap uries
-        ad.login(uries, "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx");
-        // simple auth with a single ldap server uri
-        //ad.login("ldap://Server1", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", false);
-        // secured SASL login with a domain name
-        //ad.login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", true)
+        ad.login(params);
     }
     catch(ADBindException& ex) {
          cout << "ADBindLogin: " << ex.msg << endl;
@@ -107,21 +115,30 @@ int main() {
 USAGE SAMPLE (python):
 ```python
 import adclient
+
+params = adclient.ADConnParams()
+# login with a domain name, choose DC from SITE
+params.domain = "DOMAIN.LOCAL"
+params.site = "SITE"
+# or login with a list of ldap uries
+# params.uries = ["ldap://Server1", "ldap://Server2"]
+# params.search_base = "dc=DOMAIN,dc=LOCAL";
+params.binddn = "user";
+params.bindpw = "password";
+    
+# simple auth mode
+# params.secured = False;
+
 ad = adclient.ADClient()
 try:
-  # secured SASL login with a list of ldap uries
-  ad.login(["ldap://Server1", "ldap://Server2", "ldap://Server3"], "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx")
-  # simple auth with a single ldap server uri
-  #ad.login("ldap://Server1", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", False)
-  # secured SASL login with a domain name
-  #ad.login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx", True)
-except ADBindError, ex:
-  print("failed to connect to Active Directory: %s"%(ex))
+  ad.login(params)
+except ADBindError as ex:
+  print("failed to connect to Active Directory: {}".format(ex))
   exit(1)
   
 try:
   dn = ad.getObjectDN("User");
-except adclient.ADSearchError, ex:
+except adclient.ADSearchError as ex:
   code = ad.get_error_num()
   if code == adclient.AD_OBJECT_NOT_FOUND:
     print("no such user")
@@ -144,12 +161,23 @@ func main() {
   adclient.New()
   defer adclient.Delete()
   
-  adclient.Timelimit = 60
-  adclient.Nettimeout = 60
-  // secured SASL login with a list of ldap uries
-  // if err : =ad.login(["ldap://Server1", "ldap://Server2", "ldap://Server3"], "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx"), err != nil {
-  // secured SASL login with a domain name
-  if err := adclient.Login("xx.xx.xx.xx", "user", "password", "dc=xx,dc=xx,dc=xx,dc=xx"); err != nil {
+  params := adclient.DefaultADConnParams()
+  # login with a domain name, choose DC from SITE
+  params.Domain = "DOMAIN.LOCAL"
+  params.Site = "SITE"
+  // or login with a list of ldap uries
+  // params.Uries = append(params.Uries, adclient.LdapPrefix()+"Server1", adclient.LdapPrefix()+"Server2")
+  // params.Search_base = "dc=DOMAIN,dc=LOCAL";
+  params.Binddn = "user";
+  params.Bindpw = "password";
+    
+  // simple auth mode
+  // params.Secured = false;
+
+  params.Timelimit = 60
+  params.Nettimeout = 60
+  
+  if err := adclient.Login(params); err != nil {
     fmt.Printf("Failed to AD login: %v\n", err)
     return
   }
