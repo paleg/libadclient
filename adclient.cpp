@@ -56,6 +56,7 @@ void adclient::login(adConnParams _params) {
                 }
             }
         }
+        throw ADBindException("No suitable connection uries found", AD_PARAMS_ERROR);
     } else if (!_params.domain.empty()) {
         if (_params.search_base.empty()) {
             _params.search_base = domain2dn(_params.domain);
@@ -63,7 +64,7 @@ void adclient::login(adConnParams _params) {
         _params.uries = get_ldap_servers(_params.domain, _params.site);
         login(_params);
     } else {
-        // throw
+        throw ADBindException("No suitable connection params found", AD_PARAMS_ERROR);
     }
 }
 
