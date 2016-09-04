@@ -1,6 +1,8 @@
 #include "stdlib.h"
 #include "adclient.h"
 
+const string adclient::ldap_prefix = "ldap://";
+
 /*
   Active Directory class.
 
@@ -16,7 +18,6 @@ adclient::adclient() {
   Constructor, to initialize default values of global variables.
 */
     ds = NULL;
-    ldap_prefix = "ldap://";
 }
 
 adclient::~adclient() {
@@ -1751,8 +1752,7 @@ vector<string> adclient::perform_srv_query(string srv_rec) {
             throw ADBindException("Error while resolving ldap server for " + srv_rec + ": dn_expand(host) < 0", AD_LDAP_RESOLV_ERROR);
         }
         //std::cout << priority << " " << weight << " " << ttl << " " << host << ":" << port << std::endl;
-        // TODO: use ldap_prefix
-        ret.push_back(string("ldap://") + string(host));
+        ret.push_back(adclient::ldap_prefix + string(host));
         msg = end;
     }
     free(srv_name);

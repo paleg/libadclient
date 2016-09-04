@@ -205,11 +205,12 @@ public:
 
       std::map <string, std::vector <string> > getObjectAttributes(string object);
       std::map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
+
+      static const string ldap_prefix;
 private:
       adConnParams params;
 
       LDAP *ds;
-      string ldap_prefix;
 
       void login(LDAP **ds, adConnParams& _params);
       void logout(LDAP *ds);
