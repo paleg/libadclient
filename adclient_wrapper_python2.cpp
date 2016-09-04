@@ -96,7 +96,6 @@ int dict_get_int(PyObject *dict, string key_str) {
        return result;
 }
 
-
 static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        PyObject *paramsObj;

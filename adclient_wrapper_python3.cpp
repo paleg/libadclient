@@ -72,35 +72,87 @@ static PyObject *wrapper_new_adclient(PyObject *self, PyObject *args) {
     return PyCapsule_New(obj, "adclient", delete_adclient);
 }
 
+string dict_get_string(PyObject *dict, string key_str) {
+       string result;
+
+       PyObject *key = PyUnicode_FromString(key_str.c_str());
+       if (PyDict_Contains(dict, key) == 1) {
+           PyObject *val = PyDict_GetItem(dict, key);
+           if (PyUnicode_Check(val)) {
+               result = unicode2string(val);
+           }
+       }
+       Py_DECREF(key);
+       return result;
+}
+
+bool dict_get_bool(PyObject *dict, string key_str) {
+       bool result = false;
+
+       PyObject *key = PyUnicode_FromString(key_str.c_str());
+       if (PyDict_Contains(dict, key) == 1) {
+           PyObject *val = PyDict_GetItem(dict, key);
+           result = PyObject_IsTrue(val);
+       }
+       Py_DECREF(key);
+       return result;
+}
+
+int dict_get_int(PyObject *dict, string key_str) {
+       int result = -1;
+
+       PyObject *key = PyUnicode_FromString(key_str.c_str());
+       if (PyDict_Contains(dict, key) == 1) {
+           PyObject *val = PyDict_GetItem(dict, key);
+           result = PyLong_AsLong(val);
+       }
+       Py_DECREF(key);
+       return result;
+}
+
 static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
-    PyObject *obj;
-    char *binddn, *bindpw, *search_base;
-    int secured;
-    PyObject * listObj;
-    unsigned int numLines;
+       PyObject *obj;
+       PyObject *paramsObj;
 
-    if (!PyArg_ParseTuple(args, "OO!sssi", &obj, &PyList_Type, &listObj, &binddn, &bindpw, &search_base, &secured)) return NULL;
+       if (!PyArg_ParseTuple(args, "OO!", &obj, &PyDict_Type, &paramsObj)) return NULL;
 
-    if ((numLines = PyList_Size(listObj)) < 0) return NULL; /* Not a list */
+       adConnParams params;
 
-    vector <string> uries;
-    for (unsigned int i=0; i<numLines; i++) {
-       PyObject *pListItem = PyList_GetItem(listObj, i);
-       string item = unicode2string(pListItem);
-       uries.push_back(item);
-    }
+       params.domain = dict_get_string(paramsObj, "domain");
+       params.site = dict_get_string(paramsObj, "site");
+       params.binddn = dict_get_string(paramsObj, "binddn");
+       params.bindpw = dict_get_string(paramsObj, "bindpw");
+       params.search_base = dict_get_string(paramsObj, "search_base");
+       params.secured = dict_get_bool(paramsObj, "secured");
+       params.nettimeout = dict_get_int(paramsObj, "nettimeout");
+       params.timelimit = dict_get_int(paramsObj, "timelimit");
 
-    adclient *ad = convert_ad(obj);
-    try {
-       ad->login(uries, binddn, bindpw, search_base, secured == 1);
-    }
-    catch(ADBindException& ex) {
-         error_num = ex.code;
-         PyErr_SetString(ADBindError, ex.msg.c_str());
-         return NULL;
-    }
-    Py_INCREF(Py_None);
-    return Py_None;
+       PyObject *key = PyUnicode_FromString("uries");
+       if (PyDict_Contains(paramsObj, key) == 1) {
+            PyObject *val = PyDict_GetItem(paramsObj, key);
+            if (PyList_Check(val)) {
+               for (unsigned int i = 0; i < PyList_Size(val); i++) {
+                  PyObject *strObj = PyList_GetItem(val, i);
+                  if (PyUnicode_Check(strObj)) {
+                      string item = unicode2string(strObj);
+                      params.uries.push_back(item);
+                  }
+               }
+            }
+       }
+       Py_DECREF(key);
+
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->login(params);
+       }
+       catch (ADBindException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADBindError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
 }
 
 static PyObject *wrapper_binded_uri_adclient(PyObject *self, PyObject *args) {
