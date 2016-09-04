@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import sys
+import platform
+
 Help("""
 Type: 'scons' to build libadclient library
       'scons install [prefix=/path]' to install libadclient library and header file [to /path/{include,lib}]
@@ -97,6 +99,10 @@ if not IGNORE:
    if not conf.checkLdapVersion():
       env.Append(CCFLAGS=" -DLDAP21 ")
    env = conf.Finish()
+
+if platform.system() == "Darwin" and platform.mac_ver()[0] and platform.mac_ver()[0] >= '10.11':
+    # suppress OpenDirectory Framework warnings for OSX >= 10.11
+    env.Append(CCFLAGS=" -Wno-deprecated ")
 
 libadclient_target = env.SharedLibrary('adclient', ['adclient.cpp'])
 
