@@ -30,6 +30,7 @@ func DefaultADConnParams() (params ADConnParams) {
 	params.Nettimeout = -1
 	params.Timelimit = -1
 	params.Secured = true
+	params.UseGSSAPI = false
 	return
 }
 
