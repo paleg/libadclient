@@ -49,6 +49,7 @@ USAGE NOTES:
 login: 
   - Login can be performed with (boolean `adConnParams.secured` chooses login mode):
     * SASL DIGEST-MD5 auth (default). It requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details). 
+    * SASL GSSAPI auth (`adConnParams.use_gssapi` must be set to `true`). It requires properly configured kerberos library (`krb5.conf`) with `default_keytab_name` set to keytab with computer account. `msktutil` can be used for this purpose, see [Squid Active Directory Integration](http://wiki.squid-cache.org/ConfigExamples/Authenticate/WindowsActiveDirectory) `Kerberos` part for example. 
     * simple auth (clear text username and password). It does not require proper DNS and SPN setup, but with simple auth AD will refuse to do some actions (e.g. change passwords).
   - Login can be performed with:
     * domain DNS name (`adConnParams.domain`) with optional AD site name (`adConnParams.site`). ldap uries for `domain` will be detected via DNS SRV query (_ldap._tcp.SITE._sites.DOMAIN.LOCAL / _ldap._tcp.DOMAIN.LOCAL). If `adConnParams.search_base` is empty - it will be constructed automatically from domain name (DC=DOMAIN,DC=LOCAL).
@@ -77,9 +78,13 @@ int main() {
     // params.search_base = "dc=DOMAIN,dc=LOCAL";
     params.binddn = "user";
     params.bindpw = "password";
-    
     // simple auth mode
     // params.secured = false;
+    
+    // GSSAPI auth, only domain and use_gssapi required
+    // params.domain = "DOMAIN.LOCAL";
+    // params.site = "SITE";
+    // params.use_gssapi = true;
     
     adclient ad;
     try {
@@ -129,6 +134,11 @@ params.bindpw = "password";
 # simple auth mode
 # params.secured = False;
 
+# GSSAPI auth, only domain and use_gssapi required
+# params.domain = "DOMAIN.LOCAL";
+# params.site = "SITE";
+# params.use_gssapi = True;
+
 ad = adclient.ADClient()
 try:
   ad.login(params)
@@ -174,6 +184,9 @@ func main() {
   // simple auth mode
   // params.Secured = false;
 
+  // enable GSSAPI auth
+  // params.UseGSSAPI = true
+  
   params.Timelimit = 60
   params.Nettimeout = 60
   
