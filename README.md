@@ -183,7 +183,7 @@ func main() {
   }
   
   group := "Domain Admins"
-  if users, err := adclient.GetUsersInGroup(group); err != nil {
+  if users, err := adclient.GetUsersInGroup(group, true); err != nil {
     fmt.Printf("Failed to get users in '%v': %v\n", group, err)
   } else {
     fmt.Printf("Users in '%v':\n", group)
