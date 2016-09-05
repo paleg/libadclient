@@ -18,10 +18,6 @@ adclient::adclient() {
   Constructor, to initialize default values of global variables.
 */
     ds = NULL;
-#ifdef KRB5
-    krb_param = new krb_struct;
-    krb_param->context = NULL;
-#endif
 }
 
 adclient::~adclient() {
@@ -29,15 +25,9 @@ adclient::~adclient() {
   Destructor, to automaticaly free initial values allocated at login().
 */
     logout(ds);
-#ifdef KRB5
-    delete krb_param;
-#endif
 }
 
 void adclient::logout(LDAP *ds) {
-#ifdef KRB5
-    krb5_cleanup(krb_param);
-#endif
     if (ds != NULL) {
         ldap_unbind_ext(ds, NULL, NULL);
     }
@@ -179,6 +169,9 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
     }
     if (_params.secured) {
 #ifdef KRB5
+        krb_struct krb_param;
+        krb_param.context = NULL;
+
         if (_params.use_gssapi && (!_params.domain.empty()) && (krb5_create_cache(_params.domain.c_str(), krb_param) == 0)) {
             _params.login_method = "GSSAPI";
             bindresult = sasl_bind_gssapi(*ds);
@@ -188,12 +181,14 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
 		error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + ": ";
 		error_msg.append(ldap_err2string(bindresult));
 		cout << error_msg << endl;
-                krb_param->context = NULL;
+                krb_param.context = NULL;
             }
         } else {
             bindresult = -1;
-            krb_param->context = NULL;
+            krb_param.context = NULL;
         }
+        krb5_cleanup(krb_param);
+
         if (bindresult != LDAP_SUCCESS) {
 #endif
             _params.login_method = "DIGEST-MD5";
