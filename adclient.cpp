@@ -217,12 +217,10 @@ bool adclient::checkUserPassword(string user, string password) {
 
     bool result = true;
     try {
-        adConnParams _params;
-        _params.uries.push_back(params.uri);
+        adConnParams _params(params);
         _params.binddn = user;
         _params.bindpw = password;
-        _params.search_base = params.search_base;
-        _params.secured = true; // ???
+        _params.use_gssapi = false;
         login(&ld, _params);
     }
     catch (ADBindException& ex) {
