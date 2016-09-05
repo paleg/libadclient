@@ -42,6 +42,7 @@ void adclient::login(adConnParams _params) {
             _params.uri = *it;
             try {
                 login(&ds, _params);
+                params = _params;
                 return;
             }
             catch (ADBindException&) {
@@ -206,8 +207,6 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
         error_msg.append(ldap_err2string(bindresult));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
-
-    params = _params;
 }
 
 bool adclient::checkUserPassword(string user, string password) {
