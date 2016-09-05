@@ -99,37 +99,6 @@ void adclient::login(string _uri, string binddn, string bindpw, string search_ba
     login(_params);
 }
 
-int sasl_interact(LDAP *ds, unsigned flags, void *indefaults, void *in) {
-    sasl_defaults *defaults = static_cast<sasl_defaults *>(indefaults);
-    sasl_interact_t *interact = static_cast<sasl_interact_t *>(in);
-    if (ds == NULL) {
-        return LDAP_PARAM_ERROR;
-    }
-
-    while(interact->id != SASL_CB_LIST_END) {
-        const char *dflt = static_cast<const char *>(interact->defresult);
-
-        switch(interact->id) {
-            case SASL_CB_GETREALM:
-                dflt = NULL;
-                break;
-            case SASL_CB_USER:
-            case SASL_CB_AUTHNAME:
-                dflt = defaults->username.c_str();
-                break;
-            case SASL_CB_PASS:
-                dflt = defaults->password.c_str();
-                break;
-        }
-
-        interact->result = (dflt && *dflt) ? dflt : static_cast<const char *>("");
-        interact->len = strlen(static_cast<const char *>(interact->result));
-        interact++;
-    }
-
-    return LDAP_SUCCESS;
-}
-
 void adclient::login(LDAP **ds, adConnParams& _params) {
 /*
   To set various LDAP options and bind to LDAP server.
@@ -200,28 +169,9 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
     }
 
     if (_params.secured) {
-        string sasl_mech = "DIGEST-MD5";
-        unsigned sasl_flags = LDAP_SASL_QUIET;
-
-        sasl_defaults defaults;
-        defaults.username = _params.binddn;
-        defaults.password = _params.bindpw;
-
-        bindresult = ldap_sasl_interactive_bind_s(*ds, NULL,
-                                                  sasl_mech.c_str(),
-                                                  NULL, NULL,
-                                                  sasl_flags, sasl_interact, &defaults);
+        bindresult = sasl_bind_digest_md5(*ds, _params.binddn, _params.bindpw);
     } else {
-        struct berval cred;
-        struct berval *servcred;
-
-        cred.bv_val = strdup(_params.bindpw.c_str());
-        cred.bv_len = _params.bindpw.size();
-
-        bindresult = ldap_sasl_bind_s(*ds, _params.binddn.c_str(), NULL, &cred, NULL, NULL, &servcred);
-
-        memset(cred.bv_val, 0, cred.bv_len);
-        free(cred.bv_val);
+        bindresult = sasl_bind_simple(*ds, _params.binddn, _params.bindpw);
     }
 
     if (bindresult != LDAP_SUCCESS) {

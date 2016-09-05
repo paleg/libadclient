@@ -7,7 +7,6 @@
 #define _ADCLIENT_H_
 
 #include <ldap.h>
-#include <sasl/sasl.h>
 
 #if defined( OPENLDAP )
 	#define LDAPOPTSUCCESS LDAP_OPT_SUCCESS
@@ -57,11 +56,6 @@ using std::map;
 using std::string;
 using std::cout;
 using std::endl;
-
-struct sasl_defaults {
-    string username;
-    string password;
-};
 
 class ADException {
 public:
@@ -355,5 +349,8 @@ inline string int2ip(string value) {
     ip += itos(BinToDec(fourthOctet));
     return ip;
 }
+
+int sasl_bind_digest_md5(LDAP *ds, string binddn, string bindpw);
+int sasl_bind_simple(LDAP *ds, string binddn, string bindpw);
 
 #endif // _ADCLIENT_H_

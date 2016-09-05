@@ -104,7 +104,7 @@ if platform.system() == "Darwin" and platform.mac_ver()[0] and platform.mac_ver(
     # suppress OpenDirectory Framework warnings for OSX >= 10.11
     env.Append(CCFLAGS=" -Wno-deprecated ")
 
-libadclient_target = env.SharedLibrary('adclient', ['adclient.cpp'])
+libadclient_target = env.SharedLibrary('adclient', ['adclient.cpp', 'adclient_sasl.cpp'])
 
 lib_install_target = env.Install(PREFIX+'/lib', libadclient_target)
 header_install_target = env.Install(PREFIX+'/include', 'adclient.h')
