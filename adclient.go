@@ -1,7 +1,7 @@
 package adclient
 
-// #cgo CPPFLAGS: -DOPENLDAP
-// #cgo LDFLAGS: -lstdc++ -lldap -lsasl2 -lstdc++ -llber -lresolv
+// #cgo CPPFLAGS: -DOPENLDAP -DKRB5
+// #cgo LDFLAGS: -lstdc++ -lldap -lsasl2 -lstdc++ -llber -lresolv -lkrb5
 import "C"
 
 import "fmt"
@@ -21,6 +21,7 @@ type ADConnParams struct {
 	Bindpw      string
 	Search_base string
 	Secured     bool
+	UseGSSAPI   bool
 	Nettimeout  int
 	Timelimit   int
 }
@@ -123,6 +124,7 @@ func Login(_params ADConnParams) (err error) {
 	params.SetBindpw(_params.Bindpw)
 	params.SetSearch_base(_params.Search_base)
 	params.SetSecured(_params.Secured)
+	params.SetUse_gssapi(_params.UseGSSAPI)
 	params.SetNettimeout(_params.Nettimeout)
 	params.SetTimelimit(_params.Timelimit)
 
@@ -144,7 +146,7 @@ func LoginOld(uri interface{}, user string, passwd string, sb string, secured bo
 	args.Binddn = user
 	args.Bindpw = passwd
 	args.Search_base = sb
-	args.Secured = secured
+	args.UseGSSAPI = secured
 
 	switch uri.(type) {
 	case string:

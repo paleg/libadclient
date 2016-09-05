@@ -8,6 +8,10 @@
 
 #include <ldap.h>
 
+#ifdef KRB5
+#include <krb5.h>
+#endif
+
 #if defined( OPENLDAP )
 	#define LDAPOPTSUCCESS LDAP_OPT_SUCCESS
 #elif defined( SUNLDAP )
@@ -57,6 +61,14 @@ using std::string;
 using std::cout;
 using std::endl;
 
+#ifdef KRB5
+struct krb_struct {
+    krb5_context context;
+    char *mem_cache_env;
+    krb5_ccache cc;
+};
+#endif
+
 class ADException {
 public:
       ADException(string _msg, int _code) { msg = _msg; code = _code; }
@@ -88,6 +100,7 @@ struct adConnParams {
         string bindpw;
         string search_base;
         bool secured;
+        bool use_gssapi;
 
         // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
         int nettimeout;
@@ -96,6 +109,7 @@ struct adConnParams {
 
         adConnParams() :
             secured(true),
+            use_gssapi(false),
             // by default do not touch timeouts
             nettimeout(-1), timelimit(-1)
         {};
@@ -104,6 +118,7 @@ struct adConnParams {
 
     private:
         string uri;
+        string login_method;
 };
 
 
@@ -121,6 +136,7 @@ public:
 
       string binded_uri() { return params.uri; }
       string search_base() { return params.search_base; }
+      string login_method() { return params.login_method; }
 
       void groupAddUser(string group, string user);
       void groupRemoveUser(string group, string user);
@@ -205,6 +221,9 @@ private:
       adConnParams params;
 
       LDAP *ds;
+#ifdef KRB5
+      krb_struct *krb_param;
+#endif
 
       void login(LDAP **ds, adConnParams& _params);
       void logout(LDAP *ds);
@@ -352,5 +371,11 @@ inline string int2ip(string value) {
 
 int sasl_bind_digest_md5(LDAP *ds, string binddn, string bindpw);
 int sasl_bind_simple(LDAP *ds, string binddn, string bindpw);
+#ifdef KRB5
+int krb5_create_cache(const char *domain, krb_struct *krb_param);
+void krb5_cleanup(krb_struct *krb_param);
+int sasl_bind_gssapi(LDAP *ds);
+int sasl_rebind_gssapi(LDAP * ld, LDAP_CONST char *url, ber_tag_t request, ber_int_t msgid, void *params);
+#endif
 
 #endif // _ADCLIENT_H_

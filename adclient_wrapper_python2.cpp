@@ -110,6 +110,7 @@ static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
        params.bindpw = dict_get_string(paramsObj, "bindpw");
        params.search_base = dict_get_string(paramsObj, "search_base");
        params.secured = dict_get_bool(paramsObj, "secured");
+       params.use_gssapi = dict_get_bool(paramsObj, "use_gssapi");
        params.nettimeout = dict_get_int(paramsObj, "nettimeout");
        params.timelimit = dict_get_int(paramsObj, "timelimit");
 

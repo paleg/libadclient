@@ -15,6 +15,7 @@ class ADConnParams:
         self.bindpw = ""
         self.search_base = ""
         self.secured = True
+        self.use_gssapi = False
         self.nettimeout = -1
         self.timelimit = -1
         self.uries = []

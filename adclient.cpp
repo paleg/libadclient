@@ -18,6 +18,10 @@ adclient::adclient() {
   Constructor, to initialize default values of global variables.
 */
     ds = NULL;
+#ifdef KRB5
+    krb_param = new krb_struct;
+    krb_param->context = NULL;
+#endif
 }
 
 adclient::~adclient() {
@@ -25,9 +29,15 @@ adclient::~adclient() {
   Destructor, to automaticaly free initial values allocated at login().
 */
     logout(ds);
+#ifdef KRB5
+    delete krb_param;
+#endif
 }
 
 void adclient::logout(LDAP *ds) {
+#ifdef KRB5
+    krb5_cleanup(krb_param);
+#endif
     if (ds != NULL) {
         ldap_unbind_ext(ds, NULL, NULL);
     }
@@ -107,7 +117,7 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
 */
     logout(*ds);
 
-    int result, version, bindresult;
+    int result, version, bindresult = -1;
 
     string error_msg;
 
@@ -167,15 +177,37 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
         error_msg.append(ldap_err2string(result));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
-
     if (_params.secured) {
-        bindresult = sasl_bind_digest_md5(*ds, _params.binddn, _params.bindpw);
+#ifdef KRB5
+        if (_params.use_gssapi && (!_params.domain.empty()) && (krb5_create_cache(_params.domain.c_str(), krb_param) == 0)) {
+            _params.login_method = "GSSAPI";
+            bindresult = sasl_bind_gssapi(*ds);
+            if (bindresult == LDAP_SUCCESS) {
+                ldap_set_rebind_proc(*ds, sasl_rebind_gssapi, NULL);
+            } else {
+		error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + ": ";
+		error_msg.append(ldap_err2string(bindresult));
+		cout << error_msg << endl;
+                krb_param->context = NULL;
+            }
+        } else {
+            bindresult = -1;
+            krb_param->context = NULL;
+        }
+        if (bindresult != LDAP_SUCCESS) {
+#endif
+            _params.login_method = "DIGEST-MD5";
+            bindresult = sasl_bind_digest_md5(*ds, _params.binddn, _params.bindpw);
+#ifdef KRB5
+        }
+#endif
     } else {
+        _params.login_method = "SIMPLE";
         bindresult = sasl_bind_simple(*ds, _params.binddn, _params.bindpw);
     }
 
     if (bindresult != LDAP_SUCCESS) {
-        error_msg = "Error while ldap binding to " + _params.uri + " with " + _params.binddn + " " + _params.bindpw + ": ";
+        error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + " with '" + _params.binddn + "': ";
         error_msg.append(ldap_err2string(bindresult));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
