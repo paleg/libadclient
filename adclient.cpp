@@ -1649,15 +1649,25 @@ string adclient::domain2dn(string domain) {
 }
 
 vector<string> adclient::get_ldap_servers(string domain, string site) {
+    vector<string> servers;
     if (not site.empty()) {
         string srv_site = "_ldap._tcp." + site + "._sites." + domain;
         try {
-            return perform_srv_query(srv_site);
+            servers = perform_srv_query(srv_site);
         } catch (ADBindException &ex) { }
     }
 
-    string srv_domain = "_ldap._tcp." + domain;
-    return perform_srv_query(srv_domain);
+    string srv_default = "_ldap._tcp." + domain;
+    vector<string> servers_default = perform_srv_query(srv_default);
+
+    // extend site DCs list with all DCs list (except already added site DCs) in case when site DCs is unavailable
+    for (vector <string>::iterator it = servers_default.begin(); it != servers_default.end(); ++it) {
+        if (find(servers.begin(), servers.end(), *it) == servers.end()) {
+            servers.push_back(*it);
+        }
+    }
+
+    return servers;
 }
 
 #pragma GCC diagnostic push
