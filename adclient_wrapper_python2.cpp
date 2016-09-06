@@ -160,6 +160,15 @@ static PyObject *wrapper_search_base_adclient(PyObject *self, PyObject *args) {
        return Py_BuildValue("s", ad->search_base().c_str());
 }
 
+static PyObject *wrapper_login_method_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+
+       if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
+
+       adclient *ad = convert_ad(obj);
+       return Py_BuildValue("s", ad->login_method().c_str());
+}
+
 static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
        char *ou, *filter;
@@ -1301,6 +1310,7 @@ static PyMethodDef adclient_methods[] = {
        { "ifDNExists_adclient", wrapper_ifDNExists_adclient, 1 },
        { "binded_uri_adclient", wrapper_binded_uri_adclient, 1},
        { "search_base_adclient", wrapper_search_base_adclient, 1},
+       { "login_method_adclient", wrapper_login_method_adclient, 1},
        { "get_error_num", wrapper_get_error_num, 1 },
        { "int2ip", wrapper_int2ip, 1 },
        { "domain2dn", wrapper_domain2dn, 1 },

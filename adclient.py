@@ -56,6 +56,9 @@ class ADClient:
       def search_base(self):
           return _adclient.search_base_adclient(self.obj)
 
+      def login_method(self):
+          return _adclient.login_method_adclient(self.obj)
+
       def searchDN(self, search_base, filter, scope):
           """ It returns list with DNs found with 'filter'
           """

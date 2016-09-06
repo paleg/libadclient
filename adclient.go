@@ -172,6 +172,10 @@ func SearchBase() (result string) {
 	return ad.Search_base()
 }
 
+func LoginMethod() (result string) {
+	return ad.Login_method()
+}
+
 func GroupAddUser(group string, user string) (err error) {
 	defer catch(&err)
 	ad.GroupAddUser(group, user)
