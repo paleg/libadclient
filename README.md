@@ -50,7 +50,7 @@ login:
   - Login can be performed with (boolean `adConnParams.secured` chooses login mode):
     * SASL DIGEST-MD5 auth (default). It requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details). 
     * SASL GSSAPI auth (`adConnParams.use_gssapi` must be set to `true`). It requires properly configured kerberos library (`krb5.conf`) with `default_keytab_name` set to keytab with computer account. `msktutil` can be used for this purpose, see [Squid Active Directory Integration](http://wiki.squid-cache.org/ConfigExamples/Authenticate/WindowsActiveDirectory) `Kerberos` part for example. 
-    * simple auth (clear text username and password). It does not require proper DNS and SPN setup, but with simple auth AD will refuse to do some actions (e.g. change passwords).
+    * simple auth (clear text username and password). It does not require proper DNS and SPN setup, but with simple auth AD will refuse to do some actions (e.g. change passwords). **For some configurations (2008 domain?)**, to get simple auth to work, binddn must contain domain suffix i.e. `adConnParams.binddn = "user@domain.local"`).
   - Login can be performed with:
     * domain DNS name (`adConnParams.domain`) with optional AD site name (`adConnParams.site`). ldap uries for `domain` will be detected via DNS SRV query (_ldap._tcp.SITE._sites.DOMAIN.LOCAL / _ldap._tcp.DOMAIN.LOCAL). If `adConnParams.search_base` is empty - it will be constructed automatically from domain name (DC=DOMAIN,DC=LOCAL).
     * vector of ldap uries (`adConnParams.uries`). Ldap uries must be prefixed with `adclient::ldap_prefix`. `adConnParams.search_base` must be set explicitly.
