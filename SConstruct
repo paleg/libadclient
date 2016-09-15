@@ -153,7 +153,7 @@ if not IGNORE:
       env.Append(CCFLAGS=" -DLDAP21 ")
    env = conf.Finish()
 
-if platform.system() == "Darwin" and platform.mac_ver()[0] and platform.mac_ver()[0] >= '10.11':
+if platform.system() == "Darwin" and platform.mac_ver()[0] >= '10.11':
     # suppress OpenDirectory Framework warnings for OSX >= 10.11
     env.Append(CCFLAGS=" -Wno-deprecated ")
 
