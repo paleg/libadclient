@@ -480,6 +480,11 @@ func SearchDN(search_base string, filter string, scope int) (result []string, er
 	return
 }
 
+func SetObjectAttribute(object string, attr string, value string) (err error) {
+	ad.setObjectAttribute(object, attr, value)
+	return nil
+}
+
 /*
    map < string, map < string, std::vector<string> > > search(string OU, int scope, string filter, const std::vector <string> &attributes);
 */
