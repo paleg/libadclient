@@ -481,7 +481,7 @@ func SearchDN(search_base string, filter string, scope int) (result []string, er
 }
 
 func SetObjectAttribute(object string, attr string, value string) (err error) {
-	ad.setObjectAttribute(object, attr, value)
+	ad.SetObjectAttribute(object, attr, value)
 	return nil
 }
 
