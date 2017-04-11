@@ -145,7 +145,7 @@ public:
       void CreateComputer(string name, string container);
       void CreateOU(string ou);
       void DeleteDN(string dn);
-      void RenameDN(string dn, string rdn);
+      void RenameDN(string object, string rdn);
       void EnableUser(string user);
       void DisableUser(string user);
       void UnLockUser(string user);
