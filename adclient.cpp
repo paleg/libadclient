@@ -533,7 +533,7 @@ void adclient::mod_rename(string object, string new_rdn) {
 
    }
 
- mod_replace(dn,"sAMAccountName",new_rdn);
+ mod_replace(object,"sAMAccountName",new_rdn);
   
   
   
