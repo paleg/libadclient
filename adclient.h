@@ -228,6 +228,7 @@ private:
 
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);
+      void mod_rename(string object, string rdn);
       void mod_replace(string object, string attribute, string value);
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string dn2domain(string dn);
