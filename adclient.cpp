@@ -814,8 +814,8 @@ void adclient::CreateComputer(string name, string container) {
     }
 }
 
-void RenameDN(string dn, string rdn) {
-  mod_rename(dn,rdn);
+void adclient::RenameDN(string dn, string rdn) {
+     mod_rename(dn,rdn);
 }
 
 void adclient::CreateUser(string cn, string container, string user_short) {
