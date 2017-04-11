@@ -792,6 +792,24 @@ void adclient::CreateComputer(string name, string container) {
     }
 }
 
+void RenameDN(string object, string rdn) {
+ 
+  string dn =  getObjectDN(object);
+  int result;
+  string error_msg;
+  
+  string ndn="CN=" + rdn;
+  result = ldap_rename_s(ds,dn.c_str(),ndn.c_str(),NULL,true,NULL,NULL);
+  if (result != LDAP_SUCCESS){
+       error_msg = "Error in ldap_rename_s: ";
+       error_msg.append(ldap_err2string(result));
+       throw ADOperationalException(error_msg,result);
+
+    }
+  mod_replace(dn,"sAMAccountName",rdn);
+  
+}
+
 void adclient::CreateUser(string cn, string container, string user_short) {
 /*
   It creates user with given common name and short name in given container.
