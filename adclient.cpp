@@ -533,7 +533,7 @@ void adclient::mod_rename(string object, string new_rdn) {
 
    }
 
- mod_replace(object,"sAMAccountName",new_rdn);
+
   
   
   
@@ -815,8 +815,34 @@ void adclient::CreateComputer(string name, string container) {
 }
 
 void adclient::RenameDN(string dn, string rdn) {
+
      mod_rename(dn,rdn);
 }
+
+void adclient::RenameGroup(string dn, string rdn) {
+
+     mod_rename(dn,rdn);
+     mod_replace(dn,"sAMAccountName",rdn);
+
+
+}
+
+
+void adclient::RenameUser(string old_sam ,string new_sam,string rdn) {
+
+
+     string dn = getObjectDN(old_sam);
+     string domain;
+     string upn;
+     domain=dn2domain(dn);
+     upn = new_sam + "@" + domain;
+
+     mod_replace(old_sam,"userPrincipalName",upn);
+     mod_replace(old_sam,"sAMAccountName", new_sam );
+     mod_rename(new_sam,rdn);
+
+}
+
 
 void adclient::CreateUser(string cn, string container, string user_short) {
 /*
@@ -1461,6 +1487,7 @@ void adclient::UnLockUser(string user) {
 
 void adclient::setUserDescription(string user, string descr) {
     mod_replace(user, "description", descr);
+
 }
 
 void adclient::setUserPhone(string user, string phone) {

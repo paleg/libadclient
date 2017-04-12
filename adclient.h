@@ -146,6 +146,8 @@ public:
       void CreateOU(string ou);
       void DeleteDN(string dn);
       void RenameDN(string object, string rdn);
+      void RenameGroup(string object, string rdn);
+      void RenameUser(string old_sam, string new_sam, string rdn);
       void EnableUser(string user);
       void DisableUser(string user);
       void UnLockUser(string user);
