@@ -70,9 +70,9 @@ krb5_create_cache(const char *domain, krb_struct &krb_param)
 
     //cout << "DEBUG: Get default keytab file name" << endl;
     krb5_kt_default_name(krb_param.context, buf, KT_PATH_MAX);
-    p = strchr(buf, ':');	/* Find the end if "FILE:" */
+    p = strchr(buf, ':'); /* Find the end if "FILE:" */
     if (p)
-        ++p;			/* step past : */
+        ++p;            /* step past : */
     keytab_name = strdup(p ? p : buf);
     //cout << "DEBUG: Got default keytab file name " << keytab_name << endl;
 

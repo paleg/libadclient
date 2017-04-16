@@ -13,9 +13,9 @@
 #endif
 
 #if defined( OPENLDAP )
-	#define LDAPOPTSUCCESS LDAP_OPT_SUCCESS
+    #define LDAPOPTSUCCESS LDAP_OPT_SUCCESS
 #elif defined( SUNLDAP )
-	#define LDAPOPTSUCCESS LDAP_SUCCESS
+    #define LDAPOPTSUCCESS LDAP_SUCCESS
 #endif
 
 /*#include <mpatrol.h>*/
