@@ -1,4 +1,4 @@
-# libadclient
+# [libadclient](https://paleg.github.io/libadclient/)
 
 libadclient - Active Directory client for c++, Python and Golang.
 
