@@ -273,6 +273,8 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
     }
     attrs[i] = NULL;
 
+    replace(filter, "\\", "\\\\");
+
     do {
         result = ldap_create_page_control(ds, pagesize, cookie, iscritical, &pagecontrol);
         if (result != LDAP_SUCCESS) {
