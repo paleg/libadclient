@@ -1579,7 +1579,9 @@ vector <string> adclient::DNsToShortNames(vector <string> &v) {
             short_v = getObjectAttribute(*it, "sAMAccountName");
         }
         catch (ADSearchException& ex) {
-            if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND) {
+            if (ex.code == AD_ATTRIBUTE_ENTRY_NOT_FOUND ||
+                // object could be not found if it is in a different search base / domain
+                ex.code == AD_OBJECT_NOT_FOUND) {
                 result.push_back(*it);
                 continue;
             }
