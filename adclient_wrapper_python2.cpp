@@ -38,6 +38,14 @@ static PyObject *wrapper_domain2dn(PyObject *self, PyObject *args) {
        return Py_BuildValue("s", result.c_str());
 }
 
+static PyObject *wrapper_decodeSID(PyObject *self, PyObject *args) {
+       char *sid;
+       int len;
+       if (!PyArg_ParseTuple(args, "s#", &sid, &len)) return NULL;
+       string result = decodeSID( string(sid, len) );
+       return Py_BuildValue("s", result.c_str());
+}
+
 static PyObject *wrapper_get_ldap_servers(PyObject *self, PyObject *args) {
        char *domain, *site;
        if (!PyArg_ParseTuple(args, "ss", &domain, &site)) return NULL;
@@ -1314,6 +1322,7 @@ static PyMethodDef adclient_methods[] = {
        { "get_error_num", wrapper_get_error_num, 1 },
        { "int2ip", wrapper_int2ip, 1 },
        { "domain2dn", wrapper_domain2dn, 1 },
+       { "decodeSID", wrapper_decodeSID, 1 },
        { "get_ldap_servers", wrapper_get_ldap_servers, 1 },
        { NULL, NULL }
 };

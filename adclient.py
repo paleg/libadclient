@@ -300,6 +300,9 @@ class ADClient:
       def int2ip(self, ipstr):
           return _adclient.int2ip(ipstr)
 
+      def decodeSID(self, sid):
+          return _adclient.decodeSID(sid)
+
       def domain2dn(self, domain):
           return _adclient.domain2dn(domain)
 
