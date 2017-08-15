@@ -464,10 +464,6 @@ func GetUsersInOU(OU string, scope int) (result []string, err error) {
 	return commonStringsIntToSlice(ad.GetUsersInOU, OU, scope)
 }
 
-/*
-   struct berval getBinaryObjectAttribute(string object, string attribute);
-*/
-
 func GetObjectAttribute(object string, attribute string) (result []string, err error) {
 	return common2StringsToSlice(ad.GetObjectAttribute, object, attribute)
 }

@@ -1,4 +1,4 @@
-/* 
+/*
    C++ Active Directory manipulation class.
    Based on adtool by Mike Dawson (http://gp2x.org/adtool/).
 */
@@ -207,7 +207,6 @@ public:
       std::vector <string> getGroupsInOU(string OU, int scope);
       std::vector <string> getComputersInOU(string OU, int scope);
 
-      struct berval getBinaryObjectAttribute(string object, string attribute);
       std::vector <string> getObjectAttribute(string object, string attribute);
 
       std::vector <string> searchDN(string search_base, string filter, int scope);
