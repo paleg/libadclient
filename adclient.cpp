@@ -1078,6 +1078,14 @@ map <string, vector <string> > adclient::getObjectAttributes(string object, cons
         attrs = map < string,vector<string> >();
     }
 
+    map < string, vector<string> >::iterator it = attrs.find("objectSid");
+    if (it != attrs.end()) {
+        vector<string> sid;
+        for (unsigned int i = 0; i < it->second.size(); ++i) {
+            sid.push_back( decodeSID(it->second[i]) );
+        }
+        it->second = sid;
+    }
     return attrs;
 }
 
