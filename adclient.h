@@ -365,6 +365,46 @@ inline string int2ip(string value) {
     return ip;
 }
 
+inline string decodeSID(string sid) {
+/*
+  It is taken from http://www.adamretter.org.uk/blog/entries/active-directory-ldap-users-primary-group.xml
+*/
+    std::stringstream result;
+    result << "S-";
+
+    // version
+    result << int(sid[0]);
+
+    // count of sub-authorities
+    int countSubAuths = int(sid[1]) & 0xFF;
+
+    result << "-";
+
+    // get the authority
+    long authority = 0;
+    for (int i = 2; i <= 7; i++) {
+        authority |= ((long)sid[i]) << (8 * (5 - (i - 2)));
+    }
+    result << authority;
+
+    // iterate all the sub-auths
+    int offset = 8;
+    int size = 4; // 4 bytes for each sub auth
+    for (int j = 0; j < countSubAuths; j++) {
+        long subAuthority = 0;
+        for (int k = 0; k < size; k++) {
+            subAuthority |= (long)(sid[offset + k] & 0xFF) << (8 * k);
+        }
+
+        result << "-";
+        result << subAuthority;
+
+        offset += size;
+    }
+
+    return result.str();
+}
+
 int sasl_bind_digest_md5(LDAP *ds, string binddn, string bindpw);
 int sasl_bind_simple(LDAP *ds, string binddn, string bindpw);
 #ifdef KRB5
