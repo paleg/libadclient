@@ -16,16 +16,26 @@ string unicode2string(PyObject *pobj) {
 }
 
 PyObject *vector2list(vector <string> vec) {
-    string st;
     PyObject *list = PyList_New(0);
 
     for (unsigned int j=0; j < vec.size(); j++) {
-        PyObject *unicodeString = PyUnicode_FromString(vec[j].c_str());
+        PyObject *unicodeString = PyUnicode_FromStringAndSize(vec[j].c_str(), vec[j].size());
         if (unicodeString != NULL) {
             PyList_Append(list, unicodeString);
         } else {
-            // just ignore unconvertable fields
+            // clear error from previous PyUnicode_FromStringAndSize call
             PyErr_Clear();
+
+            // TODO:
+            // not sure that this will not lead to mixing str & bytes in the same list
+            // but ATM I don't see other simple way to add support for binary values
+            PyObject *bytes = PyBytes_FromStringAndSize(vec[j].c_str(), vec[j].size());
+            if (bytes != NULL) {
+                PyList_Append(list, bytes);
+            } else {
+                // ignore unconvertable fields
+                PyErr_Clear();
+            }
         }
     }
     return list;
