@@ -1556,7 +1556,7 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
         }
         for (unsigned int i = 0; values[i] != NULL; ++i) {
             data = *values[i];
-            temp.push_back(data.bv_val);
+            temp.push_back( string(data.bv_val, data.bv_len) );
         }
         result[next] = temp;
         //cout << "_getvalues['" << next << "'] = '" << vector2string(temp) << "'" << endl;
