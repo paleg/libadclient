@@ -38,6 +38,18 @@ func LdapPrefix() string {
 	return GetAdclientLdap_prefix()
 }
 
+func Ldap_servers(domain string, site string) []string {
+	vector := AdclientGet_ldap_servers(domain, site)
+	defer DeleteStringVector(vector)
+	result := vector2slice(vector)
+	return result
+}
+
+func Domain2dn(domain string) string {
+	dn := AdclientDomain2dn(domain)
+	return dn
+}
+
 func (err ADError) Error() string {
 	return fmt.Sprintf("%v: %v", err.code, err.msg)
 }
