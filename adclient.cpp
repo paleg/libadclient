@@ -153,7 +153,7 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
             throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
         }
     }
-  
+
     version = LDAP_VERSION3;
     result = ldap_set_option(*ds, LDAP_OPT_PROTOCOL_VERSION, &version);
     if (result != LDAP_OPT_SUCCESS) {
@@ -323,7 +323,7 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
 
         /* Parse the page control returned to get the cookie and          */
         /* determine whether there are more pages.                        */
-        pagecontrol = ldap_control_find( LDAP_CONTROL_PAGEDRESULTS, returnedctrls, NULL );
+        pagecontrol = ldap_control_find(LDAP_CONTROL_PAGEDRESULTS, returnedctrls, NULL);
         if (pagecontrol == NULL) {
             error_msg = "Failed to find PAGEDRESULTS control";
             result = 255;
@@ -331,14 +331,14 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
         }
 
         struct berval newcookie;
-        result = ldap_parse_pageresponse_control( ds, pagecontrol, &totalcount, &newcookie );
+        result = ldap_parse_pageresponse_control(ds, pagecontrol, &totalcount, &newcookie);
         if (result != LDAP_SUCCESS) {
             error_msg = "Failed to parse pageresponse control: ";
             error_msg.append(ldap_err2string(result));
             break;
         }
         ber_bvfree(cookie);
-        cookie = (berval*) ber_memalloc( sizeof( struct berval ) );
+        cookie = reinterpret_cast<berval*>(ber_memalloc( sizeof( struct berval ) ));
         if (cookie == NULL) {
             error_msg = "Failed to allocate memory for cookie";
             result = 255;
@@ -436,7 +436,7 @@ string adclient::getObjectDN(string object) {
     } else {
         replace(object, "(", "\\(");
         replace(object, ")", "\\)");
-        vector <string> dn = searchDN( params.search_base, "(sAMAccountName=" + object + ")", LDAP_SCOPE_SUBTREE );
+        vector <string> dn = searchDN(params.search_base, "(sAMAccountName=" + object + ")", LDAP_SCOPE_SUBTREE);
         return dn[0];
     }
 }
@@ -578,7 +578,7 @@ void adclient::CreateOU(string ou) {
         throw ADOperationalException("Wrong OU syntax", AD_OU_SYNTAX_ERROR);
     }
 
-    for (int i=0; rez[i]!=NULL; ++i) {
+    for (int i = 0; rez[i] != NULL; ++i) {
 #ifdef LDAP21
         la_attr = (****rez[i]).la_attr;
         la_value = (****rez[i]).la_value;
@@ -597,13 +597,12 @@ void adclient::CreateOU(string ou) {
     string temp;
 
     // Separate OU and DC
-    for (int i=ous.size()-1; i>=0; --i) {
-        temp = ous[i].substr(0,3);
+    for (int i = ous.size() - 1; i >= 0; --i) {
+        temp = ous[i].substr(0, 3);
         if (temp == "OU=") {
             sub_ou += ous[i];
             sub_ou += ",";
-        }
-        else if (temp == "DC=") {
+        } else if (temp == "DC=") {
             domain += ous[i];
             domain += ",";
         } else {
@@ -644,11 +643,11 @@ void adclient::CreateOU(string ou) {
     attrs[1] = &attr2;
     attrs[2] = NULL;
 
-    result=ldap_add_ext_s(ds, ou.c_str(), attrs, NULL, NULL);
+    result = ldap_add_ext_s(ds, ou.c_str(), attrs, NULL, NULL);
 
     free(name_values[0]);
 
-    if(result!=LDAP_SUCCESS) {
+    if (result != LDAP_SUCCESS) {
         string error_msg = "Error in CreateOU, ldap_add_ext_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
@@ -662,9 +661,9 @@ void adclient::DeleteDN(string dn) {
 */
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-    int result=ldap_delete_ext_s(ds, dn.c_str(), NULL, NULL);
+    int result = ldap_delete_ext_s(ds, dn.c_str(), NULL, NULL);
 
-    if (result!=LDAP_SUCCESS) {
+    if (result != LDAP_SUCCESS) {
         string error_msg = "Error in DeleteDN, ldap_delete_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
@@ -681,7 +680,7 @@ string adclient::dn2domain(string dn) {
     int i;
     struct berval la_attr;
     struct berval la_value;
-    string domain="";
+    string domain = "";
 
     int result = ldap_str2dn(dn.c_str(), &exp_dn, LDAP_DN_FORMAT_LDAPV3);
 
@@ -689,7 +688,7 @@ string adclient::dn2domain(string dn) {
         throw ADOperationalException("Wrong OU syntax", AD_OU_SYNTAX_ERROR);
     }
 
-    for (i=0; exp_dn[i]!=NULL; ++i) {
+    for (i = 0; exp_dn[i] != NULL; ++i) {
 #ifdef LDAP21
         la_attr = (****exp_dn[i]).la_attr;
         la_value = (****exp_dn[i]).la_value;
@@ -714,12 +713,12 @@ string adclient::dn2domain(string dn) {
     free(pcDn);
 
     char* next;
-    unsigned int i=0;
+    unsigned int i = 0;
     string domain = "";
     string temp;
 
     while ((next = dns[i]) != NULL) {
-        if (strncmp(next , "DC=", 3)==0) {
+        if (strncmp(next, "DC=", 3) == 0) {
             temp = next;
             temp.erase(0, 3);
             domain += temp;
@@ -727,7 +726,7 @@ string adclient::dn2domain(string dn) {
         }
         i++;
     }
-    domain.erase(domain.size()-1,1);
+    domain.erase(domain.size()-1, 1);
     ldap_value_free(dns);
     return domain;
 }
@@ -785,9 +784,9 @@ void adclient::CreateComputer(string name, string container) {
     attrs[3] = NULL;
 
     int result;
-    result=ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
+    result = ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
     free(name_values[0]);
-    if(result!=LDAP_SUCCESS) {
+    if (result != LDAP_SUCCESS) {
         string error_msg = "Error in CreateComputer, ldap_add_ext_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
@@ -832,7 +831,7 @@ void adclient::CreateUser(string cn, string container, string user_short) {
     attr3.mod_type = "userAccountControl";
     attr3.mod_values = accountControl_values;
 
-    domain=dn2domain(dn);
+    domain = dn2domain(dn);
     upn = user_short + "@" + domain;
     upn_values[0] = strdup(upn.c_str());
     upn_values[1] = NULL;
@@ -848,10 +847,10 @@ void adclient::CreateUser(string cn, string container, string user_short) {
     attrs[4] = NULL;
 
     int result;
-    result=ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
+    result = ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
     free(name_values[0]);
     free(upn_values[0]);
-    if(result!=LDAP_SUCCESS) {
+    if (result != LDAP_SUCCESS) {
         string error_msg = "Error in CreateUser, ldap_add_ext_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
@@ -880,11 +879,6 @@ void adclient::CreateGroup(string cn, string container, string group_short) {
     char *name_values[2];
     char *sAMAccountName_values[2];
 
-    //char *accountControl_values[] = {"66050", NULL};
-    //char *upn_values[2];
-    //string upn;
-    //string domain;
-
     attr1.mod_op = LDAP_MOD_ADD;
     attr1.mod_type = "objectClass";
     attr1.mod_values = objectClass_values;
@@ -911,7 +905,7 @@ void adclient::CreateGroup(string cn, string container, string group_short) {
     result = ldap_add_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
     free(name_values[0]);
     free(sAMAccountName_values[0]);
-    if(result != LDAP_SUCCESS) {
+    if (result != LDAP_SUCCESS) {
         string error_msg = "Error in CreateGroup, ldap_add_ext_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
@@ -963,14 +957,14 @@ void adclient::changeUserPassword(string user, string old_password, string new_p
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
-    attr1.mod_type="unicodePwd";
+    attr1.mod_type = "unicodePwd";
 #pragma GCC diagnostic pop
     attr1.mod_op = LDAP_MOD_DELETE|LDAP_MOD_BVALUES;
     attr1.mod_bvalues = old_bervalues;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
-    attr2.mod_type="unicodePwd";
+    attr2.mod_type = "unicodePwd";
 #pragma GCC diagnostic pop
     attr2.mod_op = LDAP_MOD_ADD|LDAP_MOD_BVALUES;
     attr2.mod_bvalues = new_bervalues;
@@ -1012,7 +1006,7 @@ void adclient::setUserPassword(string user, string password) {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
-    attr1.mod_type="unicodePwd";
+    attr1.mod_type = "unicodePwd";
 #pragma GCC diagnostic pop
     attr1.mod_op = LDAP_MOD_REPLACE|LDAP_MOD_BVALUES;
     attr1.mod_bvalues = bervalues;
@@ -1075,7 +1069,7 @@ map <string, vector <string> > adclient::getObjectAttributes(string object, cons
         attrs = search_result.at(dn);
     }
     catch (const std::out_of_range&) {
-        attrs = map < string,vector<string> >();
+        attrs = map < string, vector<string> >();
     }
 
     return attrs;
@@ -1165,7 +1159,7 @@ vector <string> adclient::getUsersInGroup(string group, bool nested) {
 
 bool adclient::ifDialinUser(string user) {
 /*
-  It returns true if msNPAllowDialin user attribute set to TRUE, 
+  It returns true if msNPAllowDialin user attribute set to TRUE,
              false - otherwise.
 */
     vector <string> user_dn;
@@ -1180,9 +1174,9 @@ bool adclient::ifDialinUser(string user) {
         }
         throw;
     }
- 
+
     if (dialin[0] == "TRUE") {
-        return true; 
+        return true;
     } else  { return false; }
 }
 
@@ -1191,7 +1185,7 @@ vector <string> adclient::getDialinUsers() {
   It returns vector of strings with all users with msNPAllowDialin = TRUE.
 */
     vector <string> users_dn;
- 
+
     users_dn = searchDN(params.search_base, "(msNPAllowDialin=TRUE)", LDAP_SCOPE_SUBTREE);
 
     return DNsToShortNames(users_dn);
@@ -1280,7 +1274,7 @@ map <string, bool> adclient::getUserControls(string user) {
     controls["locked"] = (iflags2 & 16);
 
     controls["dontExpirePassword"] = (iflags1 & 65536);
-    controls["mustChangePassword"] = ((iflags3 == 0) and (not controls["dontExpirePassword"]));
+    controls["mustChangePassword"] = ((iflags3 == 0) && (!controls["dontExpirePassword"]));
 
     controls["expired"] = (now > expires);
 
@@ -1425,7 +1419,7 @@ void adclient::DisableUser(string user) {
     int iflags = atoi(flags[0].c_str());
     int oldflags = iflags&2;
 
-    if (not oldflags) {
+    if (!oldflags) {
         int newflags = iflags^2;
         mod_replace(user, "userAccountControl", itos(newflags));
     }
@@ -1547,7 +1541,6 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
     for ( char *next = ldap_first_attribute(ds, entry, &berptr);
           next != NULL;
           next = ldap_next_attribute(ds, entry, berptr) ) {
-
         vector <string> temp;
         struct berval **values = ldap_get_values_len(ds, entry, next);
         if (values == NULL) {
@@ -1556,10 +1549,10 @@ map < string, vector<string> > adclient::_getvalues(LDAPMessage *entry) {
         }
         for (unsigned int i = 0; values[i] != NULL; ++i) {
             data = *values[i];
-            temp.push_back( string(data.bv_val, data.bv_len) );
+            temp.push_back(string(data.bv_val, data.bv_len));
         }
         result[next] = temp;
-        //cout << "_getvalues['" << next << "'] = '" << vector2string(temp) << "'" << endl;
+        // cout << "_getvalues['" << next << "'] = '" << vector2string(temp) << "'" << endl;
         ldap_memfree(next);
         ldap_value_free_len(values);
     }
@@ -1599,7 +1592,7 @@ string adclient::domain2dn(string domain) {
 
 vector<string> adclient::get_ldap_servers(string domain, string site) {
     vector<string> servers;
-    if (not site.empty()) {
+    if (!site.empty()) {
         string srv_site = "_ldap._tcp." + site + "._sites." + domain;
         try {
             servers = perform_srv_query(srv_site);
@@ -1686,7 +1679,7 @@ vector<string> adclient::perform_srv_query(string srv_rec) {
             free(srv_name);
             throw ADBindException("Error while resolving ldap server for " + srv_rec + ": dn_expand(host) < 0", AD_LDAP_RESOLV_ERROR);
         }
-        //std::cout << priority << " " << weight << " " << ttl << " " << host << ":" << port << std::endl;
+        // std::cout << priority << " " << weight << " " << ttl << " " << host << ":" << port << std::endl;
         ret.push_back(adclient::ldap_prefix + string(host));
         msg = end;
     }
