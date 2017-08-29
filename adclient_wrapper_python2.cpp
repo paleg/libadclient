@@ -1261,6 +1261,53 @@ static PyObject * wrapper_UnLockUser_adclient(PyObject *self, PyObject *args) {
        return Py_None;
 }
 
+static PyObject * wrapper_MoveUser_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *user;
+       char *new_container;
+       if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &new_container)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->MoveUser(user, new_container);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
+static PyObject * wrapper_RenameUser_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+       char *user;
+       char *shortname;
+       char *cn;
+       if (!PyArg_ParseTuple(args, "Osss", &obj, &user, &shortname, &cn)) return NULL;
+       adclient *ad = convert_ad(obj);
+       try {
+          ad->RenameUser(user, shortname, cn);
+       }
+       catch(ADSearchException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADSearchError, ex.msg.c_str());
+            return NULL;
+       }
+       catch(ADOperationalException& ex) {
+            error_num = ex.code;
+            PyErr_SetString(ADOperationalError, ex.msg.c_str());
+            return NULL;
+       }
+       Py_INCREF(Py_None);
+       return Py_None;
+}
+
 static PyMethodDef adclient_methods[] = {
        { "new_adclient", wrapper_new_adclient, 1 },
        { "login_adclient", wrapper_login_adclient, 1 },
@@ -1315,6 +1362,8 @@ static PyMethodDef adclient_methods[] = {
        { "clearObjectAttribute_adclient", wrapper_clearObjectAttribute_adclient, 1 },
        { "setObjectAttribute_adclient", wrapper_setObjectAttribute_adclient, 1 },
        { "UnLockUser_adclient", wrapper_UnLockUser_adclient, 1 },
+       { "MoveUser_adclient", wrapper_MoveUser_adclient, 1 },
+       { "RenameUser_adclient", wrapper_RenameUser_adclient, 1 },
        { "ifDNExists_adclient", wrapper_ifDNExists_adclient, 1 },
        { "binded_uri_adclient", wrapper_binded_uri_adclient, 1},
        { "search_base_adclient", wrapper_search_base_adclient, 1},

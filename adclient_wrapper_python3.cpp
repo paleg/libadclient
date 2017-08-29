@@ -1282,6 +1282,53 @@ static PyObject *wrapper_UnLockUser_adclient(PyObject *self, PyObject *args) {
     return Py_None;
 }
 
+static PyObject *wrapper_MoveUser_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *user;
+    char *new_container;
+    if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &new_container)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        ad->MoveUser(user, new_container);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    catch(ADOperationalException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *wrapper_RenameUser_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *user;
+    char *shortname;
+    char *cn;
+    if (!PyArg_ParseTuple(args, "Osss", &obj, &user, &shortname, &cn)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        ad->RenameUser(user, shortname, cn);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    catch(ADOperationalException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef adclient_methods[] = {
     { "new_adclient",                    (PyCFunction)wrapper_new_adclient,                      METH_VARARGS,   NULL },
     { "login_adclient",                  (PyCFunction)wrapper_login_adclient,                    METH_VARARGS,   NULL },
@@ -1336,6 +1383,8 @@ static PyMethodDef adclient_methods[] = {
     { "clearObjectAttribute_adclient",   (PyCFunction)wrapper_clearObjectAttribute_adclient,     METH_VARARGS,   NULL },
     { "setObjectAttribute_adclient",     (PyCFunction)wrapper_setObjectAttribute_adclient,       METH_VARARGS,   NULL },
     { "UnLockUser_adclient",             (PyCFunction)wrapper_UnLockUser_adclient,               METH_VARARGS,   NULL },
+    { "MoveUser_adclient",               (PyCFunction)wrapper_MoveUser_adclient,                 METH_VARARGS,   NULL },
+    { "RenameUser_adclient",             (PyCFunction)wrapper_RenameUser_adclient,               METH_VARARGS,   NULL },
     { "ifDNExists_adclient",             (PyCFunction)wrapper_ifDNExists_adclient,               METH_VARARGS,   NULL },
     { "binded_uri_adclient",             (PyCFunction)wrapper_binded_uri_adclient,               METH_VARARGS,   NULL },
     { "search_base_adclient",            (PyCFunction)wrapper_search_base_adclient,              METH_VARARGS,   NULL },

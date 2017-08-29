@@ -494,6 +494,22 @@ func SetObjectAttribute(object string, attr string, value string) (err error) {
 	return
 }
 
+func MoveUser(user string, new_container string) (err error) {
+	defer catch(&err)
+	ad.MoveUser(user, new_container)
+	return
+}
+
+func RenameUser(user string, shortname string, cn_optional ...string) (err error) {
+	cn := ""
+	if len(cn_optional) > 0 {
+		cn = cn_optional[0]
+	}
+	defer catch(&err)
+	ad.RenameUser(user, shortname, cn)
+	return
+}
+
 /*
    map < string, map < string, std::vector<string> > > search(string OU, int scope, string filter, const std::vector <string> &attributes);
 */
