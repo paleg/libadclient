@@ -1414,6 +1414,33 @@ void adclient::DisableUser(string user) {
     }
 }
 
+void adclient::MoveUser(string user, string new_container) {
+    if (!ifDNExists(new_container)) {
+        string error_msg = "Error in MoveUser, destination OU does not exists: ";
+        error_msg.append(new_container);
+        throw ADOperationalException(error_msg, AD_PARAMS_ERROR);
+    }
+
+    string dn = getObjectDN(user);
+
+    string username = getObjectAttribute(dn, "sAMAccountName")[0];
+    string oldUpn = getObjectAttribute(dn, "userPrincipalName")[0];
+    string newUpn = username + "@" + dn2domain(new_container);
+    if (oldUpn != newUpn) {
+        mod_replace(dn, "userPrincipalName", newUpn);
+    }
+
+    std::pair<string, string> rdn = explode_dn(dn)[0];
+    string newrdn = rdn.first + "=" + rdn.second;
+
+    int result = ldap_rename_s(ds, dn.c_str(), newrdn.c_str(), new_container.c_str(), 1, NULL, NULL);
+    if (result != LDAP_SUCCESS) {
+        string error_msg = "Error in MoveUser, ldap_rename_s: ";
+        error_msg.append(ldap_err2string(result));
+        throw ADOperationalException(error_msg, result);
+    }
+}
+
 void adclient::UnLockUser(string user) {
     mod_replace(user, "lockoutTime", "0");
 }

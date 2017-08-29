@@ -148,6 +148,7 @@ public:
       void EnableUser(string user);
       void DisableUser(string user);
       void UnLockUser(string user);
+      void MoveUser(string user, string new_container);
 
       void setUserPassword(string user, string password);
       void changeUserPassword(string user, string old_password, string new_password);
