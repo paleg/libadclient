@@ -1441,6 +1441,28 @@ void adclient::MoveUser(string user, string new_container) {
     }
 }
 
+void adclient::RenameUser(string user, string shortname, string cn) {
+    string dn = getObjectDN(user);
+
+    if (cn.empty()) {
+        cn = shortname;
+    }
+
+    mod_replace(dn, "sAMAccountName", shortname);
+
+    string upn = shortname + "@" + dn2domain(dn);
+    mod_replace(dn, "userPrincipalName", upn);
+
+    string newrdn = "CN=" + cn;
+
+    int result = ldap_rename_s(ds, dn.c_str(), newrdn.c_str(), NULL, 1, NULL, NULL);
+    if (result != LDAP_SUCCESS) {
+        string error_msg = "Error in RenameUser, ldap_rename_s: ";
+        error_msg.append(ldap_err2string(result));
+        throw ADOperationalException(error_msg, result);
+    }
+}
+
 void adclient::UnLockUser(string user) {
     mod_replace(user, "lockoutTime", "0");
 }
