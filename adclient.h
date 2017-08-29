@@ -229,11 +229,18 @@ private:
       void mod_replace(string object, string attribute, string value);
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string dn2domain(string dn);
+      vector < std::pair<string, string> > explode_dn(string dn);
+      string merge_dn(vector < std::pair<string, string> > dn_exploded);
       std::vector <string> DNsToShortNames(std::vector <string> &v);
 
       static std::vector<string> perform_srv_query(string srv_rec);
       static struct berval password2berval(string password);
 };
+
+inline string upper(string input) {
+    std::transform(input.begin(), input.end(), input.begin(), ::toupper);
+    return input;
+}
 
 inline string vector2string(const std::vector<string> &v, std::string separator = ", ") {
     std::stringstream ss;

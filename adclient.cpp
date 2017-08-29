@@ -560,61 +560,24 @@ void adclient::CreateOU(string ou) {
   It creates given OU (with subOUs if needed).
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
-    int result;
-    vector <string> ous;
-    string sub_ou = "";
-    // Split OU to vector
-#ifdef LDAP21
-    LDAPDN *rez;
-#else
-    LDAPDN rez;
-#endif
-    struct berval la_attr;
-    struct berval la_value;
-
-    result = ldap_str2dn(ou.c_str(), &rez, LDAP_DN_FORMAT_LDAPV3);
-
-    if (result != LDAP_SUCCESS || rez == NULL) {
-        throw ADOperationalException("Wrong OU syntax", AD_OU_SYNTAX_ERROR);
+    if (ifDNExists(ou)) {
+        return;
     }
 
-    for (int i = 0; rez[i] != NULL; ++i) {
-#ifdef LDAP21
-        la_attr = (****rez[i]).la_attr;
-        la_value = (****rez[i]).la_value;
-#else
-        la_attr = (**rez[i]).la_attr;
-        la_value = (**rez[i]).la_value;
-#endif
-        ous.insert(ous.begin(), string(la_attr.bv_val)+"="+string(la_value.bv_val));
+    vector < std::pair<string, string> > ou_exploded = explode_dn(ou);
+
+    std::pair<string, string> front_ou = ou_exploded.front();
+    ou_exploded.erase(ou_exploded.begin());
+
+    string sub_ou = merge_dn(ou_exploded);
+    if ((!sub_ou.empty()) && (!ifDNExists(sub_ou))) {
+        CreateOU(sub_ou);
     }
-    ldap_dnfree(rez);
-    string name = ous[ous.size()-1].substr(3);
-    // Remove last OU
-    ous.pop_back();
 
-    string domain;
-    string temp;
-
-    // Separate OU and DC
-    for (int i = ous.size() - 1; i >= 0; --i) {
-        temp = ous[i].substr(0, 3);
-        if (temp == "OU=") {
-            sub_ou += ous[i];
-            sub_ou += ",";
-        } else if (temp == "DC=") {
-            domain += ous[i];
-            domain += ",";
-        } else {
-            throw ADSearchException("Unknown OU syntax", AD_OU_SYNTAX_ERROR);
-        }
-    }
-    if (sub_ou != "")
-       sub_ou.erase(sub_ou.size() - 1, 1);
-    domain.erase(domain.size() - 1, 1);
-
-    if ((sub_ou != "")&&(!ifDNExists(sub_ou+","+domain))) {
-       CreateOU(sub_ou+","+domain);
+    if (upper(front_ou.first) != "OU") {
+        string error_msg = "Error in CreateOU, incorrect OU syntax: ";
+        error_msg.append(front_ou.first + "=" + front_ou.second);
+        throw ADOperationalException(error_msg, AD_PARAMS_ERROR);
     }
 
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
@@ -631,7 +594,7 @@ void adclient::CreateOU(string ou) {
     attr1.mod_values = objectClass_values;
 
     char *name_values[2];
-    name_values[0] = strdup(name.c_str());
+    name_values[0] = strdup(front_ou.second.c_str());
     name_values[1] = NULL;
 
     attr2.mod_op = LDAP_MOD_ADD;
@@ -643,7 +606,7 @@ void adclient::CreateOU(string ou) {
     attrs[1] = &attr2;
     attrs[2] = NULL;
 
-    result = ldap_add_ext_s(ds, ou.c_str(), attrs, NULL, NULL);
+    int result = ldap_add_ext_s(ds, ou.c_str(), attrs, NULL, NULL);
 
     free(name_values[0]);
 
@@ -670,8 +633,41 @@ void adclient::DeleteDN(string dn) {
     }
 }
 
-#if defined OPENLDAP
 string adclient::dn2domain(string dn) {
+    string domain = "";
+
+    vector < std::pair<string, string> > dn_exploded = explode_dn(dn);
+
+    vector < std::pair<string, string> >::iterator it;
+    for (it = dn_exploded.begin(); it != dn_exploded.end(); ++it) {
+        if (upper(it->first) == "DC") {
+            domain += it->second;
+            domain += ".";
+        }
+    }
+    if (domain.size() > 0) {
+        domain.erase(domain.size()-1, 1);
+    }
+    return domain;
+}
+
+string adclient::merge_dn(vector < std::pair<string, string> > dn_exploded) {
+    std::stringstream result;
+
+    vector < std::pair<string, string> >::iterator it;
+    for (it = dn_exploded.begin(); it != dn_exploded.end(); ++it) {
+        result << it->first;
+        result << "=";
+        result << it->second;
+        if (it != dn_exploded.end() - 1) {
+            result << ",";
+        }
+    }
+    return result.str();
+}
+
+vector < std::pair<string, string> > adclient::explode_dn(string dn) {
+#if defined OPENLDAP
 #ifdef LDAP21
     LDAPDN *exp_dn;
 #else
@@ -680,7 +676,7 @@ string adclient::dn2domain(string dn) {
     int i;
     struct berval la_attr;
     struct berval la_value;
-    string domain = "";
+    vector < std::pair<string, string> > dn_exploded;
 
     int result = ldap_str2dn(dn.c_str(), &exp_dn, LDAP_DN_FORMAT_LDAPV3);
 
@@ -696,17 +692,12 @@ string adclient::dn2domain(string dn) {
         la_attr = (**exp_dn[i]).la_attr;
         la_value = (**exp_dn[i]).la_value;
 #endif
-        if (string(la_attr.bv_val) == "DC") {
-            domain += la_value.bv_val;
-            domain += ".";
-        }
+        dn_exploded.push_back( std::make_pair(la_attr.bv_val, la_value.bv_val) );
     }
     ldap_dnfree(exp_dn);
-    domain.erase(domain.size()-1, 1);
-    return domain;
+    return dn_exploded;
 }
 #elif defined SUNLDAP
-string adclient::dn2domain(string dn) {
     char** dns;
     char* pcDn = strdup(dn.c_str());
     dns = ldap_explode_dn(pcDn, 0);
@@ -714,25 +705,23 @@ string adclient::dn2domain(string dn) {
 
     char* next;
     unsigned int i = 0;
-    string domain = "";
-    string temp;
+    vector < std::pair<string, string> > dn_exploded;
 
     while ((next = dns[i]) != NULL) {
-        if (strncmp(next, "DC=", 3) == 0) {
-            temp = next;
-            temp.erase(0, 3);
-            domain += temp;
-            domain += ".";
+        string temp(next);
+        size_t pos = temp.find("=");
+        if (pos != temp.npos) {
+            string first = temp.substr(0, pos);
+            string second = temp.substr(pos+1);
+            dn_exploded.push_back( std::make_pair(first, second) );
         }
         i++;
     }
-    domain.erase(domain.size()-1, 1);
     ldap_value_free(dns);
-    return domain;
+    return dn_exploded;
 }
 #else
-string adclient::dn2domain(string dn) {
-    throw ADOperationalException("Don't know how to do dn2domain", 255);
+    throw ADOperationalException("Don't know how to do explode_dn", 255);
 }
 #endif
 
