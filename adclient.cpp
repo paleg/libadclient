@@ -181,7 +181,7 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
             } else {
                 error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + ": ";
                 error_msg.append(ldap_err2string(bindresult));
-                cout << error_msg << endl;
+                //cout << error_msg << endl;
                 krb_param.context = NULL;
             }
         } else {
