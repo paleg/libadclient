@@ -514,6 +514,12 @@ func SetObjectAttribute(object string, attr string, value string) (err error) {
 	return
 }
 
+func MoveObject(object string, new_container string) (err error) {
+	defer catch(&err)
+	ad.MoveObject(object, new_container)
+	return
+}
+
 func MoveUser(user string, new_container string) (err error) {
 	defer catch(&err)
 	ad.MoveUser(user, new_container)

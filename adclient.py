@@ -298,6 +298,11 @@ class ADClient(object):
         """
         _adclient.MoveUser_adclient(self.obj, user, new_container)
 
+    def MoveObject(self, obj, new_container):
+        """ It moves given user to new container.
+        """
+        _adclient.MoveObject_adclient(self.obj, obj, new_container)
+
     def RenameUser(self, user, shortname, cn=""):
         """ It renames sAMAccountName, UPN and CN for given user
             CN is taken from shortname when empty

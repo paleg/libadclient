@@ -152,6 +152,7 @@ public:
       void UnLockUser(string user);
       void MoveUser(string user, string new_container);
       void RenameUser(string user, string shortname, string cn="");
+      void MoveObject(string object, string new_container);
 
       void setUserPassword(string user, string password);
       void changeUserPassword(string user, string old_password, string new_password);
@@ -232,6 +233,7 @@ private:
       void mod_delete(string object, string attribute, string value);
       void mod_rename(string object, string cn);
       void mod_replace(string object, string attribute, string value);
+      void mod_move(string object, string new_container);
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string dn2domain(string dn);
       vector < std::pair<string, string> > explode_dn(string dn);

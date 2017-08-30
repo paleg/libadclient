@@ -519,6 +519,28 @@ void adclient::mod_delete(string object, string attribute, string value) {
     }
 }
 
+void adclient::mod_move(string object, string new_container) {
+    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
+
+    if (!ifDNExists(new_container)) {
+        string error_msg = "Error in mod_move, destination OU does not exists: ";
+        error_msg.append(new_container);
+        throw ADOperationalException(error_msg, AD_PARAMS_ERROR);
+    }
+
+    string dn = getObjectDN(object);
+
+    std::pair<string, string> rdn = explode_dn(dn)[0];
+    string newrdn = rdn.first + "=" + rdn.second;
+
+    int result = ldap_rename_s(ds, dn.c_str(), newrdn.c_str(), new_container.c_str(), 1, NULL, NULL);
+    if (result != LDAP_SUCCESS) {
+        string error_msg = "Error in mod_move, ldap_rename_s: ";
+        error_msg.append(ldap_err2string(result));
+        throw ADOperationalException(error_msg, result);
+    }
+}
+
 void adclient::mod_rename(string object, string cn) {
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
@@ -1461,30 +1483,23 @@ void adclient::DisableUser(string user) {
     }
 }
 
-void adclient::MoveUser(string user, string new_container) {
-    if (!ifDNExists(new_container)) {
-        string error_msg = "Error in MoveUser, destination OU does not exists: ";
-        error_msg.append(new_container);
-        throw ADOperationalException(error_msg, AD_PARAMS_ERROR);
-    }
+void adclient::MoveObject(string object, string new_container) {
+    string dn = getObjectDN(object);
+    mod_move(dn, new_container);
+}
 
+void adclient::MoveUser(string user, string new_container) {
     string dn = getObjectDN(user);
 
-    string username = getObjectAttribute(dn, "sAMAccountName")[0];
-    string oldUpn = getObjectAttribute(dn, "userPrincipalName")[0];
-    string newUpn = username + "@" + dn2domain(new_container);
-    if (oldUpn != newUpn) {
+    string shortname = getObjectAttribute(dn, "sAMAccountName")[0];
+    string upn = getObjectAttribute(dn, "userPrincipalName")[0];
+
+    mod_move(dn, new_container);
+
+    string newUpn = shortname + "@" + dn2domain(new_container);
+    if (upn != newUpn) {
+        dn = getObjectDN(shortname);
         mod_replace(dn, "userPrincipalName", newUpn);
-    }
-
-    std::pair<string, string> rdn = explode_dn(dn)[0];
-    string newrdn = rdn.first + "=" + rdn.second;
-
-    int result = ldap_rename_s(ds, dn.c_str(), newrdn.c_str(), new_container.c_str(), 1, NULL, NULL);
-    if (result != LDAP_SUCCESS) {
-        string error_msg = "Error in MoveUser, ldap_rename_s: ";
-        error_msg.append(ldap_err2string(result));
-        throw ADOperationalException(error_msg, result);
     }
 }
 
