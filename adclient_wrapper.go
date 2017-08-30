@@ -224,6 +224,32 @@ func DeleteDN(dn string) (err error) {
 	return
 }
 
+
+func RenameDN(dn string, new_rdn string) (err error) {
+        defer catch(&err)
+        ad.RenameDN(dn, new_rdn)
+        return
+}
+
+
+
+func RenameGroup(dn string, new_rdn string) (err error) {
+	defer catch(&err)
+	ad.RenameGroup(dn, new_rdn)
+	return
+}
+
+func RenameUser(old_sam string, new_sam string, new_rdn string) (err error) {
+
+	defer catch(&err)
+	ad.RenameUser(old_sam, new_sam, new_rdn)
+	return
+
+}
+
+
+
+
 func CreateOU(ou string) (err error) {
 	defer catch(&err)
 	ad.CreateOU(ou)
