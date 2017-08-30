@@ -224,14 +224,11 @@ func DeleteDN(dn string) (err error) {
 	return
 }
 
-
 func RenameDN(dn string, new_rdn string) (err error) {
-        defer catch(&err)
-        ad.RenameDN(dn, new_rdn)
-        return
+	defer catch(&err)
+	ad.RenameDN(dn, new_rdn)
+	return
 }
-
-
 
 func RenameGroup(dn string, new_rdn string) (err error) {
 	defer catch(&err)
@@ -246,9 +243,6 @@ func RenameUser(old_sam string, new_sam string, new_rdn string) (err error) {
 	return
 
 }
-
-
-
 
 func CreateOU(ou string) (err error) {
 	defer catch(&err)

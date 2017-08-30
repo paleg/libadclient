@@ -519,26 +519,19 @@ void adclient::mod_delete(string object, string attribute, string value) {
     }
 }
 
-void adclient::mod_rename(string object, string new_rdn) {
-  
-  
-  string dn =  getObjectDN(object);
-  int result;
-  string error_msg;
-  
-  string ndn="CN=" + new_rdn;
-  result = ldap_rename_s(ds,dn.c_str(),ndn.c_str(),NULL,true,NULL,NULL);
-  if (result != LDAP_SUCCESS){
-       error_msg = "Error in ldap_rename_s: ";
-       error_msg.append(ldap_err2string(result));
-       throw ADOperationalException(error_msg,result);
+void adclient::mod_rename(string object, string cn) {
+    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
 
-   }
+    string dn = getObjectDN(object);
 
+    string newrdn = "CN=" + cn;
 
-  
-  
-  
+    int result = ldap_rename_s(ds, dn.c_str(), newrdn.c_str(), NULL, 1, NULL, NULL);
+    if (result != LDAP_SUCCESS){
+        string error_msg = "Error in mod_rename, ldap_rename_s: ";
+        error_msg.append(ldap_err2string(result));
+        throw ADOperationalException(error_msg,result);
+    }
 }
 
 void adclient::mod_replace(string object, string attribute, string value) {
@@ -804,35 +797,37 @@ void adclient::CreateComputer(string name, string container) {
     }
 }
 
-void adclient::RenameDN(string dn, string rdn) {
-
-     mod_rename(dn,rdn);
+void adclient::RenameDN(string object, string cn) {
+    string dn = getObjectDN(object);
+    mod_rename(dn, cn);
 }
 
-void adclient::RenameGroup(string dn, string rdn) {
+void adclient::RenameGroup(string group, string shortname, string cn) {
+    string dn = getObjectDN(group);
 
-     mod_rename(dn,rdn);
-     mod_replace(dn,"sAMAccountName",rdn);
+    if (cn.empty()) {
+        cn = shortname;
+    }
 
+    mod_replace(dn, "sAMAccountName", shortname);
 
+    mod_rename(dn, cn);
 }
 
+void adclient::RenameUser(string user, string shortname, string cn) {
+    string dn = getObjectDN(user);
 
-void adclient::RenameUser(string old_sam ,string new_sam,string rdn) {
+    if (cn.empty()) {
+        cn = shortname;
+    }
 
+    mod_replace(dn, "sAMAccountName", shortname);
 
-     string dn = getObjectDN(old_sam);
-     string domain;
-     string upn;
-     domain=dn2domain(dn);
-     upn = new_sam + "@" + domain;
+    string upn = shortname + "@" + dn2domain(dn);
+    mod_replace(dn, "userPrincipalName", upn);
 
-     mod_replace(old_sam,"userPrincipalName",upn);
-     mod_replace(old_sam,"sAMAccountName", new_sam );
-     mod_rename(new_sam,rdn);
-
+    mod_rename(dn, cn);
 }
-
 
 void adclient::CreateUser(string cn, string container, string user_short) {
 /*
@@ -1488,28 +1483,6 @@ void adclient::MoveUser(string user, string new_container) {
     int result = ldap_rename_s(ds, dn.c_str(), newrdn.c_str(), new_container.c_str(), 1, NULL, NULL);
     if (result != LDAP_SUCCESS) {
         string error_msg = "Error in MoveUser, ldap_rename_s: ";
-        error_msg.append(ldap_err2string(result));
-        throw ADOperationalException(error_msg, result);
-    }
-}
-
-void adclient::RenameUser(string user, string shortname, string cn) {
-    string dn = getObjectDN(user);
-
-    if (cn.empty()) {
-        cn = shortname;
-    }
-
-    mod_replace(dn, "sAMAccountName", shortname);
-
-    string upn = shortname + "@" + dn2domain(dn);
-    mod_replace(dn, "userPrincipalName", upn);
-
-    string newrdn = "CN=" + cn;
-
-    int result = ldap_rename_s(ds, dn.c_str(), newrdn.c_str(), NULL, 1, NULL, NULL);
-    if (result != LDAP_SUCCESS) {
-        string error_msg = "Error in RenameUser, ldap_rename_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
     }

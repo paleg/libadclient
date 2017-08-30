@@ -142,12 +142,11 @@ public:
       void groupRemoveUser(string group, string user);
       void CreateUser(string cn, string container, string user_short);
       void CreateGroup(string cn, string container, string group_short);
+      void RenameGroup(string group, string shortname, string cn="");
       void CreateComputer(string name, string container);
       void CreateOU(string ou);
       void DeleteDN(string dn);
-      void RenameDN(string object, string rdn);
-      void RenameGroup(string object, string rdn);
-      void RenameUser(string old_sam, string new_sam, string rdn);
+      void RenameDN(string object, string cn);
       void EnableUser(string user);
       void DisableUser(string user);
       void UnLockUser(string user);
@@ -231,7 +230,7 @@ private:
 
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);
-      void mod_rename(string object, string rdn);
+      void mod_rename(string object, string cn);
       void mod_replace(string object, string attribute, string value);
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string dn2domain(string dn);
