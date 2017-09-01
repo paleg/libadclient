@@ -172,22 +172,15 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
     if (_params.secured) {
 #ifdef KRB5
         if (_params.use_gssapi) {
-            krb_struct krb_param;
-            krb_param.context = NULL;
-
-            if (krb5_create_cache(_params.domain.c_str(), krb_param) == 0) {
+            if (krb5_create_cache(_params.domain.c_str()) == 0) {
                 _params.login_method = "GSSAPI";
                 bindresult = sasl_bind_gssapi(*ds);
                 if (bindresult == LDAP_SUCCESS) {
                     ldap_set_rebind_proc(*ds, sasl_rebind_gssapi, NULL);
-                } else {
-                    krb_param.context = NULL;
                 }
             } else {
                 bindresult = -1;
-                krb_param.context = NULL;
             }
-            krb5_cleanup(krb_param);
         } else {
 #endif
             _params.login_method = "DIGEST-MD5";

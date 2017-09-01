@@ -33,8 +33,12 @@ krb5_cleanup(krb_struct &krb_param)
  * create Kerberos memory cache
  */
 int
-krb5_create_cache(const char *domain, krb_struct &krb_param)
+krb5_create_cache(const char *domain)
 {
+    krb_struct krb_param;
+    krb_param.context = NULL;
+    krb_param.cc = NULL;
+
     krb5_keytab keytab = 0;
     krb5_keytab_entry entry;
     krb5_kt_cursor cursor;
@@ -291,5 +295,7 @@ cleanup:
     free(principal_list);
     if (creds)
         krb5_free_creds(krb_param.context, creds);
+
+    krb5_cleanup(krb_param);
     return (retval);
 }
