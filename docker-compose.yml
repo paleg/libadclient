@@ -1,0 +1,18 @@
+version: '2'
+services:
+    adclient:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: libadclient:latest
+        container_name: adclient
+        security_opt:
+            - seccomp:unconfined
+        dns: 192.168.99.99
+        dns_search: paleg.local
+        volumes:
+            - "/home/oleg/iCloud/projects/libadclient:/usr/src/libadclient"
+            - "/home/oleg/iCloud/projects/libadclient:/root/.go/src/github.com/paleg/libadclient"
+        command: /bin/bash
+        stdin_open: true
+        tty: true
