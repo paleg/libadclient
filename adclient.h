@@ -422,7 +422,7 @@ inline string decodeSID(string sid) {
 int sasl_bind_digest_md5(LDAP *ds, string binddn, string bindpw);
 int sasl_bind_simple(LDAP *ds, string binddn, string bindpw);
 #ifdef KRB5
-int krb5_create_cache(const char *domain, krb_struct &krb_param);
+int krb5_create_cache(const char *domain);
 void krb5_cleanup(krb_struct &krb_param);
 int sasl_bind_gssapi(LDAP *ds);
 int sasl_rebind_gssapi(LDAP * ld, LDAP_CONST char *url, ber_tag_t request, ber_int_t msgid, void *params);

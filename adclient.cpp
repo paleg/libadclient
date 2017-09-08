@@ -168,29 +168,20 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
         error_msg.append(ldap_err2string(result));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
+
     if (_params.secured) {
 #ifdef KRB5
-        krb_struct krb_param;
-        krb_param.context = NULL;
-
-        if (_params.use_gssapi && (!_params.domain.empty()) && (krb5_create_cache(_params.domain.c_str(), krb_param) == 0)) {
-            _params.login_method = "GSSAPI";
-            bindresult = sasl_bind_gssapi(*ds);
-            if (bindresult == LDAP_SUCCESS) {
-                ldap_set_rebind_proc(*ds, sasl_rebind_gssapi, NULL);
+        if (_params.use_gssapi) {
+            if (krb5_create_cache(_params.domain.c_str()) == 0) {
+                _params.login_method = "GSSAPI";
+                bindresult = sasl_bind_gssapi(*ds);
+                if (bindresult == LDAP_SUCCESS) {
+                    ldap_set_rebind_proc(*ds, sasl_rebind_gssapi, NULL);
+                }
             } else {
-                error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + ": ";
-                error_msg.append(ldap_err2string(bindresult));
-                //cout << error_msg << endl;
-                krb_param.context = NULL;
+                bindresult = -1;
             }
         } else {
-            bindresult = -1;
-            krb_param.context = NULL;
-        }
-        krb5_cleanup(krb_param);
-
-        if (bindresult != LDAP_SUCCESS) {
 #endif
             _params.login_method = "DIGEST-MD5";
             bindresult = sasl_bind_digest_md5(*ds, _params.binddn, _params.bindpw);
@@ -203,7 +194,7 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
     }
 
     if (bindresult != LDAP_SUCCESS) {
-        error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + " with '" + _params.binddn + "': ";
+        error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + ": ";
         error_msg.append(ldap_err2string(bindresult));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
@@ -1498,6 +1489,7 @@ void adclient::MoveUser(string user, string new_container) {
 
     string newUpn = shortname + "@" + dn2domain(new_container);
     if (upn != newUpn) {
+        // this will not work if shortname was moved to different search base
         dn = getObjectDN(shortname);
         mod_replace(dn, "userPrincipalName", newUpn);
     }
