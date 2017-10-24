@@ -320,6 +320,9 @@ class ADClient(object):
     def decodeSID(self, sid):
         return _adclient.decodeSID(sid)
 
+    def FileTimeToPOSIX(self, filetime):
+        return _adclient.FileTimeToPOSIX(filetime)
+
     def domain2dn(self, domain):
         return _adclient.domain2dn(domain)
 

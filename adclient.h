@@ -27,7 +27,7 @@
 #include <iterator>     // std::distance
 #include <stdexcept>    // std::out_of_range
 #include <algorithm>
-#include <ctime>
+#include <sys/time.h>
 #include <limits>
 #include <climits>
 #include <cerrno>

@@ -13,6 +13,7 @@ libadclient - Active Directory client for c++, Python and Golang.
     - [Active Directory binding](#active-directory-binding)
     - [Binary values in object attributes](#binary-values-in-object-attributes)
     - [Helper functions](#helper-functions)
+        - [FileTimeToPOSIX](#filetimetoposix)
         - [Decode SID](#decode-sid)
         - [IP to int and vise versa](#ip-to-int-and-vise-versa)
         - [Getting LDAP URIes list for domain/site](#getting-ldap-uries-list-for-domainsite)
@@ -107,6 +108,28 @@ Some object attributes (e.g. `objectSid`) are stored in Active Directory as bina
 * in Python3, binary data will be returned as `bytes`, not `unicode` strings.
 
 ### Helper functions
+
+#### FileTimeToPOSIX
+
+* `FileTimeToPOSIX(long long filetime)` (c++)
+* `adclient.FileTimeToPOSIX(filetime)` (Python)
+* `adclient.FileTimeToPOSIX(filetime)` (golang)
+
+Can be used to convert 18-digit Active Directory timestamp to Unix epoch time.
+
+The 18-digit timestamps, also named `Windows NT time format`, `Win32 FILETIME or SYSTEMTIME` or `NTFS file time` are used in Microsoft Active Directory for `pwdLastSet`, `accountExpires`, `LastLogon`, `LastLogonTimestamp` and `LastPwdSet`. The timestamp is the number of 100-nanoseconds intervals (1 nanosecond = one billionth of a second) since Jan 1, 1601 UTC.
+
+```golang
+pw, _ := adclient.GetObjectAttribute(username, "pwdLastSet")
+pwNum, _ := strconv.ParseInt(pw[0], 10, 64)
+pwPosix := adclient.FileTimeToPOSIX(pwNum)
+tm := time.Unix(pwPosix, 0)
+fmt.Printf("pw for '%v' was last set at '%v'\n", username, tm)
+```
+will return
+```shell
+pw for 'XXX' was last set at '2017-10-23 19:59:47 +0000 UTC'
+```
 
 #### decode SID
 
