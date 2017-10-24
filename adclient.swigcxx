@@ -48,3 +48,5 @@ namespace std {
 }
 
 %include "adclient.h"
+
+typedef long time_t;
