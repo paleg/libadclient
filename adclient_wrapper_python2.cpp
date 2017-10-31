@@ -16,7 +16,7 @@ PyObject *vector2list(vector <string> vec) {
        PyObject *list = PyList_New(vec.size());;
 
        for (unsigned int j=0; (j < vec.size()); j++) {
-           if (PyList_SET_ITEM(list, j, PyString_FromStringAndSize(vec[j].c_str(), vec[j].size())) < 0)
+           if (PyList_SetItem(list, j, PyString_FromStringAndSize(vec[j].c_str(), vec[j].size())) < 0)
               return NULL;
        }
        return list;

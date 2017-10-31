@@ -336,7 +336,6 @@ inline int ip2int(string ip) {
         string bin = DecToBin(_stoll(s));
         if (bin.size() > 8) {
             throw std::invalid_argument("wrong ipv4 address: " + ip);
-            break;
         } else if (bin.size() < 8) {
             while (bin.size() != 8) {
                 bin = "0" + bin;

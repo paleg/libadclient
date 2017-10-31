@@ -52,8 +52,6 @@ krb5_create_cache(const char *domain)
     int retval = 0;
     krb5_error_code code = 0;
 
-    krb_param.context = NULL;
-
     if (!domain || !strcmp(domain, ""))
         return (1);
 
@@ -100,7 +98,14 @@ krb5_create_cache(const char *domain)
     while ((code = krb5_kt_next_entry(krb_param.context, keytab, &entry, &cursor)) == 0) {
         int found = 0;
 
-        principal_list = (krb5_principal *) realloc(principal_list, sizeof(krb5_principal) * (nprinc + 1));
+        krb5_principal *new_principal_list;
+        new_principal_list = (krb5_principal *) realloc(principal_list, sizeof(krb5_principal) * (nprinc + 1));
+        if (!new_principal_list) {
+            retval = 1;
+            goto cleanup;
+        } else {
+            principal_list = new_principal_list;
+        }
         krb5_copy_principal(krb_param.context, entry.principal, &principal_list[nprinc++]);
         //cout << "DEBUG: Keytab entry has realm name: " << krb5_princ_realm(krb_param.context, entry.principal)->data << endl;
         if (!strcasecmp(domain, krb5_princ_realm(krb_param.context, entry.principal)->data))
@@ -149,6 +154,11 @@ krb5_create_cache(const char *domain)
     snprintf(mem_cache, strlen("MEMORY:libadclient_") + 16, "MEMORY:libadclient_%d", (int) getpid());
 #endif
 
+    if (!mem_cache) {
+        retval = 1;
+        goto cleanup;
+    }
+
     setenv("KRB5CCNAME", mem_cache, 1);
     //cout << "DEBUG: Set credential cache to " << mem_cache << endl;
     code = krb5_cc_resolve(krb_param.context, mem_cache, &krb_param.cc);
@@ -169,6 +179,10 @@ krb5_create_cache(const char *domain)
         for (i = 0; i < nprinc; ++i) {
             krb5_creds *tgt_creds = NULL;
             creds = (krb5_creds *) malloc(sizeof(*creds));
+            if (!creds) {
+                retval = 1;
+                goto cleanup;
+            }
             memset(creds, 0, sizeof(*creds));
             /*
              * get credentials
@@ -226,8 +240,7 @@ loop_end:
                 krb5_free_creds(krb_param.context, tgt_creds);
                 tgt_creds = NULL;
             }
-            if (creds)
-                krb5_free_creds(krb_param.context, creds);
+            krb5_free_creds(krb_param.context, creds);
             creds = NULL;
 
         }
@@ -249,6 +262,10 @@ loop_end:
             goto cleanup;
         }
         creds = (krb5_creds *) malloc(sizeof(*creds));
+        if (!creds) {
+            retval = 1;
+            goto cleanup;
+        }
         memset(creds, 0, sizeof(*creds));
 
         /*
