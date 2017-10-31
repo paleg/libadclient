@@ -256,8 +256,6 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
 
     if (attributes.size() > 50) throw ADSearchException("Cant return more than 50 attributes", AD_PARAMS_ERROR);
 
-    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
-
     unsigned int i;
     for (i = 0; i < attributes.size(); ++i) {
         attrs[i] = strdup(attributes[i].c_str());
@@ -342,7 +340,7 @@ map < string, map < string, vector<string> > > adclient::search(string OU, int s
         returnedctrls = NULL;
 
         /* Determine if the cookie is not empty, indicating there are more pages for these search parameters. */
-        if (cookie && cookie->bv_val != NULL && (strlen(cookie->bv_val) > 0)) {
+        if (cookie->bv_val != NULL && (strlen(cookie->bv_val) > 0)) {
             morepages = true;
         } else {
             morepages = false;
@@ -1284,7 +1282,7 @@ string adclient::getUserIpAddress(string user) {
         if (!tmp[0].empty()) {
             return int2ip(tmp[0]);
         }
-    } catch (std::invalid_argument ex) {
+    } catch (std::invalid_argument& ex) {
         throw ADOperationalException(ex.what(), AD_PARAMS_ERROR);
     }
     return "";
@@ -1560,7 +1558,7 @@ void adclient::setUserIpAddress(string user, string ip) {
     try {
         int ipdec = ip2int(ip);
         mod_replace(user, "msRADIUSFramedIPAddress", itos(ipdec));
-    } catch (std::invalid_argument ex) {
+    } catch (std::invalid_argument& ex) {
         throw ADOperationalException(ex.what(), AD_PARAMS_ERROR);
     }
 }
@@ -1696,6 +1694,9 @@ vector<string> adclient::perform_srv_query(string srv_rec) {
     size_t ans_size;
 
     char *srv_name = strdup(srv_rec.c_str());
+    if (!srv_name) {
+        throw ADBindException("Failed to allocate memory for srv_rec", AD_LDAP_RESOLV_ERROR);
+    }
     ans_size = res_search(srv_name, ns_c_in, ns_t_srv, ans.buf, sizeof(ans.buf));
 
     int qdcount, ancount;

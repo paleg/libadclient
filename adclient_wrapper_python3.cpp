@@ -12,7 +12,7 @@ static PyObject *ADOperationalError;
 static int error_num;
 
 string unicode2string(PyObject *pobj) {
-    return PyBytes_AS_STRING( PyUnicode_AsEncodedString(pobj, "utf-8", "Error ~") );
+    return PyBytes_AsString( PyUnicode_AsEncodedString(pobj, "utf-8", "Error ~") );
 }
 
 PyObject *vector2list(vector <string> vec) {
