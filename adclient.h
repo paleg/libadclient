@@ -220,6 +220,7 @@ public:
       std::map <string, std::vector <string> > getObjectAttributes(string object);
       std::map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
 
+      string ldap_login_diagnostic_message;
       static const string ldap_prefix;
 private:
       adConnParams params;
@@ -228,6 +229,8 @@ private:
 
       void login(LDAP **ds, adConnParams& _params);
       void logout(LDAP *ds);
+
+      string get_ldap_diagnostic_message(LDAP **ds);
 
       void mod_add(string object, string attribute, string value);
       void mod_delete(string object, string attribute, string value);

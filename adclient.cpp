@@ -196,8 +196,21 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
     if (bindresult != LDAP_SUCCESS) {
         error_msg = "Error while " + _params.login_method + " ldap binding to " + _params.uri + ": ";
         error_msg.append(ldap_err2string(bindresult));
+        ldap_login_diagnostic_message = get_ldap_diagnostic_message(ds);
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
+    ldap_login_diagnostic_message = "";
+}
+
+string adclient::get_ldap_diagnostic_message(LDAP **ld) {
+    string diag_message;
+    char *msg;
+    int result = ldap_get_option(*ld, LDAP_OPT_DIAGNOSTIC_MESSAGE, &msg);
+    if ((result == LDAP_SUCCESS) && msg) {
+        diag_message = string(msg);
+        ldap_memfree(msg);
+    }
+    return diag_message;
 }
 
 bool adclient::checkUserPassword(string user, string password) {

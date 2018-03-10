@@ -56,6 +56,10 @@ class ADClient(object):
     def search_base(self):
         return _adclient.search_base_adclient(self.obj)
 
+    @property
+    def ldapLoginDiagnosticMessage(self):
+        return _adclient.ldapLoginDiagnosticMessage_adclient(self.obj)
+
     def login_method(self):
         return _adclient.login_method_adclient(self.obj)
 

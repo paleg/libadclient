@@ -188,6 +188,10 @@ func LoginMethod() (result string) {
 	return ad.Login_method()
 }
 
+func LdapLoginDiagnosticMessage() string {
+	return ad.GetLdap_login_diagnostic_message()
+}
+
 func GroupAddUser(group string, user string) (err error) {
 	defer catch(&err)
 	ad.GroupAddUser(group, user)
