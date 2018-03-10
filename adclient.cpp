@@ -216,7 +216,6 @@ bool adclient::checkUserPassword(string user, string password) {
     }
     catch (ADBindException& ex) {
         result = false;
-        throw;
     }
     logout(ld);
     return result;
