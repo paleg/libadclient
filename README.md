@@ -103,7 +103,7 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
 
 ### Binary values in object attributes
 
-Some object attributes (e.g. `objectSid`) are stored in Active Directory as binary values, so some functions (e.g. `getObjectAttribute(user, "objectSid")`) can return binary data (which can include NULL character as well as any unprintable characters). Usually it is not a problem as in c++, Python and Golang `string` type could hold any values, but:
+Some object attributes (e.g. `objectSid`) are stored in Active Directory as binary values, so some functions (e.g. `getObjectAttribute(user, "objectSid")`) can return binary data (which can include NULL character as well as any unprintable characters). Usually it is not a problem as in c++, Python and Golang `string` type can hold any values, but:
 * calling code should be ready to handle such values
 * in Python3, binary data will be returned as `bytes`, not `unicode` strings.
 
@@ -177,7 +177,7 @@ will return
 * `adclient.get_ldap_servers(domain, site)` (Python)
 * `adclient.Ldap_servers(domain, site)` (golang)
 
-Can be used to get information about LDAP servers for domain/site from DNS. `site` parameter could be empty to get servers from domain level.
+Can be used to get information about LDAP servers for domain/site from DNS. `site` parameter can be empty to get servers from domain level.
 
 #### Converting domain to distinguished name
 * `adclient::domain2dn(domain)` (c++)
@@ -202,7 +202,7 @@ int main() {
     adConnParams params;
     // login with a domain name
     params.domain = "DOMAIN.LOCAL";
-    // choose DC from SITE (optional, could be ommited)
+    // choose DC from SITE (optional, can be ommited)
     params.site = "SITE";
     // or login with a list of ldap uries
     // params.uries.push_back(adclient::ldap_prefix + "Server1");
@@ -256,7 +256,7 @@ import adclient
 params = adclient.ADConnParams()
 # login with a domain name
 params.domain = "DOMAIN.LOCAL"
-# choose DC from SITE (optional, could be ommited)
+# choose DC from SITE (optional, can be ommited)
 params.site = "SITE"
 # or login with a list of ldap uries
 # params.uries = [adclient.LdapPrefix+"Server1", adclient.LdapPrefix+"Server2"]
@@ -307,7 +307,7 @@ func main() {
   params := adclient.DefaultADConnParams()
   // login with a domain name
   params.Domain = "DOMAIN.LOCAL"
-  // choose DC from SITE (optional, could be ommited)
+  // choose DC from SITE (optional, can be ommited)
   params.Site = "SITE"
   // or login with a list of ldap uries
   // params.Uries = append(params.Uries, adclient.LdapPrefix()+"Server1", adclient.LdapPrefix()+"Server2")
