@@ -506,6 +506,17 @@ func SetObjectAttribute(object string, attr string, value string) (err error) {
 	return
 }
 
+func SetObjectAttributeList(object string, attr string, value ...string) (err error) {
+	defer catch(&err)
+	cattrs := NewStringVector()
+	defer DeleteStringVector(cattrs)
+	for _, attr := range value {
+		cattrs.Add(attr)
+	}
+	ad.SetObjectAttributeList(object, attr, cattrs)
+	return
+}
+
 func MoveObject(object string, new_container string) (err error) {
 	defer catch(&err)
 	ad.MoveObject(object, new_container)
