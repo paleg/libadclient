@@ -173,7 +173,7 @@ public:
       void setUserDescription(string user, string descr);
       void setUserIpAddress(string user, string ip);
 
-      void setObjectAttributeList(string object, string attr, vector <string> list);
+      void setObjectAttribute(string object, string attr, vector <string> values);
       void setObjectAttribute(string object, string attr, string value);
       void clearObjectAttribute(string object, string attr);
 
@@ -234,7 +234,7 @@ private:
       void mod_delete(string object, string attribute, string value);
       void mod_rename(string object, string cn);
       void mod_replace(string object, string attribute, string value);
-      void mod_replace_list(string object, string attribute, vector <string> list);
+      void mod_replace(string object, string attribute, vector <string> list);
       void mod_move(string object, string new_container);
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string dn2domain(string dn);

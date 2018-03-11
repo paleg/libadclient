@@ -285,8 +285,10 @@ class ADClient(object):
     def clearObjectAttribute(self, obj, attr):
         _adclient.clearObjectAttribute_adclient(self.obj, obj, attr)
 
-    def setObjectAttribute(self, obj, attr, value):
-        _adclient.setObjectAttribute_adclient(self.obj, obj, attr, value)
+    def setObjectAttribute(self, obj, attr, values):
+        if not isinstance(values, list):
+            values = [values]
+        _adclient.setObjectAttribute_adclient(self.obj, obj, attr, values)
 
     def UnLockUser(self, user):
         """ It unlocks given user.
