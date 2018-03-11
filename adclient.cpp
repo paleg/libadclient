@@ -545,10 +545,10 @@ void adclient::mod_rename(string object, string cn) {
     }
 }
 
-void adclient::mod_replace(string object, string attribute, string value) {
+void adclient::mod_replace(string object, string attribute, vector <string> list) {
 /*
   It performs generic LDAP_MOD_REPLACE operation on object (short_name/DN).
-  It removes value from attribute.
+  It removes list from attribute.
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
@@ -557,12 +557,16 @@ void adclient::mod_replace(string object, string attribute, string value) {
 
     LDAPMod *attrs[2];
     LDAPMod attr;
-    char *values[2];
     int result;
     string error_msg;
+    char** values = new char*[list.size() + 1];
+    size_t i;
 
-    values[0] = strdup(value.c_str());
-    values[1] = NULL;
+    for (i = 0; i < list.size(); ++i) {
+        values[i] = new char[list[i].size() + 1];
+        strcpy(values[i], list[i].c_str());
+    }
+    values[i] = NULL;
 
     attr.mod_op = LDAP_MOD_REPLACE;
     attr.mod_type = strdup(attribute.c_str());
@@ -573,12 +577,25 @@ void adclient::mod_replace(string object, string attribute, string value) {
 
     result = ldap_modify_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
     if (result != LDAP_SUCCESS) {
-        error_msg = "Error in mod_replace, ldap_modify_ext_s: ";
+        error_msg = "Error in mod_replace_list, ldap_modify_ext_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
     }
-    free(values[0]);
+    for (i = 0; i < list.size(); ++i) {
+        delete[] values[i];
+    }
     free(attr.mod_type);
+}
+
+void adclient::mod_replace(string object, string attribute, string value) {
+/*
+  It performs generic LDAP_MOD_REPLACE operation on object (short_name/DN).
+  It removes value from attribute.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
+    vector<string> values;
+    values.push_back(value);
+    return mod_replace(object, attribute, value);
 }
 
 void adclient::CreateOU(string ou) {
@@ -1569,6 +1586,10 @@ void adclient::clearObjectAttribute(string object, string attr) {
 
 void adclient::setObjectAttribute(string object, string attr, string value) {
     mod_replace(object, attr, value);
+}
+
+void adclient::setObjectAttribute(string object, string attr, vector <string> values) {
+    mod_replace(object, attr, values);
 }
 
 /*
