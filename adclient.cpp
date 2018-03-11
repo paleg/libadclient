@@ -584,6 +584,7 @@ void adclient::mod_replace(string object, string attribute, vector <string> list
     for (i = 0; i < list.size(); ++i) {
         delete[] values[i];
     }
+    delete[] values;
     free(attr.mod_type);
 }
 
