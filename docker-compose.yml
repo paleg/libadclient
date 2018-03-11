@@ -11,8 +11,8 @@ services:
         dns: 192.168.99.99
         dns_search: paleg.local
         volumes:
-            - "/home/oleg/iCloud/projects/libadclient:/usr/src/libadclient"
-            - "/home/oleg/iCloud/projects/libadclient:/root/.go/src/github.com/paleg/libadclient"
+            - "/home/oleg/iCloud/projects/libadclient/libadclient:/usr/src/libadclient"
+            - "/home/oleg/iCloud/projects/libadclient/libadclient:/root/.go/src/github.com/paleg/libadclient"
         command: /bin/bash
         stdin_open: true
         tty: true
