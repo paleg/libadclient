@@ -584,6 +584,7 @@ void adclient::mod_replace(string object, string attribute, vector <string> list
     for (i = 0; i < list.size(); ++i) {
         delete[] values[i];
     }
+    delete[] values;
     free(attr.mod_type);
 }
 
@@ -595,7 +596,7 @@ void adclient::mod_replace(string object, string attribute, string value) {
 */
     vector<string> values;
     values.push_back(value);
-    return mod_replace(object, attribute, value);
+    return mod_replace(object, attribute, values);
 }
 
 void adclient::CreateOU(string ou) {

@@ -173,8 +173,8 @@ public:
       void setUserDescription(string user, string descr);
       void setUserIpAddress(string user, string ip);
 
-      void setObjectAttribute(string object, string attr, vector <string> values);
       void setObjectAttribute(string object, string attr, string value);
+      void setObjectAttribute(string object, string attr, vector <string> values);
       void clearObjectAttribute(string object, string attr);
 
       std::map <string, bool>    getUserControls(string user);
