@@ -545,7 +545,7 @@ void adclient::mod_rename(string object, string cn) {
     }
 }
 
-void adclient::mod_replace_list(string object, string attribute, vector <string> list) {
+void adclient::mod_replace(string object, string attribute, vector <string> list) {
 /*
   It performs generic LDAP_MOD_REPLACE operation on object (short_name/DN).
   It removes list from attribute.
@@ -562,7 +562,7 @@ void adclient::mod_replace_list(string object, string attribute, vector <string>
     char** values = new char*[list.size() + 1];
     size_t i;
 
-    for(i = 0; i < list.size(); ++i) {
+    for (i = 0; i < list.size(); ++i) {
         values[i] = new char[list[i].size() + 1];
         strcpy(values[i], list[i].c_str());
     }
@@ -593,34 +593,9 @@ void adclient::mod_replace(string object, string attribute, string value) {
   It removes value from attribute.
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
-    if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
-
-    string dn = getObjectDN(object);
-
-    LDAPMod *attrs[2];
-    LDAPMod attr;
-    char *values[2];
-    int result;
-    string error_msg;
-
-    values[0] = strdup(value.c_str());
-    values[1] = NULL;
-
-    attr.mod_op = LDAP_MOD_REPLACE;
-    attr.mod_type = strdup(attribute.c_str());
-    attr.mod_values = values;
-
-    attrs[0] = &attr;
-    attrs[1] = NULL;
-
-    result = ldap_modify_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
-    if (result != LDAP_SUCCESS) {
-        error_msg = "Error in mod_replace, ldap_modify_ext_s: ";
-        error_msg.append(ldap_err2string(result));
-        throw ADOperationalException(error_msg, result);
-    }
-    free(values[0]);
-    free(attr.mod_type);
+    vector<string> values;
+    values.push_back(value);
+    return mod_replace(object, attribute, values);
 }
 
 void adclient::CreateOU(string ou) {
@@ -1613,8 +1588,8 @@ void adclient::setObjectAttribute(string object, string attr, string value) {
     mod_replace(object, attr, value);
 }
 
-void adclient::setObjectAttributeList(string object, string attr, vector <string> list) {
-    mod_replace_list(object, attr, list);
+void adclient::setObjectAttribute(string object, string attr, vector <string> values) {
+    mod_replace(object, attr, values);
 }
 
 /*

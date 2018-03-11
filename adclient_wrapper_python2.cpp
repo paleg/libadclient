@@ -1204,11 +1204,21 @@ static PyObject *wrapper_setUserIpAddress_adclient(PyObject *self, PyObject *arg
 
 static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
-       char *object, *attr, *value;
-       if (!PyArg_ParseTuple(args, "Osss", &obj, &object, &attr, &value)) return NULL;
+       char *object, *attr;
+       PyObject *listObj;
+
+       if (!PyArg_ParseTuple(args, "OssO!", &obj, &object, &attr, &PyList_Type, &listObj)) return NULL;
+
+       vector<string> values;
+       for (unsigned int i = 0; i < PyList_Size(listObj); ++i) {
+           PyObject *strObj = PyList_GetItem(listObj, i);
+           string item = PyString_AsString(strObj);
+           values.push_back(item);
+       }
+
        adclient *ad = convert_ad(obj);
        try {
-          ad->setObjectAttribute(object, attr, value);
+          ad->setObjectAttribute(object, attr, values);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
