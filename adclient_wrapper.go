@@ -518,6 +518,12 @@ func SetObjectAttribute(object string, attr string, values ...string) (err error
 	return
 }
 
+func ClearObjectAttribute(object string, attr string) (err error) {
+	defer catch(&err)
+	ad.ClearObjectAttribute(object, attr)
+	return
+}
+
 func MoveObject(object string, new_container string) (err error) {
 	defer catch(&err)
 	ad.MoveObject(object, new_container)
