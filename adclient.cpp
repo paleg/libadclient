@@ -577,7 +577,7 @@ void adclient::mod_replace(string object, string attribute, vector <string> list
 
     result = ldap_modify_ext_s(ds, dn.c_str(), attrs, NULL, NULL);
     if (result != LDAP_SUCCESS) {
-        error_msg = "Error in mod_replace_list, ldap_modify_ext_s: ";
+        error_msg = "Error in mod_replace, ldap_modify_ext_s: ";
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
     }
