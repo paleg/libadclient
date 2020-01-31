@@ -2,11 +2,24 @@ package adclient
 
 // #cgo CPPFLAGS: -DOPENLDAP -DKRB5
 // #cgo LDFLAGS: -lstdc++ -lldap -lsasl2 -lstdc++ -llber -lresolv -lkrb5
+// #include <ldap.h>
 import "C"
 
 import "fmt"
 import "strings"
 import "strconv"
+
+const (
+	AD_SCOPE_BASE        = C.LDAP_SCOPE_BASE
+	AD_SCOPE_BASEOBJECT  = C.LDAP_SCOPE_BASE
+	AD_SCOPE_ONELEVEL    = C.LDAP_SCOPE_ONELEVEL
+	AD_SCOPE_ONE         = C.LDAP_SCOPE_ONELEVEL
+	AD_SCOPE_SUBTREE     = C.LDAP_SCOPE_SUBTREE
+	AD_SCOPE_SUB         = C.LDAP_SCOPE_SUBTREE
+	AD_SCOPE_SUBORDINATE = C.LDAP_SCOPE_SUBORDINATE /* OpenLDAP extension */
+	AD_SCOPE_CHILDREN    = C.LDAP_SCOPE_SUBORDINATE
+	AD_SCOPE_DEFAULT     = C.LDAP_SCOPE_DEFAULT /* OpenLDAP extension */
+)
 
 type ADError struct {
 	msg  string
