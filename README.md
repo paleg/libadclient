@@ -78,6 +78,9 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
 
 ### Active Directory binding
 
+* boolean `adConnParams.use_tls` can be used to enable TLS over 'ldap' protocol (normally served on port 389):
+    + you must configure your `ldap.conf` properly for client to be able to validate your server's certificate. Check `man ldap.conf` for details.
+    + `TLS_REQCERT allow` can be used in `ldap.conf` to ignore server's certificate check.
 * boolean `adConnParams.secured` and `adConnParams.use_gssapi` chooses login authentication mode:
     + `SASL DIGEST-MD5` auth (default). It requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details).
         * `adConnParams.secured = true`
@@ -99,6 +102,7 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
 * after successfull binding following methods can be used to check connection properties:
     + `binded_uri()` - to get connected server ldap URI
     + `search_base()` - to get current search base
+    + `bind_method()` - to get method used for binding (`plain`, `TLS`)
     + `login_method()` - to get method used for login (`GSSAPI`, `DIGEST-MD5`, `SIMPLE`)
 
 ### Binary values in object attributes

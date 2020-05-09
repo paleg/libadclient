@@ -169,6 +169,18 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
     }
 
+    if (_params.use_tls) {
+        result = ldap_start_tls_s(*ds, NULL, NULL);
+        if (result != LDAP_SUCCESS) {
+            error_msg = "Error in ldap_start_tls_s: ";
+            error_msg.append(ldap_err2string(result));
+            throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
+        }
+        _params.bind_method = "TLS";
+    } else {
+        _params.bind_method = "plain";
+    }
+
     if (_params.secured) {
 #ifdef KRB5
         if (_params.use_gssapi) {
