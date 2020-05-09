@@ -101,6 +101,7 @@ struct adConnParams {
         string search_base;
         bool secured;
         bool use_gssapi;
+        bool use_tls;
 
         // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
         int nettimeout;
@@ -110,6 +111,7 @@ struct adConnParams {
         adConnParams() :
             secured(true),
             use_gssapi(false),
+            use_tls(false),
             // by default do not touch timeouts
             nettimeout(-1), timelimit(-1)
         {};
@@ -119,6 +121,7 @@ struct adConnParams {
     private:
         string uri;
         string login_method;
+        string bind_method;
 };
 
 
@@ -136,6 +139,7 @@ public:
 
       string binded_uri() { return params.uri; }
       string search_base() { return params.search_base; }
+      string bind_method() { return params.bind_method; }
       string login_method() { return params.login_method; }
 
       void groupAddUser(string group, string user);
