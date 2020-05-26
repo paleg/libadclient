@@ -20,10 +20,14 @@ type ADConnParams struct {
 	Binddn      string
 	Bindpw      string
 	Search_base string
+
 	Secured     bool
 	UseGSSAPI   bool
-	Nettimeout  int
-	Timelimit   int
+	UseLDAPS    bool
+	UseStartTLS bool
+
+	Nettimeout int
+	Timelimit  int
 }
 
 func DefaultADConnParams() (params ADConnParams) {
@@ -31,11 +35,9 @@ func DefaultADConnParams() (params ADConnParams) {
 	params.Timelimit = -1
 	params.Secured = true
 	params.UseGSSAPI = false
+	params.UseLDAPS = false
+	params.UseStartTLS = false
 	return
-}
-
-func LdapPrefix() string {
-	return GetAdclientLdap_prefix()
 }
 
 func Ldap_servers(domain string, site string) []string {
@@ -140,6 +142,8 @@ func Login(_params ADConnParams) (err error) {
 	params.SetUse_gssapi(_params.UseGSSAPI)
 	params.SetNettimeout(_params.Nettimeout)
 	params.SetTimelimit(_params.Timelimit)
+	params.SetUse_tls(_params.UseStartTLS)
+	params.SetUse_ldaps(_params.UseLDAPS)
 
 	uries := NewStringVector()
 	defer DeleteStringVector(uries)
