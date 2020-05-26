@@ -217,6 +217,11 @@ int main() {
     // params.search_base = "dc=DOMAIN,dc=LOCAL";
     params.binddn = "user";
     params.bindpw = "password";
+    // binding mode (LDAPS)
+    //params.use_ldaps = true;
+    // binding mode (StartTLS)
+    //params.use_tls = true;
+
     // simple auth mode
     // params.secured = false;
     
@@ -321,6 +326,10 @@ func main() {
   // params.Search_base = "dc=DOMAIN,dc=LOCAL";
   params.Binddn = "user";
   params.Bindpw = "password";
+
+  // binding with TLS or LDAPS
+  // params.UseStartTLS = true
+  // params.UseLDAPS = true
     
   // simple auth mode
   // params.Secured = false;
