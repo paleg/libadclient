@@ -57,23 +57,14 @@
 #define AD_SCOPE_ONE          LDAP_SCOPE_ONE
 #define AD_SCOPE_SUBTREE      LDAP_SCOPE_SUBTREE
 #define AD_SCOPE_SUB          LDAP_SCOPE_SUB
-
-#ifdef LDAP_SCOPE_SUBORDINATE
-#define AD_SCOPE_SUBORDINATE	LDAP_SCOPE_SUBORDINATE /* OpenLDAP extension */
-#endif
-
-#ifndef LDAP_SCOPE_SUBORDINATE
-#define LDAP_SCOPE_SUBORDINATE ((ber_int_t) 0x0003)
-#endif
-
 #define AD_SCOPE_CHILDREN     LDAP_SCOPE_CHILDREN
 
 #ifdef LDAP_SCOPE_SUBORDINATE
-#define AD_SCOPE_DEFAULT      LDAP_SCOPE_DEFAULT /* OpenLDAP extension */
-#endif
-
-#ifndef AD_SCOPE_DEFAULT
-#define AD_SCOPE_DEFAULT ((ber_int_t) -1)
+    #define AD_SCOPE_SUBORDINATE LDAP_SCOPE_SUBORDINATE /* OpenLDAP extension */
+    #define AD_SCOPE_DEFAULT     LDAP_SCOPE_DEFAULT     /* OpenLDAP extension */
+#else
+    #define AD_SCOPE_SUBORDINATE ((ber_int_t) 0x0003)
+    #define AD_SCOPE_DEFAULT     ((ber_int_t) -1)
 #endif
 
 using std::vector;
