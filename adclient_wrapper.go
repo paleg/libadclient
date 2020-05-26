@@ -192,6 +192,10 @@ func LoginMethod() (result string) {
 	return ad.Login_method()
 }
 
+func BindMethod() (result string) {
+	return ad.Bind_method()
+}
+
 func GroupAddUser(group string, user string) (err error) {
 	defer catch(&err)
 	ad.GroupAddUser(group, user)
