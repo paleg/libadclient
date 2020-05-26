@@ -16,6 +16,8 @@ class ADConnParams(object):
         self.search_base = ""
         self.secured = True
         self.use_gssapi = False
+        self.use_tls = False
+        self.use_ldaps = False
         self.nettimeout = -1
         self.timelimit = -1
         self.uries = []
@@ -58,6 +60,9 @@ class ADClient(object):
 
     def login_method(self):
         return _adclient.login_method_adclient(self.obj)
+
+    def bind_method(self):
+        return _adclient.bind_method_adclient(self.obj)
 
     def searchDN(self, search_base, filter, scope):
         """ It returns list with DNs found with 'filter'

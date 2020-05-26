@@ -273,9 +273,13 @@ params.site = "SITE"
 # or login with a list of ldap uries
 # params.uries = [adclient.LdapPrefix+"Server1", adclient.LdapPrefix+"Server2"]
 # params.search_base = "dc=DOMAIN,dc=LOCAL";
-params.binddn = "user";
-params.bindpw = "password";
-    
+params.binddn = "user"
+params.bindpw = "password"
+
+# binding with TLS or LDAPS
+# params.use_ldaps = True
+# params.use_tls   = True
+
 # simple auth mode
 # params.secured = False;
 
