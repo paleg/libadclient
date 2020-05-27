@@ -51,9 +51,21 @@
 
 #define MAX_PASSWORD_LENGTH 22
 
-#define AD_SCOPE_BASE       LDAP_SCOPE_BASE
-#define AD_SCOPE_ONELEVEL   LDAP_SCOPE_ONELEVEL
-#define AD_SCOPE_SUBTREE    LDAP_SCOPE_SUBTREE
+#define AD_SCOPE_BASE         LDAP_SCOPE_BASE
+#define AD_SCOPE_BASEOBJECT   LDAP_SCOPE_BASEOBJECT
+#define AD_SCOPE_ONELEVEL     LDAP_SCOPE_ONELEVEL
+#define AD_SCOPE_ONE          LDAP_SCOPE_ONE
+#define AD_SCOPE_SUBTREE      LDAP_SCOPE_SUBTREE
+#define AD_SCOPE_SUB          LDAP_SCOPE_SUB
+#define AD_SCOPE_CHILDREN     LDAP_SCOPE_CHILDREN
+
+#ifdef LDAP_SCOPE_SUBORDINATE
+    #define AD_SCOPE_SUBORDINATE LDAP_SCOPE_SUBORDINATE /* OpenLDAP extension */
+    #define AD_SCOPE_DEFAULT     LDAP_SCOPE_DEFAULT     /* OpenLDAP extension */
+#else
+    #define AD_SCOPE_SUBORDINATE ((ber_int_t) 0x0003)
+    #define AD_SCOPE_DEFAULT     ((ber_int_t) -1)
+#endif
 
 using std::vector;
 using std::map;
