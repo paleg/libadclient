@@ -1,8 +1,6 @@
 #include "stdlib.h"
 #include "adclient.h"
 
-const string adclient::ldap_prefix = "ldap://";
-
 /*
   Active Directory class.
 
@@ -34,12 +32,15 @@ void adclient::logout(LDAP *ds) {
 }
 
 void adclient::login(adConnParams _params) {
+    ldap_prefix = _params.use_ldaps ? "ldaps" : "ldap";
+
     if (!_params.uries.empty()) {
         for (vector <string>::iterator it = _params.uries.begin(); it != _params.uries.end(); ++it) {
-            if (it->compare(0, ldap_prefix.size(), ldap_prefix) != 0) {
-                continue;
+            if (it->find("://") == string::npos) {
+                _params.uri = ldap_prefix + "://" + *it;
+            } else {
+                _params.uri = *it;
             }
-            _params.uri = *it;
             try {
                 login(&ds, _params);
                 params = _params;
@@ -88,11 +89,7 @@ void adclient::login(string _uri, string binddn, string bindpw, string search_ba
   Wrapper around login to fill LDAP* structure
 */
     adConnParams _params;
-    if (_uri.compare(0, ldap_prefix.size(), ldap_prefix) == 0) {
-        _params.uries.push_back(_uri);
-    } else {
-        _params.domain = _uri;
-    }
+    _params.uries.push_back(_uri);
     _params.binddn = binddn;
     _params.bindpw = bindpw;
     _params.search_base = search_base;
@@ -111,6 +108,11 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
     int result, version, bindresult = -1;
 
     string error_msg;
+
+    if (_params.use_ldaps && _params.use_tls) {
+        error_msg = "Error in passed params: use_ldaps and use_tls are mutually exclusive";
+        throw ADBindException(error_msg, AD_PARAMS_ERROR);
+    }
 
 #if defined OPENLDAP
     result = ldap_initialize(ds, _params.uri.c_str());
@@ -167,6 +169,18 @@ void adclient::login(LDAP **ds, adConnParams& _params) {
         error_msg = "Error in ldap_set_option (referrals->off): ";
         error_msg.append(ldap_err2string(result));
         throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
+    }
+
+    if (_params.use_tls) {
+        result = ldap_start_tls_s(*ds, NULL, NULL);
+        if (result != LDAP_SUCCESS) {
+            error_msg = "Error in ldap_start_tls_s: ";
+            error_msg.append(ldap_err2string(result));
+            throw ADBindException(error_msg, AD_SERVER_CONNECT_FAILURE);
+        }
+        _params.bind_method = "StartTLS";
+    } else {
+        _params.bind_method = _params.use_ldaps ? "LDAPS" : "plain";
     }
 
     if (_params.secured) {
@@ -545,10 +559,10 @@ void adclient::mod_rename(string object, string cn) {
     }
 }
 
-void adclient::mod_replace(string object, string attribute, string value) {
+void adclient::mod_replace(string object, string attribute, vector <string> list) {
 /*
   It performs generic LDAP_MOD_REPLACE operation on object (short_name/DN).
-  It removes value from attribute.
+  It removes list from attribute.
   It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
 */
     if (ds == NULL) throw ADSearchException("Failed to use LDAP connection handler", AD_LDAP_CONNECTION_ERROR);
@@ -557,12 +571,16 @@ void adclient::mod_replace(string object, string attribute, string value) {
 
     LDAPMod *attrs[2];
     LDAPMod attr;
-    char *values[2];
     int result;
     string error_msg;
+    char** values = new char*[list.size() + 1];
+    size_t i;
 
-    values[0] = strdup(value.c_str());
-    values[1] = NULL;
+    for (i = 0; i < list.size(); ++i) {
+        values[i] = new char[list[i].size() + 1];
+        strcpy(values[i], list[i].c_str());
+    }
+    values[i] = NULL;
 
     attr.mod_op = LDAP_MOD_REPLACE;
     attr.mod_type = strdup(attribute.c_str());
@@ -577,8 +595,22 @@ void adclient::mod_replace(string object, string attribute, string value) {
         error_msg.append(ldap_err2string(result));
         throw ADOperationalException(error_msg, result);
     }
-    free(values[0]);
+    for (i = 0; i < list.size(); ++i) {
+        delete[] values[i];
+    }
+    delete[] values;
     free(attr.mod_type);
+}
+
+void adclient::mod_replace(string object, string attribute, string value) {
+/*
+  It performs generic LDAP_MOD_REPLACE operation on object (short_name/DN).
+  It removes value from attribute.
+  It returns nothing if operation was successfull, throw ADOperationalException - otherwise.
+*/
+    vector<string> values;
+    values.push_back(value);
+    return mod_replace(object, attribute, values);
 }
 
 void adclient::CreateOU(string ou) {
@@ -1571,6 +1603,10 @@ void adclient::setObjectAttribute(string object, string attr, string value) {
     mod_replace(object, attr, value);
 }
 
+void adclient::setObjectAttribute(string object, string attr, vector <string> values) {
+    mod_replace(object, attr, values);
+}
+
 /*
 AD can set following limit (http://support.microsoft.com/kb/315071/en-us):
  MaxValRange - This value controls the number of values that are returned
@@ -1752,7 +1788,7 @@ vector<string> adclient::perform_srv_query(string srv_rec) {
             throw ADBindException("Error while resolving ldap server for " + srv_rec + ": dn_expand(host) < 0", AD_LDAP_RESOLV_ERROR);
         }
         // std::cout << priority << " " << weight << " " << ttl << " " << host << ":" << port << std::endl;
-        ret.push_back(adclient::ldap_prefix + string(host));
+        ret.push_back(string(host));
         msg = end;
     }
     free(srv_name);

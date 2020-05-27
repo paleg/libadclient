@@ -16,6 +16,8 @@ class ADConnParams(object):
         self.search_base = ""
         self.secured = True
         self.use_gssapi = False
+        self.use_tls = False
+        self.use_ldaps = False
         self.nettimeout = -1
         self.timelimit = -1
         self.uries = []
@@ -58,6 +60,9 @@ class ADClient(object):
 
     def login_method(self):
         return _adclient.login_method_adclient(self.obj)
+
+    def bind_method(self):
+        return _adclient.bind_method_adclient(self.obj)
 
     def searchDN(self, search_base, filter, scope):
         """ It returns list with DNs found with 'filter'
@@ -285,8 +290,10 @@ class ADClient(object):
     def clearObjectAttribute(self, obj, attr):
         _adclient.clearObjectAttribute_adclient(self.obj, obj, attr)
 
-    def setObjectAttribute(self, obj, attr, value):
-        _adclient.setObjectAttribute_adclient(self.obj, obj, attr, value)
+    def setObjectAttribute(self, obj, attr, values):
+        if not isinstance(values, list):
+            values = [values]
+        _adclient.setObjectAttribute_adclient(self.obj, obj, attr, values)
 
     def UnLockUser(self, user):
         """ It unlocks given user.
