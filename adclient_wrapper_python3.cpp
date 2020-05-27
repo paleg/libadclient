@@ -12,20 +12,30 @@ static PyObject *ADOperationalError;
 static int error_num;
 
 string unicode2string(PyObject *pobj) {
-    return PyBytes_AS_STRING( PyUnicode_AsEncodedString(pobj, "utf-8", "Error ~") );
+    return PyBytes_AsString( PyUnicode_AsEncodedString(pobj, "utf-8", "Error ~") );
 }
 
 PyObject *vector2list(vector <string> vec) {
-    string st;
     PyObject *list = PyList_New(0);
 
     for (unsigned int j=0; j < vec.size(); j++) {
-        PyObject *unicodeString = PyUnicode_FromString(vec[j].c_str());
+        PyObject *unicodeString = PyUnicode_FromStringAndSize(vec[j].c_str(), vec[j].size());
         if (unicodeString != NULL) {
             PyList_Append(list, unicodeString);
         } else {
-            // just ignore unconvertable fields
+            // clear error from previous PyUnicode_FromStringAndSize call
             PyErr_Clear();
+
+            // TODO:
+            // not sure that this will not lead to mixing str & bytes in the same list
+            // but ATM I don't see other simple way to add support for binary values
+            PyObject *bytes = PyBytes_FromStringAndSize(vec[j].c_str(), vec[j].size());
+            if (bytes != NULL) {
+                PyList_Append(list, bytes);
+            } else {
+                // ignore unconvertable fields
+                PyErr_Clear();
+            }
         }
     }
     return list;
@@ -45,6 +55,21 @@ static PyObject *wrapper_domain2dn(PyObject *self, PyObject *args) {
        if (!PyArg_ParseTuple(args, "s", &domain)) return NULL;
        string result = adclient::domain2dn(domain);
        return Py_BuildValue("s", result.c_str());
+}
+
+static PyObject *wrapper_decodeSID(PyObject *self, PyObject *args) {
+       char *sid;
+       int len;
+       if (!PyArg_ParseTuple(args, "s#", &sid, &len)) return NULL;
+       string result = decodeSID(string(sid, len));
+       return Py_BuildValue("s", result.c_str());
+}
+
+static PyObject *wrapper_FileTimeToPOSIX(PyObject *self, PyObject *args) {
+       long long filetime;
+       if (!PyArg_ParseTuple(args, "L", &filetime)) return NULL;
+       time_t result = FileTimeToPOSIX(filetime);
+       return Py_BuildValue("i", result);
 }
 
 static PyObject *wrapper_get_ldap_servers(PyObject *self, PyObject *args) {
@@ -125,6 +150,8 @@ static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
        params.search_base = dict_get_string(paramsObj, "search_base");
        params.secured = dict_get_bool(paramsObj, "secured");
        params.use_gssapi = dict_get_bool(paramsObj, "use_gssapi");
+       params.use_tls = dict_get_bool(paramsObj, "use_tls");
+       params.use_ldaps = dict_get_bool(paramsObj, "use_ldaps");
        params.nettimeout = dict_get_int(paramsObj, "nettimeout");
        params.timelimit = dict_get_int(paramsObj, "timelimit");
 
@@ -181,6 +208,15 @@ static PyObject *wrapper_login_method_adclient(PyObject *self, PyObject *args) {
 
        adclient *ad = convert_ad(obj);
        return Py_BuildValue("s", ad->login_method().c_str());
+}
+
+static PyObject *wrapper_bind_method_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+
+       if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
+
+       adclient *ad = convert_ad(obj);
+       return Py_BuildValue("s", ad->bind_method().c_str());
 }
 
 static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
@@ -442,8 +478,8 @@ static PyObject *wrapper_ifDNExists_adclient(PyObject *self, PyObject *args) {
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
-        PyErr_SetString(ADSearchError, ex.msg.c_str()); 
-        return NULL; 
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
     }
 }
 
@@ -758,7 +794,7 @@ static PyObject *wrapper_CreateOU_adclient(PyObject *self, PyObject *args) {
     }
     catch(ADOperationalException& ex) {
         error_num = ex.code;
-        PyErr_SetString(ADOperationalError, ex.msg.c_str()); 
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
         return NULL;
     }
     Py_INCREF(Py_None);
@@ -966,7 +1002,7 @@ static PyObject *wrapper_setUserInitials_adclient(PyObject *self, PyObject *args
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
-        PyErr_SetString(ADSearchError, ex.msg.c_str()); 
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
         return NULL;
     }
     catch(ADOperationalException& ex) {
@@ -988,7 +1024,7 @@ static PyObject *wrapper_setUserGivenName_adclient(PyObject *self, PyObject *arg
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
-        PyErr_SetString(ADSearchError, ex.msg.c_str());  
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
         return NULL;
     }
     catch(ADOperationalException& ex) {
@@ -1010,7 +1046,7 @@ static PyObject *wrapper_setUserDisplayName_adclient(PyObject *self, PyObject *a
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
-        PyErr_SetString(ADSearchError, ex.msg.c_str());  
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
         return NULL;
     }
     catch(ADOperationalException& ex) {
@@ -1032,14 +1068,14 @@ static PyObject *wrapper_setUserRoomNumber_adclient(PyObject *self, PyObject *ar
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
-        PyErr_SetString(ADSearchError, ex.msg.c_str());  
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
         return NULL;
     }
     catch(ADOperationalException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADOperationalError, ex.msg.c_str());
         return NULL;
-    } 
+    }
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -1054,7 +1090,7 @@ static PyObject *wrapper_setUserAddress_adclient(PyObject *self, PyObject *args)
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
-        PyErr_SetString(ADSearchError, ex.msg.c_str());  
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
         return NULL;
     }
     catch(ADOperationalException& ex) {
@@ -1078,7 +1114,7 @@ static PyObject *wrapper_setUserInfo_adclient(PyObject *self, PyObject *args) {
         error_num = ex.code;
         PyErr_SetString(ADSearchError, ex.msg.c_str());
         return NULL;
-    } 
+    }
     catch(ADOperationalException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADOperationalError, ex.msg.c_str());
@@ -1099,8 +1135,8 @@ static PyObject *wrapper_setUserTitle_adclient(PyObject *self, PyObject *args) {
     catch(ADSearchException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADSearchError, ex.msg.c_str());
-        return NULL; 
-    } 
+        return NULL;
+    }
     catch(ADOperationalException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADOperationalError, ex.msg.c_str());
@@ -1115,14 +1151,14 @@ static PyObject *wrapper_setUserDepartment_adclient(PyObject *self, PyObject *ar
     char *user, *department;
     if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &department)) return NULL;
     adclient *ad = convert_ad(obj);
-    try { 
+    try {
         ad->setUserDepartment(user, department);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADSearchError, ex.msg.c_str());
-        return NULL; 
-    } 
+        return NULL;
+    }
     catch(ADOperationalException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADOperationalError, ex.msg.c_str());
@@ -1137,14 +1173,14 @@ static PyObject *wrapper_setUserCompany_adclient(PyObject *self, PyObject *args)
     char *user, *company;
     if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &company)) return NULL;
     adclient *ad = convert_ad(obj);
-    try { 
+    try {
         ad->setUserCompany(user, company);
     }
-    catch(ADSearchException& ex) { 
+    catch(ADSearchException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADSearchError, ex.msg.c_str());
-        return NULL; 
-    } 
+        return NULL;
+    }
     catch(ADOperationalException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADOperationalError, ex.msg.c_str());
@@ -1159,19 +1195,19 @@ static PyObject *wrapper_setUserPhone_adclient(PyObject *self, PyObject *args) {
     char *user, *phone;
     if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &phone)) return NULL;
     adclient *ad = convert_ad(obj);
-    try { 
+    try {
         ad->setUserPhone(user, phone);
     }
-    catch(ADSearchException& ex) { 
+    catch(ADSearchException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADSearchError, ex.msg.c_str());
-        return NULL; 
-    } 
+        return NULL;
+    }
     catch(ADOperationalException& ex) {
         error_num = ex.code;
         PyErr_SetString(ADOperationalError, ex.msg.c_str());
         return NULL;
-    } 
+    }
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -1222,11 +1258,21 @@ static PyObject *wrapper_clearObjectAttribute_adclient(PyObject *self, PyObject 
 
 static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
     PyObject *obj;
-    char *object, *attr, *value;
-    if (!PyArg_ParseTuple(args, "Osss", &obj, &object, &attr, &value)) return NULL;
+    char *object, *attr;
+    PyObject *listObj;
+
+    if (!PyArg_ParseTuple(args, "OssO!", &obj, &object, &attr, &PyList_Type, &listObj)) return NULL;
+
+    vector <string> values;
+    for (unsigned int i = 0; i < PyList_Size(listObj); ++i) {
+        PyObject *strObj = PyList_GetItem(listObj, i);
+        string item = unicode2string(strObj);
+        values.push_back(item);
+    }
+
     adclient *ad = convert_ad(obj);
     try {
-        ad->setObjectAttribute(object, attr, value);
+        ad->setObjectAttribute(object, attr, values);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -1249,6 +1295,76 @@ static PyObject *wrapper_UnLockUser_adclient(PyObject *self, PyObject *args) {
     adclient *ad = convert_ad(obj);
     try {
         ad->UnLockUser(user);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    catch(ADOperationalException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *wrapper_MoveUser_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *user;
+    char *new_container;
+    if (!PyArg_ParseTuple(args, "Oss", &obj, &user, &new_container)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        ad->MoveUser(user, new_container);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    catch(ADOperationalException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *wrapper_MoveObject_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *object;
+    char *new_container;
+    if (!PyArg_ParseTuple(args, "Oss", &obj, &object, &new_container)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        ad->MoveObject(object, new_container);
+    }
+    catch(ADSearchException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADSearchError, ex.msg.c_str());
+        return NULL;
+    }
+    catch(ADOperationalException& ex) {
+        error_num = ex.code;
+        PyErr_SetString(ADOperationalError, ex.msg.c_str());
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *wrapper_RenameUser_adclient(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    char *user;
+    char *shortname;
+    char *cn;
+    if (!PyArg_ParseTuple(args, "Osss", &obj, &user, &shortname, &cn)) return NULL;
+    adclient *ad = convert_ad(obj);
+    try {
+        ad->RenameUser(user, shortname, cn);
     }
     catch(ADSearchException& ex) {
         error_num = ex.code;
@@ -1318,13 +1434,19 @@ static PyMethodDef adclient_methods[] = {
     { "clearObjectAttribute_adclient",   (PyCFunction)wrapper_clearObjectAttribute_adclient,     METH_VARARGS,   NULL },
     { "setObjectAttribute_adclient",     (PyCFunction)wrapper_setObjectAttribute_adclient,       METH_VARARGS,   NULL },
     { "UnLockUser_adclient",             (PyCFunction)wrapper_UnLockUser_adclient,               METH_VARARGS,   NULL },
+    { "MoveUser_adclient",               (PyCFunction)wrapper_MoveUser_adclient,                 METH_VARARGS,   NULL },
+    { "MoveObject_adclient",             (PyCFunction)wrapper_MoveObject_adclient,               METH_VARARGS,   NULL },
+    { "RenameUser_adclient",             (PyCFunction)wrapper_RenameUser_adclient,               METH_VARARGS,   NULL },
     { "ifDNExists_adclient",             (PyCFunction)wrapper_ifDNExists_adclient,               METH_VARARGS,   NULL },
     { "binded_uri_adclient",             (PyCFunction)wrapper_binded_uri_adclient,               METH_VARARGS,   NULL },
     { "search_base_adclient",            (PyCFunction)wrapper_search_base_adclient,              METH_VARARGS,   NULL },
     { "login_method_adclient",           (PyCFunction)wrapper_login_method_adclient,             METH_VARARGS,   NULL },
+    { "bind_method_adclient",            (PyCFunction)wrapper_bind_method_adclient,              METH_VARARGS,   NULL },
     { "get_error_num",                   (PyCFunction)wrapper_get_error_num,                     METH_VARARGS,   NULL },
     { "int2ip",                          (PyCFunction)wrapper_int2ip,                            METH_VARARGS,   NULL },
     { "domain2dn",                       (PyCFunction)wrapper_domain2dn,                         METH_VARARGS,   NULL },
+    { "decodeSID",                       (PyCFunction)wrapper_decodeSID,                         METH_VARARGS,   NULL },
+    { "FileTimeToPOSIX",                 (PyCFunction)wrapper_FileTimeToPOSIX,                   METH_VARARGS,   NULL },
     { "get_ldap_servers",                (PyCFunction)wrapper_get_ldap_servers,                  METH_VARARGS,   NULL },
     { NULL, NULL }
 };
@@ -1357,8 +1479,6 @@ PyInit__adclient() {
     PyModule_AddObject(module, "ADBindError", ADBindError);
     PyModule_AddObject(module, "ADSearchError", ADSearchError);
     PyModule_AddObject(module, "ADOperationalError", ADOperationalError);
-
-    PyModule_AddStringConstant(module, "LdapPrefix", adclient::ldap_prefix.c_str());
 
     PyModule_AddIntMacro(module, AD_SUCCESS);
     PyModule_AddIntMacro(module, AD_LDAP_CONNECTION_ERROR);

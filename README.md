@@ -11,6 +11,13 @@ libadclient - Active Directory client for c++, Python and Golang.
     - [Golang](#golang)
 - [Usage notes](#usage-notes)
     - [Active Directory binding](#active-directory-binding)
+    - [Binary values in object attributes](#binary-values-in-object-attributes)
+    - [Helper functions](#helper-functions)
+        - [FileTimeToPOSIX](#filetimetoposix)
+        - [Decode SID](#decode-sid)
+        - [IP to int and vise versa](#ip-to-int-and-vise-versa)
+        - [Getting LDAP URIes list for domain/site](#getting-ldap-uries-list-for-domainsite)
+        - [Converting domain to distinguished name](#converting-domain-to-distinguished-name)
 - [Usage samples](#usage-samples)
     - [c++](#c)
     - [Python](#python)
@@ -23,7 +30,7 @@ This simple C++/Python/Golang classes can be used to manipulate Active Directory
 Full list of supported methods can be found in:
 * [adclient.h](https://github.com/paleg/libadclient/blob/master/adclient.h) (for c++)
 * [adclient.py](https://github.com/paleg/libadclient/blob/master/adclient.py) (for Python)
-* [adclient.go](https://github.com/paleg/libadclient/blob/master/adclient.go) (for Golang)
+* [adclient_wrapper.go](https://github.com/paleg/libadclient/blob/master/adclient_wrapper.go) (for Golang)
 
 Requirements:
 * OpenLDAP or SunLDAP
@@ -71,7 +78,13 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
 
 ### Active Directory binding
 
-* boolean `adConnParams.secured` and `adConnParams.use_gssapi` chooses login authentication mode:
+* boolean `adConnParams.use_tls` and `adConnParams.use_ldaps` choose binding method:
+    + `adConnParams.use_tls` enables StartTLS extension to the LDAP protocol, normally served on port 389
+    + `adConnParams.use_ldaps` enables non-standardized LDAP over SSL protocol, normally served on port 636
+    + these two options are **mutually exclusive** and disabled by default
+    + you must configure your `ldap.conf` properly for client to be able to validate your server's certificate. Check `man ldap.conf` for details.
+    + `TLS_REQCERT allow` can be used in `ldap.conf` to ignore server's certificate check.
+* boolean `adConnParams.secured` and `adConnParams.use_gssapi` choose login authentication mode:
     + `SASL DIGEST-MD5` auth (default). It requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details).
         * `adConnParams.secured = true`
         * `adConnParams.use_gssapi = false`
@@ -89,6 +102,96 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
         * `adConnParams.search_base` must be set explicitly.
 * `LDAP_OPT_NETWORK_TIMEOUT` and `LDAP_OPT_TIMEOUT` can be set with `adConnParams.nettimeout`.
 * `LDAP_OPT_TIMELIMIT` can be set with `adConnParams.timelimit`.
+* after successfull binding following methods can be used to check connection properties:
+    + `binded_uri()` - to get connected server ldap URI
+    + `search_base()` - to get current search base
+    + `bind_method()` - to get method used for binding (`plain`, `StartTLS`, `LDAPS`)
+    + `login_method()` - to get method used for login (`GSSAPI`, `DIGEST-MD5`, `SIMPLE`)
+
+### Binary values in object attributes
+
+Some object attributes (e.g. `objectSid`) are stored in Active Directory as binary values, so some functions (e.g. `getObjectAttribute(user, "objectSid")`) can return binary data (which can include NULL character as well as any unprintable characters). Usually it is not a problem as in c++, Python and Golang `string` type can hold any values, but:
+* calling code should be ready to handle such values
+* in Python3, binary data will be returned as `bytes`, not `unicode` strings.
+
+### Helper functions
+
+#### FileTimeToPOSIX
+
+* `FileTimeToPOSIX(long long filetime)` (c++)
+* `adclient.FileTimeToPOSIX(filetime)` (Python)
+* `adclient.FileTimeToPOSIX(filetime)` (golang)
+
+Can be used to convert 18-digit Active Directory timestamp to Unix epoch time.
+
+The 18-digit timestamps, also named `Windows NT time format`, `Win32 FILETIME or SYSTEMTIME` or `NTFS file time` are used in Microsoft Active Directory for `pwdLastSet`, `accountExpires`, `LastLogon`, `LastLogonTimestamp` and `LastPwdSet`. The timestamp is the number of 100-nanoseconds intervals (1 nanosecond = one billionth of a second) since Jan 1, 1601 UTC.
+
+```golang
+pw, _ := adclient.GetObjectAttribute(username, "pwdLastSet")
+pwNum, _ := strconv.ParseInt(pw[0], 10, 64)
+pwPosix := adclient.FileTimeToPOSIX(pwNum)
+tm := time.Unix(pwPosix, 0)
+fmt.Printf("pw for '%v' was last set at '%v'\n", username, tm)
+```
+will return
+```shell
+pw for 'XXX' was last set at '2017-10-23 19:59:47 +0000 UTC'
+```
+
+#### decode SID
+
+* `decodeSID(sid)` (c++)
+* `adclient.decodeSID(sid)` (Python)
+* `adclient.DecodeSID(sid)` (golang)
+
+Can be used to convert `objectSid` from binary representation to string value
+
+```golang
+if sid, err := adclient.GetObjectAttribute(user, "objectSid"); err == nil {
+    fmt.Printf("objectSid encoded is %q\n", sid[0])
+    fmt.Printf("objectSid decoded is %v\n", adclient.DecodeSID(sid[0]))
+}
+```
+will return
+```shell
+objectSid encoded is "\x01\x05\x00\x00\x00\x00\x00\x05\x15\x00\x00\x00;\x10\x8a\xceui\xab\xc3\xfao\x93\x81\xbe\xa2\x00\x00"
+objectSid decoded is S-1-5-21-3465154619-3282790773-2173923322-41662
+```
+
+#### IP to int and vise versa
+
+* `int2ip(string value) / ip2int(string ip)` (c++)
+* `adclient.int2ip(string value)` (Python)
+* `adclient.Int2ip(value string) / adclient.Ip2int(ip string)` (golang)
+
+IP addresses (e.g. `msRADIUSFramedIPAddress`) are stored in object attributes as integer, these functions can be used to convert IP to integer and vise versa.
+
+```golang
+ip := "192.168.1.100"
+ipInt := adclient.Ip2int(ip)
+fmt.Printf("%s to int: %v\n", ip, ipInt)
+ipStr := adclient.Int2ip(strconv.Itoa(ipInt))
+fmt.Printf("%v to string: %s\n", ipInt, ipStr)
+```
+will return
+```shell
+192.168.1.100 to int: -1062731420
+-1062731420 to string: 192.168.1.100
+```
+
+#### Getting LDAP URIes list for domain/site
+* `adclient::get_ldap_servers(domain, site)` (c++)
+* `adclient.get_ldap_servers(domain, site)` (Python)
+* `adclient.Ldap_servers(domain, site)` (golang)
+
+Can be used to get information about LDAP servers for domain/site from DNS. `site` parameter can be empty to get servers from domain level.
+
+#### Converting domain to distinguished name
+* `adclient::domain2dn(domain)` (c++)
+* `adclient.domain2dn(domain)` (Python)
+* `adclient.Domain2dn(domain)` (golang)
+
+Can be used to perform simple convertion from `DOMAIN.COM` to `DC=DOMAIN,DC=COM`.
 
 ## Usage samples
 
@@ -106,7 +209,7 @@ int main() {
     adConnParams params;
     // login with a domain name
     params.domain = "DOMAIN.LOCAL";
-    // choose DC from SITE (optional, could be ommited)
+    // choose DC from SITE (optional, can be ommited)
     params.site = "SITE";
     // or login with a list of ldap uries
     // params.uries.push_back(adclient::ldap_prefix + "Server1");
@@ -114,6 +217,11 @@ int main() {
     // params.search_base = "dc=DOMAIN,dc=LOCAL";
     params.binddn = "user";
     params.bindpw = "password";
+    // binding mode (LDAPS)
+    //params.use_ldaps = true;
+    // binding mode (StartTLS)
+    //params.use_tls = true;
+
     // simple auth mode
     // params.secured = false;
     
@@ -160,14 +268,18 @@ import adclient
 params = adclient.ADConnParams()
 # login with a domain name
 params.domain = "DOMAIN.LOCAL"
-# choose DC from SITE (optional, could be ommited)
+# choose DC from SITE (optional, can be ommited)
 params.site = "SITE"
 # or login with a list of ldap uries
 # params.uries = [adclient.LdapPrefix+"Server1", adclient.LdapPrefix+"Server2"]
 # params.search_base = "dc=DOMAIN,dc=LOCAL";
-params.binddn = "user";
-params.bindpw = "password";
-    
+params.binddn = "user"
+params.bindpw = "password"
+
+# binding with TLS or LDAPS
+# params.use_ldaps = True
+# params.use_tls   = True
+
 # simple auth mode
 # params.secured = False;
 
@@ -211,13 +323,17 @@ func main() {
   params := adclient.DefaultADConnParams()
   // login with a domain name
   params.Domain = "DOMAIN.LOCAL"
-  // choose DC from SITE (optional, could be ommited)
+  // choose DC from SITE (optional, can be ommited)
   params.Site = "SITE"
   // or login with a list of ldap uries
   // params.Uries = append(params.Uries, adclient.LdapPrefix()+"Server1", adclient.LdapPrefix()+"Server2")
   // params.Search_base = "dc=DOMAIN,dc=LOCAL";
   params.Binddn = "user";
   params.Bindpw = "password";
+
+  // binding with TLS or LDAPS
+  // params.UseStartTLS = true
+  // params.UseLDAPS = true
     
   // simple auth mode
   // params.Secured = false;
