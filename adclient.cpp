@@ -1151,14 +1151,18 @@ map <string, vector <string> > adclient::getObjectAttributes(string object, cons
         attrs = map < string, vector<string> >();
     }
 
-    map < string, vector<string> >::iterator it = attrs.find("objectSid");
-    if (it != attrs.end()) {
-        vector<string> sid;
-        for (unsigned int i = 0; i < it->second.size(); ++i) {
-            sid.push_back( decodeSID(it->second[i]) );
-        }
-        it->second = sid;
-    }
+    // on-fly convertion of objectSid from binary to string
+    // not sure if it should be done here as end user could want to see actual binary data
+    // and covert it only if it is required.
+//    map < string, vector<string> >::iterator it = attrs.find("objectSid");
+//    if (it != attrs.end()) {
+//        vector<string> sid;
+//        for (unsigned int i = 0; i < it->second.size(); ++i) {
+//            sid.push_back( decodeSID(it->second[i]) );
+//        }
+//        it->second = sid;
+//    }
+
     return attrs;
 }
 
