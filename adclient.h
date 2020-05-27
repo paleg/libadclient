@@ -51,9 +51,21 @@
 
 #define MAX_PASSWORD_LENGTH 22
 
-#define AD_SCOPE_BASE       LDAP_SCOPE_BASE
-#define AD_SCOPE_ONELEVEL   LDAP_SCOPE_ONELEVEL
-#define AD_SCOPE_SUBTREE    LDAP_SCOPE_SUBTREE
+#define AD_SCOPE_BASE         LDAP_SCOPE_BASE
+#define AD_SCOPE_BASEOBJECT   LDAP_SCOPE_BASEOBJECT
+#define AD_SCOPE_ONELEVEL     LDAP_SCOPE_ONELEVEL
+#define AD_SCOPE_ONE          LDAP_SCOPE_ONE
+#define AD_SCOPE_SUBTREE      LDAP_SCOPE_SUBTREE
+#define AD_SCOPE_SUB          LDAP_SCOPE_SUB
+#define AD_SCOPE_CHILDREN     LDAP_SCOPE_CHILDREN
+
+#ifdef LDAP_SCOPE_SUBORDINATE
+    #define AD_SCOPE_SUBORDINATE LDAP_SCOPE_SUBORDINATE /* OpenLDAP extension */
+    #define AD_SCOPE_DEFAULT     LDAP_SCOPE_DEFAULT     /* OpenLDAP extension */
+#else
+    #define AD_SCOPE_SUBORDINATE ((ber_int_t) 0x0003)
+    #define AD_SCOPE_DEFAULT     ((ber_int_t) -1)
+#endif
 
 using std::vector;
 using std::map;
@@ -101,6 +113,8 @@ struct adConnParams {
         string search_base;
         bool secured;
         bool use_gssapi;
+        bool use_tls;
+        bool use_ldaps;
 
         // LDAP_OPT_NETWORK_TIMEOUT, LDAP_OPT_TIMEOUT
         int nettimeout;
@@ -110,6 +124,8 @@ struct adConnParams {
         adConnParams() :
             secured(true),
             use_gssapi(false),
+            use_tls(false),
+            use_ldaps(false),
             // by default do not touch timeouts
             nettimeout(-1), timelimit(-1)
         {};
@@ -119,6 +135,7 @@ struct adConnParams {
     private:
         string uri;
         string login_method;
+        string bind_method;
 };
 
 
@@ -136,6 +153,7 @@ public:
 
       string binded_uri() { return params.uri; }
       string search_base() { return params.search_base; }
+      string bind_method() { return params.bind_method; }
       string login_method() { return params.login_method; }
 
       void groupAddUser(string group, string user);
@@ -174,6 +192,7 @@ public:
       void setUserIpAddress(string user, string ip);
 
       void setObjectAttribute(string object, string attr, string value);
+      void setObjectAttribute(string object, string attr, vector <string> values);
       void clearObjectAttribute(string object, string attr);
 
       std::map <string, bool>    getUserControls(string user);
@@ -221,7 +240,6 @@ public:
       std::map <string, std::vector <string> > getObjectAttributes(string object, const std::vector<string> &attributes);
 
       string ldap_login_diagnostic_message;
-      static const string ldap_prefix;
 private:
       adConnParams params;
 
@@ -236,12 +254,15 @@ private:
       void mod_delete(string object, string attribute, string value);
       void mod_rename(string object, string cn);
       void mod_replace(string object, string attribute, string value);
+      void mod_replace(string object, string attribute, vector <string> list);
       void mod_move(string object, string new_container);
       std::map < string, std::vector<string> > _getvalues(LDAPMessage *entry);
       string dn2domain(string dn);
       vector < std::pair<string, string> > explode_dn(string dn);
       string merge_dn(vector < std::pair<string, string> > dn_exploded);
       std::vector <string> DNsToShortNames(std::vector <string> &v);
+
+      std::string ldap_prefix;
 
       static std::vector<string> perform_srv_query(string srv_rec);
       static struct berval password2berval(string password);

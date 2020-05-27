@@ -78,7 +78,13 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
 
 ### Active Directory binding
 
-* boolean `adConnParams.secured` and `adConnParams.use_gssapi` chooses login authentication mode:
+* boolean `adConnParams.use_tls` and `adConnParams.use_ldaps` choose binding method:
+    + `adConnParams.use_tls` enables StartTLS extension to the LDAP protocol, normally served on port 389
+    + `adConnParams.use_ldaps` enables non-standardized LDAP over SSL protocol, normally served on port 636
+    + these two options are **mutually exclusive** and disabled by default
+    + you must configure your `ldap.conf` properly for client to be able to validate your server's certificate. Check `man ldap.conf` for details.
+    + `TLS_REQCERT allow` can be used in `ldap.conf` to ignore server's certificate check.
+* boolean `adConnParams.secured` and `adConnParams.use_gssapi` choose login authentication mode:
     + `SASL DIGEST-MD5` auth (default). It requires properly configured DNS (both direct and reverse) and SPN records (see [issue 1](https://github.com/paleg/libadclient/issues/1#issuecomment-131693081) for details).
         * `adConnParams.secured = true`
         * `adConnParams.use_gssapi = false`
@@ -99,6 +105,7 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
 * after successfull binding following methods can be used to check connection properties:
     + `binded_uri()` - to get connected server ldap URI
     + `search_base()` - to get current search base
+    + `bind_method()` - to get method used for binding (`plain`, `StartTLS`, `LDAPS`)
     + `login_method()` - to get method used for login (`GSSAPI`, `DIGEST-MD5`, `SIMPLE`)
 
 ### Binary values in object attributes
@@ -210,6 +217,11 @@ int main() {
     // params.search_base = "dc=DOMAIN,dc=LOCAL";
     params.binddn = "user";
     params.bindpw = "password";
+    // binding mode (LDAPS)
+    //params.use_ldaps = true;
+    // binding mode (StartTLS)
+    //params.use_tls = true;
+
     // simple auth mode
     // params.secured = false;
     
@@ -261,9 +273,13 @@ params.site = "SITE"
 # or login with a list of ldap uries
 # params.uries = [adclient.LdapPrefix+"Server1", adclient.LdapPrefix+"Server2"]
 # params.search_base = "dc=DOMAIN,dc=LOCAL";
-params.binddn = "user";
-params.bindpw = "password";
-    
+params.binddn = "user"
+params.bindpw = "password"
+
+# binding with TLS or LDAPS
+# params.use_ldaps = True
+# params.use_tls   = True
+
 # simple auth mode
 # params.secured = False;
 
@@ -314,6 +330,10 @@ func main() {
   // params.Search_base = "dc=DOMAIN,dc=LOCAL";
   params.Binddn = "user";
   params.Bindpw = "password";
+
+  // binding with TLS or LDAPS
+  // params.UseStartTLS = true
+  // params.UseLDAPS = true
     
   // simple auth mode
   // params.Secured = false;

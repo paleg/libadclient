@@ -126,6 +126,8 @@ static PyObject *wrapper_login_adclient(PyObject *self, PyObject *args) {
        params.search_base = dict_get_string(paramsObj, "search_base");
        params.secured = dict_get_bool(paramsObj, "secured");
        params.use_gssapi = dict_get_bool(paramsObj, "use_gssapi");
+       params.use_tls = dict_get_bool(paramsObj, "use_tls");
+       params.use_ldaps = dict_get_bool(paramsObj, "use_ldaps");
        params.nettimeout = dict_get_int(paramsObj, "nettimeout");
        params.timelimit = dict_get_int(paramsObj, "timelimit");
 
@@ -191,6 +193,15 @@ static PyObject *wrapper_login_method_adclient(PyObject *self, PyObject *args) {
 
        adclient *ad = convert_ad(obj);
        return Py_BuildValue("s", ad->login_method().c_str());
+}
+
+static PyObject *wrapper_bind_method_adclient(PyObject *self, PyObject *args) {
+       PyObject *obj;
+
+       if (!PyArg_ParseTuple(args, "O", &obj)) return NULL;
+
+       adclient *ad = convert_ad(obj);
+       return Py_BuildValue("s", ad->bind_method().c_str());
 }
 
 static PyObject *wrapper_search_adclient(PyObject *self, PyObject *args) {
@@ -1213,11 +1224,21 @@ static PyObject *wrapper_setUserIpAddress_adclient(PyObject *self, PyObject *arg
 
 static PyObject *wrapper_setObjectAttribute_adclient(PyObject *self, PyObject *args) {
        PyObject *obj;
-       char *object, *attr, *value;
-       if (!PyArg_ParseTuple(args, "Osss", &obj, &object, &attr, &value)) return NULL;
+       char *object, *attr;
+       PyObject *listObj;
+
+       if (!PyArg_ParseTuple(args, "OssO!", &obj, &object, &attr, &PyList_Type, &listObj)) return NULL;
+
+       vector<string> values;
+       for (unsigned int i = 0; i < PyList_Size(listObj); ++i) {
+           PyObject *strObj = PyList_GetItem(listObj, i);
+           string item = PyString_AsString(strObj);
+           values.push_back(item);
+       }
+
        adclient *ad = convert_ad(obj);
        try {
-          ad->setObjectAttribute(object, attr, value);
+          ad->setObjectAttribute(object, attr, values);
        }
        catch(ADSearchException& ex) {
             error_num = ex.code;
@@ -1409,6 +1430,7 @@ static PyMethodDef adclient_methods[] = {
        { "search_base_adclient", wrapper_search_base_adclient, 1},
        { "ldapLoginDiagnosticMessage_adclient", wrapper_ldap_login_diagnostic_message_adclient, 1},
        { "login_method_adclient", wrapper_login_method_adclient, 1},
+       { "bind_method_adclient", wrapper_bind_method_adclient, 1},
        { "get_error_num", wrapper_get_error_num, 1 },
        { "int2ip", wrapper_int2ip, 1 },
        { "domain2dn", wrapper_domain2dn, 1 },
@@ -1434,8 +1456,6 @@ init_adclient(void) {
        PyModule_AddObject(m, "ADBindError", ADBindError);
        PyModule_AddObject(m, "ADSearchError", ADSearchError);
        PyModule_AddObject(m, "ADOperationalError", ADOperationalError);
-
-       PyModule_AddStringConstant(m, "LdapPrefix", adclient::ldap_prefix.c_str());
 
        PyModule_AddIntMacro(m, AD_SUCCESS);
        PyModule_AddIntMacro(m, AD_LDAP_CONNECTION_ERROR);

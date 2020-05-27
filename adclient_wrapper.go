@@ -2,11 +2,24 @@ package adclient
 
 // #cgo CPPFLAGS: -DOPENLDAP -DKRB5
 // #cgo LDFLAGS: -lstdc++ -lldap -lsasl2 -lstdc++ -llber -lresolv -lkrb5
+// #include <ldap.h>
 import "C"
 
 import "fmt"
 import "strings"
 import "strconv"
+
+const (
+	AD_SCOPE_BASE        = C.LDAP_SCOPE_BASE
+	AD_SCOPE_BASEOBJECT  = C.LDAP_SCOPE_BASE
+	AD_SCOPE_ONELEVEL    = C.LDAP_SCOPE_ONELEVEL
+	AD_SCOPE_ONE         = C.LDAP_SCOPE_ONELEVEL
+	AD_SCOPE_SUBTREE     = C.LDAP_SCOPE_SUBTREE
+	AD_SCOPE_SUB         = C.LDAP_SCOPE_SUBTREE
+	AD_SCOPE_SUBORDINATE = C.LDAP_SCOPE_SUBORDINATE /* OpenLDAP extension */
+	AD_SCOPE_CHILDREN    = C.LDAP_SCOPE_SUBORDINATE
+	AD_SCOPE_DEFAULT     = C.LDAP_SCOPE_DEFAULT /* OpenLDAP extension */
+)
 
 type ADError struct {
 	msg  string
@@ -20,10 +33,14 @@ type ADConnParams struct {
 	Binddn      string
 	Bindpw      string
 	Search_base string
+
 	Secured     bool
 	UseGSSAPI   bool
-	Nettimeout  int
-	Timelimit   int
+	UseLDAPS    bool
+	UseStartTLS bool
+
+	Nettimeout int
+	Timelimit  int
 }
 
 func DefaultADConnParams() (params ADConnParams) {
@@ -31,11 +48,9 @@ func DefaultADConnParams() (params ADConnParams) {
 	params.Timelimit = -1
 	params.Secured = true
 	params.UseGSSAPI = false
+	params.UseLDAPS = false
+	params.UseStartTLS = false
 	return
-}
-
-func LdapPrefix() string {
-	return GetAdclientLdap_prefix()
 }
 
 func Ldap_servers(domain string, site string) []string {
@@ -140,6 +155,8 @@ func Login(_params ADConnParams) (err error) {
 	params.SetUse_gssapi(_params.UseGSSAPI)
 	params.SetNettimeout(_params.Nettimeout)
 	params.SetTimelimit(_params.Timelimit)
+	params.SetUse_tls(_params.UseStartTLS)
+	params.SetUse_ldaps(_params.UseLDAPS)
 
 	uries := NewStringVector()
 	defer DeleteStringVector(uries)
@@ -186,6 +203,10 @@ func SearchBase() (result string) {
 
 func LoginMethod() (result string) {
 	return ad.Login_method()
+}
+
+func BindMethod() (result string) {
+	return ad.Bind_method()
 }
 
 func LdapLoginDiagnosticMessage() string {
@@ -504,9 +525,27 @@ func SearchDN(search_base string, filter string, scope int) (result []string, er
 	return
 }
 
-func SetObjectAttribute(object string, attr string, value string) (err error) {
+func SetObjectAttribute(object string, attr string, values ...string) (err error) {
+	if len(values) == 0 {
+		err = ADError{
+			fmt.Sprintf("wrong number of arguments"),
+			-1,
+		}
+	} else {
+		defer catch(&err)
+		cattrs := NewStringVector()
+		defer DeleteStringVector(cattrs)
+		for _, attr := range values {
+			cattrs.Add(attr)
+		}
+		ad.SetObjectAttribute(object, attr, cattrs)
+	}
+	return
+}
+
+func ClearObjectAttribute(object string, attr string) (err error) {
 	defer catch(&err)
-	ad.SetObjectAttribute(object, attr, value)
+	ad.ClearObjectAttribute(object, attr)
 	return
 }
 
