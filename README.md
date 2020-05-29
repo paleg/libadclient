@@ -97,8 +97,7 @@ Note: this library is **not safe** for concurrent use. If you need to use librar
     + automatically with domain DNS name (`adConnParams.domain`) with optional [AD site name](https://technet.microsoft.com/en-us/library/cc754697\(v=ws.11\).aspx) (`adConnParams.site`):
         * ldap uries for `domain` will be detected via DNS SRV query (`_ldap._tcp.SITE._sites.DOMAIN.LOCAL` / `_ldap._tcp.DOMAIN.LOCAL`)
         * if `adConnParams.search_base` is empty - it will be constructed automatically from domain name (`DC=DOMAIN,DC=LOCAL`).
-    + manually with vector of ldap uries (`adConnParams.uries`):
-        * ldap uries must be prefixed with `adclient::ldap_prefix`
+    + manually with vector of domain controller DNS names to connect to (`adConnParams.uries`):
         * `adConnParams.search_base` must be set explicitly.
 * `LDAP_OPT_NETWORK_TIMEOUT` and `LDAP_OPT_TIMEOUT` can be set with `adConnParams.nettimeout`.
 * `LDAP_OPT_TIMELIMIT` can be set with `adConnParams.timelimit`.
@@ -212,8 +211,8 @@ int main() {
     // choose DC from SITE (optional, can be ommited)
     params.site = "SITE";
     // or login with a list of ldap uries
-    // params.uries.push_back(adclient::ldap_prefix + "Server1");
-    // params.uries.push_back(adclient::ldap_prefix + "Server2");
+    // params.uries.push_back("Server1");
+    // params.uries.push_back("Server2");
     // params.search_base = "dc=DOMAIN,dc=LOCAL";
     params.binddn = "user";
     params.bindpw = "password";
@@ -271,7 +270,7 @@ params.domain = "DOMAIN.LOCAL"
 # choose DC from SITE (optional, can be ommited)
 params.site = "SITE"
 # or login with a list of ldap uries
-# params.uries = [adclient.LdapPrefix+"Server1", adclient.LdapPrefix+"Server2"]
+# params.uries = ["Server1", "Server2"]
 # params.search_base = "dc=DOMAIN,dc=LOCAL";
 params.binddn = "user"
 params.bindpw = "password"
@@ -326,7 +325,7 @@ func main() {
   // choose DC from SITE (optional, can be ommited)
   params.Site = "SITE"
   // or login with a list of ldap uries
-  // params.Uries = append(params.Uries, adclient.LdapPrefix()+"Server1", adclient.LdapPrefix()+"Server2")
+  // params.Uries = append(params.Uries, "Server1", "Server2")
   // params.Search_base = "dc=DOMAIN,dc=LOCAL";
   params.Binddn = "user";
   params.Bindpw = "password";
